@@ -1,0 +1,4 @@
+TODO:
+- replace malloc strcpy with strdup
+- support multiple colors
+- validate object names used in rules exist or are `...`

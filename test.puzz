@@ -1,0 +1,65 @@
+title hi there
+ author me myself and i
+homepage www.myanimeprincess.com
+=====
+OBJECTS
+=====
+Background
+BROWN
+
+Player
+red
+
+Wall
+Blue
+
+=====
+LEGEND
+=====
+. = Background
+P = Player
+# = Wall
+X = Zebra
+
+=====
+COLLISIONLAYERS
+=====
+Background
+Wall,Player
+=====
+RULES
+=====
+UP [ up Player | Wall ] -> [ Wall | Player ]
+[ > Player | Wall ] -> [ > Wall | > Player ]
+[ Player ] [ Wall ] -> [ Wall ] [ Player ]
+[ Player | ... | Wall ] -> [ Wall | .. | Player ]
+
+==============
+WINCONDITIONS
+==============
+
+All Target on Crate
+All Crate on Spikes
+No Cat
+
+=======
+LEVELS
+=======
+
+
+####..
+#.O#..
+#..###
+#@P..#
+#..*.#
+#..###
+####..
+
+
+######
+#....#
+#.#P.#
+#.*@.#
+#.O@.#
+#....#
+######
