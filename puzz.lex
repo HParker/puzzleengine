@@ -117,6 +117,11 @@ homepage[ ]+ { BEGIN IDENTIFIER; return HOMEPAGE; }
   return DIRECTION;
 }
 
+<RULES>^late {
+  yylval.identifier = strdup(yytext);
+  return EXECUTION_TIME;
+}
+
 <RULES>-> {
   return ARROW;
 }

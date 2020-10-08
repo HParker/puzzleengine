@@ -16,7 +16,7 @@ int yyerror(const char *p) { printf("ERROR: %s\n", p); return 1; }
 };
 
 %token TITLE AUTHOR HOMEPAGE MODEHEADER EQUALS END_LAYER
-%token  <identifier> ID OBJID COLOR LEGEND_VALUE LAYER_NAME DIRECTION LOGIC_WORD
+%token  <identifier> ID OBJID COLOR LEGEND_VALUE LAYER_NAME DIRECTION LOGIC_WORD EXECUTION_TIME
 
 // Rules tokens (ALSO USES OBJID)
 %token OPEN_SQUARE CLOSE_SQUARE VIRTICAL_PIPE MOVE_RIGHT MOVE_UP MOVE_LEFT MOVE_DOWN ARROW
@@ -98,11 +98,22 @@ rule: maybe_newline rule_side arrow rule_side END_OF_RULE {
 arrow: ARROW {
   pd.rules[pd.ruleCount].matchStateDone = 1;
 }
-rule_side: rule_with_global_direction | state_definitions
+rule_side: rule_with_global_direction | rule_with_execution_time | state_definitions
+
 rule_with_global_direction: DIRECTION state_definitions {
   pd.rules[pd.ruleCount].directionConstraint = strdup($1);
   pd.rules[pd.ruleCount].hasDirectionConstraint = 1;
 }
+
+rule_with_execution_time: EXECUTION_TIME state_definitions {
+  if (strcasecmp($1, "late") == 0) {
+    pd.rules[pd.ruleCount].executionTime = LATE;
+  } else {
+    pd.rules[pd.ruleCount].executionTime = NORMAL;
+  }
+
+}
+
 state_definitions: state_definition state_definitions | state_definition
 state_definition: OPEN_SQUARE state_internals CLOSE_SQUARE {
   if (pd.rules[pd.ruleCount].matchStateDone == 0) {
@@ -111,6 +122,7 @@ state_definition: OPEN_SQUARE state_internals CLOSE_SQUARE {
     pd.rules[pd.ruleCount].resultStateCount++;
   }
 }
+
 state_internals: state_part VIRTICAL_PIPE state_internals | state_part
 state_part: state_part_with_direction | state_part_without_direction
 state_part_with_direction: DIRECTION OBJID {
@@ -130,8 +142,8 @@ state_part_with_direction: DIRECTION OBJID {
     rsp->identifier = strdup($2);
     rs->partCount++;
   }
-
 }
+
 state_part_without_direction: OBJID {
   if (pd.rules[pd.ruleCount].matchStateDone == 0) {
     Rule * r = &pd.rules[pd.ruleCount];
@@ -174,6 +186,7 @@ row: cells LEVEL_EOL {
     pd.levels[pd.levelCount].width = pd.levels[pd.levelCount].cellIndex;
   }
 }
+
 cells: cell cells | cell
 cell: LEVEL_CELL {
   pd.levels[pd.levelCount].cells[pd.levels[pd.levelCount].cellIndex] = $1;

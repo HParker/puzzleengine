@@ -20,6 +20,9 @@ Blue
 Crate
 Orange
 
+Temp
+transparent
+
 =======
 LEGEND
 =======
@@ -50,7 +53,8 @@ Player, Wall, Crate
 RULES
 ======
 
-[ >  Player | Crate ] -> [  >  Player | > Crate  ]
+late [ Player | Crate ] -> [ Crate | Temp ]
+late [ Temp ] -> [ Player ]
 
 ==============
 WINCONDITIONS
@@ -62,6 +66,14 @@ All Target on Crate
 LEVELS
 =======
 
+#######
+#.....#
+#.#P..#
+#...*.#
+#.....#
+#..*..#
+#######
+
 
 ####..
 #.O#..
@@ -70,12 +82,3 @@ LEVELS
 #..*.#
 #..###
 ####..
-
-
-######
-#....#
-#.#P.#
-#.*@.#
-#.O@.#
-#....#
-######

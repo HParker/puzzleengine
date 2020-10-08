@@ -1,4 +1,8 @@
 TODO:
+- sounds
 - replace malloc strcpy with strdup
 - support multiple colors
 - validate object names used in rules exist or are `...`
+- validate has background
+- make sure all objects are in a layer
+- When PS finds a circular rule it only applies the right and down versions
