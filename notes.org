@@ -1,3 +1,7 @@
+TODAY:
+- swap some strings with enums from the parser
+- redo the current level as "layers"
+
 TODO:
 - sounds
 - replace malloc strcpy with strdup
@@ -6,3 +10,4 @@ TODO:
 - validate has background
 - make sure all objects are in a layer
 - When PS finds a circular rule it only applies the right and down versions
+- redo active level as layers (maybe just objects with x,y)?

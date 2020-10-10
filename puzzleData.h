@@ -14,17 +14,18 @@ typedef struct Layer {
   char * objectNames[100];
 } Layer;
 
-typedef enum WinQualifier
+typedef enum WinQualifier // TODO: rename to logic words?
   {
-   ALL,
-   ANY,
-   NO,
-   SOME,
-   ON,   UNSPECIFIED
+   ALL  = 0,
+   ANY  = 1,
+   NO   = 2,
+   SOME = 3,
+   ON   = 4,
+   UNSPECIFIED = 105
   } WinQualifier;
 
 typedef struct WinCondition {
-  char * winQualifier;
+  WinQualifier winQualifier;
   char * winIdentifier;
   int hasOnQualifier;
   char * onIndentifier;
@@ -32,29 +33,27 @@ typedef struct WinCondition {
 
 typedef enum Direction
   {
-   UP,
-   DOWN,
-   LEFT,
-   RIGHT,
-   HORIZONTAL,
-   VIRTICAL,
-   // TODO: remove RELs they shouldn't make it into actual rules
-   REL_UP,
-   REL_DOWN,
-   REL_LEFT,
-   REL_RIGHT,
-   NONE
+   UP         = 0,
+   DOWN       = 1,
+   LEFT       = 2,
+   RIGHT      = 3,
+   HORIZONTAL = 4,
+   VIRTICAL   = 5,
+   REL_UP     = 6,
+   REL_DOWN   = 7,
+   REL_LEFT   = 8,
+   REL_RIGHT  = 9,
+   NONE       = 10
   } Direction;
 
 typedef enum ExecutionTime
   {
-   NORMAL,
-   LATE
+   NORMAL = 0,
+   LATE = 1
   } ExecutionTime;
 
 typedef struct RuleStatePart {
-  int hasDirection;
-  char * direction;
+  Direction direction;
   char * identifier;
 } RuleStatePart;
 
@@ -66,20 +65,25 @@ typedef struct RuleState {
 typedef struct Rule {
   int matchStateCount;
   int resultStateCount;
-  int matchStateDone;
-  int hasDirectionConstraint;
-  char * directionConstraint;
+  int matchStateDone; // TODO: this is only needed when parsing. maybe manage it there?
+  Direction directionConstraint;
   ExecutionTime executionTime;
   RuleState matchStates[100];
   RuleState resultStates[100];
 } Rule;
 
+typedef enum LevelType
+  {
+   SQUARES,
+   MESSAGE
+  } LevelType;
+
 typedef struct Level {
+  LevelType levelType;
   int height;
   int width;
   int cellIndex;
   char cells[100];
-  int hasMessage;
   char * message;
 } Level;
 

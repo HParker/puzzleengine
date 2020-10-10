@@ -3,14 +3,36 @@
 /* #include "puzzleData.h" */
 #include "puzz.tab.c"
 
+typedef struct ToMove {
+  int from;
+  int to;
+} ToMove;
+
 typedef struct Runtime {
   int levelIndex;
   Level currentLevel;
+  int toMoveCount;
+  ToMove toMove[100];
   // move history?
 } Runtime;
 
+void addToMove(Runtime * rt, int from, int to)  {
+  printf("adding '%c' f:%i t:%i\n", rt->currentLevel.cells[from], from, to);
+  rt->toMove[rt->toMoveCount].from = from;
+  rt->toMove[rt->toMoveCount].to = to;
+  rt->toMoveCount++;
+}
 
-char nameToLegendKey(const char * name) {
+int isMoving(Runtime * rt, int loc) {
+  for (int i = 0; i < rt->toMoveCount; i++) {
+    if (rt->toMove[i].from == loc) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+char nameToLegendKey(char * name) {
   for (int i = 0; i < pd.objectCount; i++) {
     if (strcmp(pd.objects[i].name, name) == 0) {
       return pd.objects[i].legendKey;
@@ -19,14 +41,10 @@ char nameToLegendKey(const char * name) {
   return '\t';
 }
 
-// TODO: lets try to never use this to avoid managing the strings it could create
-/* char * legendKeyToName(char key, ) { */
-
-/* } */
-
 Runtime startGame() {
   Runtime rt;
   rt.levelIndex = 0;
+  rt.toMoveCount = 0;
   rt.currentLevel = pd.levels[0];
   return rt;
 }
@@ -71,139 +89,178 @@ typedef enum Action
    ACTION_DOWN,
    ACTION_LEFT,
    ACTION_RIGHT,
-   ACTION_USE
+   ACTION_USE,
+   ACTION_NONE
   } Action;
-
-int cellMatches(Runtime * rt, int cellIndex, int cellMultiplier, RuleState * rs) {
-  // TODO: this ignores direction and shouldn't
-  int matches = 0;
-  for (int i = 0; i < rs->partCount; i++) {
-    if (rt->currentLevel.cells[cellIndex + (i * cellMultiplier)] != nameToLegendKey(rs->parts[i].identifier)) {
-      matches = 1;
-    } else {
-      /* printf("matched: %i (%c == %s)\n", cellIndex + i, rt->currentLevel.cells[cellIndex + (i * cellMultiplier)], rs->parts[i].identifier); */
-    }
-  }
-  return matches;
-}
 
 int doResultState(Runtime * rt, Action act, int ruleIndex, int cellIndex, int cellMultipler) {
   // TODO: direction
   for (int i = 0; i < pd.rules[ruleIndex].resultStateCount; i++) {
     for (int j = 0; j < pd.rules[ruleIndex].resultStates[i].partCount; j++) {
+      if (pd.rules[ruleIndex].resultStates[i].parts[j].direction != NONE) {
+        if (isMoving(rt, (cellIndex + (j * cellMultipler))) != 1) {
+          printf("ADDING MOVEMENT TO %s\n", pd.rules[ruleIndex].resultStates[i].parts[j].identifier);
+          addToMove(rt, (cellIndex + (j * cellMultipler)), (cellIndex + (j * cellMultipler)) + cellMultipler);
+        }
+      }
       rt->currentLevel.cells[cellIndex + (j * cellMultipler)] = nameToLegendKey(pd.rules[ruleIndex].resultStates[i].parts[j].identifier);
     }
   }
   return 0;
 }
 
+int ruleApplies(Runtime * rt, ExecutionTime execTime, Action act, Rule * rule) {
+  if (rule->executionTime != execTime) {
+    return 0;
+  }
+
+  //if (rule->hasDirectionConstraint == 1) {
+    // TODO: rule->directionContraint is an enum now! yay!
+    /* switch (act) { */
+    /* case ACTION_UP: */
+    /*   if (strcmp(rule->directionConstraint, "up") != 0) { */
+    /*     return 0; */
+    /*   } */
+    /*   break; */
+    /* case ACTION_DOWN: */
+    /*   if (strcmp(rule->directionConstraint, "down") != 0) { */
+    /*     return 0; */
+    /*   } */
+    /*   break; */
+    /* case ACTION_LEFT: */
+    /*   if (strcmp(rule->directionConstraint, "left") != 0) { */
+    /*     return 0; */
+    /*   } */
+    /*   break; */
+    /* default: */
+    /*   break; */
+    /* } */
+  //}
+  return 1;
+}
+
+int partMatches(Runtime * rt, Action act, int cellIndex, RuleStatePart * rsp) {
+  if (rt->currentLevel.cells[cellIndex] != nameToLegendKey(rsp->identifier)) {
+    return 0;
+  }
+  printf("ids match! '%c'\n", rt->currentLevel.cells[cellIndex]);
+  if (rsp->direction != NONE) {
+    switch (act) {
+    case ACTION_UP:
+      printf("action is up direction is %i\n", rsp->direction);
+      if (rsp->direction != UP) {
+        return 0;
+      }
+      break;
+    case ACTION_DOWN:
+      printf("action is down direction is %i\n", rsp->direction);
+      if (rsp->direction != DOWN) {
+        return 0;
+      }
+      break;
+    case ACTION_LEFT:
+      printf("action is left direction is %i\n", rsp->direction);
+      if (rsp->direction != LEFT) {
+        return 0;
+      }
+    case ACTION_RIGHT:
+      printf("action is right direction is %i\n", rsp->direction);
+      if (rsp->direction != RIGHT) {
+        return 0;
+      }
+      break;
+    default:
+      break;
+    }
+  } else {
+      // should not be moving
+      if (isMoving(rt, cellIndex) != 0) {
+        return 0;
+      }
+    }
+  return 1;
+}
+
+int cellMatches(Runtime * rt, Action act, int cellIndex, int cellMultiplier, RuleState * rs) {
+  // TODO: this ignores direction and shouldn't
+  int matchingCells = 0;
+  for (int i = 0; i < rs->partCount; i++) {
+    if (partMatches(rt, act, cellIndex + (i * cellMultiplier), &rs->parts[i]) != 1) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+int checkMatches(Runtime * rt, Action act, int ruleIndex, int cellIndex, int cellMultiplier) {
+  int appliedSomething = 0;
+  for (int matchIndex = 0; matchIndex < pd.rules[ruleIndex].matchStateCount; matchIndex++) {
+    if (cellMatches(rt, act, cellIndex, cellMultiplier, &pd.rules[ruleIndex].matchStates[matchIndex]) == 1) {
+      doResultState(rt, act, ruleIndex, cellIndex, cellMultiplier);
+      appliedSomething = 1;
+    }
+  }
+  return appliedSomething;
+}
+
 int applyRules(Runtime * rt, ExecutionTime execTime, Action act) {
   // do things like move blocks when you push them
   for (int ruleIndex = 0; ruleIndex < pd.ruleCount; ruleIndex++) {
-    int appliedSomething = 1;
-    while (appliedSomething == 1) {
-      appliedSomething = 0;
-      if (pd.rules[ruleIndex].executionTime == execTime) {
+    if (pd.rules[ruleIndex].executionTime == execTime) {
+      int appliedSomething = 1;
+      while (appliedSomething == 1) {
+        appliedSomething = 0;
         // applies to the right
         for (int cellIndex = 0; cellIndex < rt->currentLevel.cellIndex; cellIndex++) {
-          // right
-          for (int matchIndex = 0; matchIndex < pd.rules[ruleIndex].matchStateCount; matchIndex++) {
-            if (cellMatches(rt, cellIndex, 1, &pd.rules[ruleIndex].matchStates[matchIndex]) == 0) {
-              printf("APPLYING RIGHT\n");
-              appliedSomething = 1;
-              doResultState(rt, act, ruleIndex, cellIndex, 1);
-            }
-          }
-
+          // up
+          appliedSomething = appliedSomething || checkMatches(rt, act, ruleIndex, cellIndex, (rt->currentLevel.width * -1));
+          //down
+          appliedSomething = appliedSomething || checkMatches(rt, act, ruleIndex, cellIndex, rt->currentLevel.width);
           // left
-          for (int cellIndex = 0; cellIndex < rt->currentLevel.cellIndex; cellIndex++) {
-            for (int matchIndex = 0; matchIndex < pd.rules[ruleIndex].matchStateCount; matchIndex++) {
-              if (cellMatches(rt, cellIndex, -1, &pd.rules[ruleIndex].matchStates[matchIndex]) == 0) {
-                printf("APPLYING LEFT\n");
-                appliedSomething = 1;
-                doResultState(rt, act, ruleIndex, cellIndex, -1);
-              }
-            }
-          }
-
-          // up
-          for (int cellIndex = 0; cellIndex < rt->currentLevel.cellIndex; cellIndex++) {
-            for (int matchIndex = 0; matchIndex < pd.rules[ruleIndex].matchStateCount; matchIndex++) {
-              if (cellMatches(rt, cellIndex, (rt->currentLevel.width * -1), &pd.rules[ruleIndex].matchStates[matchIndex]) == 0) {
-                printf("APPLYING UP\n");
-                appliedSomething = 1;
-                doResultState(rt, act, ruleIndex, cellIndex, (rt->currentLevel.width * -1));
-              }
-            }
-          }
-
-          // up
-          for (int cellIndex = 0; cellIndex < rt->currentLevel.cellIndex; cellIndex++) {
-            for (int matchIndex = 0; matchIndex < pd.rules[ruleIndex].matchStateCount; matchIndex++) {
-              if (cellMatches(rt, cellIndex, rt->currentLevel.width, &pd.rules[ruleIndex].matchStates[matchIndex]) == 0) {
-                printf("APPLYING DOWN\n");
-                appliedSomething = 1;
-                doResultState(rt, act, ruleIndex, cellIndex, rt->currentLevel.width);
-              }
-            }
-          }
+          appliedSomething = appliedSomething || checkMatches(rt, act, ruleIndex, cellIndex, -1);
+          // right
+          appliedSomething = appliedSomething || checkMatches(rt, act, ruleIndex, cellIndex, 1);
         }
       }
     }
-
-
-    // applies down
-    // applies left
-    // applies up
   }
   return 0;
 }
 
 void update(Runtime * rt, char * input) {
+  int playerLoc = playerLocation(rt);
+  int multiplier = 0;
   Action act;
   // mark player to move
-  if (strcmp(input, "right") == 0) {
-    act = ACTION_RIGHT;
-  } else if (strcmp(input, "up") == 0) {
+  if (strcmp(input, "up") == 0) {
+    multiplier = (rt->currentLevel.width * -1);
     act = ACTION_UP;
-  } else if (strcmp(input, "left") == 0) {
-    act = ACTION_LEFT;
   } else if (strcmp(input, "down") == 0) {
+    multiplier = rt->currentLevel.width;
     act = ACTION_DOWN;
+  } else if (strcmp(input, "left") == 0) {
+    multiplier = -1;
+    act = ACTION_LEFT;
+  } else if (strcmp(input, "right") == 0) {
+    multiplier = 1;
+       act = ACTION_RIGHT;
   } else if (strcmp(input, "use") == 0) {
     act = ACTION_USE;
+  } else {
+    act = ACTION_NONE;
   }
+  addToMove(rt, playerLoc, (playerLoc + multiplier));
 
 
   // apply rule
   applyRules(rt, NORMAL, act);
 
-  // move player
-  if (strcmp(input, "right") == 0) {
-    int playerLoc = playerLocation(rt);
-    if (isMovable(rt, playerLoc + 1)) {
-      swapSquares(rt, playerLoc, playerLoc + 1);
-    }
-  }
-  if (strcmp(input, "left") == 0) {
-    int playerLoc = playerLocation(rt);
-    if (isMovable(rt, playerLoc - 1)) {
-      swapSquares(rt, playerLoc, playerLoc - 1);
-    }
-  }
+  // apply marked for move
+  printf("moves: %i", rt->toMoveCount);
+  for (int i = rt->toMoveCount-1; i >= 0; i--) {
 
-  if (strcmp(input, "up") == 0) {
-    int playerLoc = playerLocation(rt);
-    if (isMovable(rt, playerLoc - rt->currentLevel.width)) {
-      swapSquares(rt, playerLoc, playerLoc - rt->currentLevel.width);
-    }
-  }
-
-  if (strcmp(input, "down") == 0) {
-    int playerLoc = playerLocation(rt);
-    if (isMovable(rt, playerLoc + rt->currentLevel.width)) {
-      swapSquares(rt, playerLoc, playerLoc + rt->currentLevel.width);
-    }
+    printf("moving %i to %i\n", rt->toMove[i].from, rt->toMove[i].to);
+    swapSquares(rt, rt->toMove[i].from, rt->toMove[i].to);
   }
 
   // apply late rules
@@ -218,7 +275,12 @@ int main(int argc, char ** argv) {
       fprintf(stderr,"could not open %s\n", argv[1]);
       return 1;
     }
+  } else {
+    printf("Please provide a puzzlescript file\n");
+    return 1;
   }
+
+
   yyin = file;
   yyparse();
   printf("pd ready: %i levels\n", pd.levelCount);
@@ -227,11 +289,12 @@ int main(int argc, char ** argv) {
   Runtime rt = startGame();
 
   char input[100];
-  while (1) {
-    render(&rt);
-    printf("Enter Move: ");
-    gets(input);
-    update(&rt, input);
-  }
+  /* while (1) { */
+  /*   render(&rt); */
+  /*   printf("Enter Move: "); */
+  /*   gets(input); */
+  /*   update(&rt, input); */
+  /*   rt.toMoveCount = 0; */
+  /* } */
   return 0;
 }

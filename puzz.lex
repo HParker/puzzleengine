@@ -21,20 +21,17 @@ direction (action|up|down|left|right|\^|v|\<|\>|moving|stationary|parallel|perpe
 color (black|white|lightgray|lightgrey|gray|grey|darkgray|darkgrey|red|darkred|lightred|brown|darkbrown|lightbrown|orange|yellow|green|darkgreen|lightgreen|blue|lightblue|darkblue|purple|pink|transparent)
 
 %%
-\(.*\) { printf("Skipping comment\n"); }
-
-
 title[ ]+ { BEGIN IDENTIFIER; return TITLE; }
 author[ ]+ { BEGIN IDENTIFIER; return AUTHOR; }
 homepage[ ]+ { BEGIN IDENTIFIER; return HOMEPAGE; }
 <IDENTIFIER>[a-zA-Z. ]+$ {
-  BEGIN 0;
-  yylval.identifier = malloc(sizeof(char) * 100);
+  BEGIN INITIAL;
+  yylval.identifier = strdup(yytext);
   strcpy(yylval.identifier, yytext);
   return ID;
- }
+}
 
-={2,} {
+={2,}\n {
   BEGIN MODE;
   return MODEHEADER;
 }
@@ -59,7 +56,7 @@ homepage[ ]+ { BEGIN IDENTIFIER; return HOMEPAGE; }
 
   return ID;
  }
-<MODE>={2,} {
+<MODE>={2,}\n {
   BEGIN modeToEnter;
   return MODEHEADER;
 }
@@ -83,14 +80,12 @@ homepage[ ]+ { BEGIN IDENTIFIER; return HOMEPAGE; }
 <LEGEND>= { return EQUALS; }
 
 <LEGEND>[a-zA-Z]+$ {
-  yylval.identifier = malloc(sizeof(char) * 100);
-  strcpy(yylval.identifier, yytext);
+  yylval.identifier = strdup(yytext);
   return LEGEND_VALUE;
 }
 
 <COLLISIONLAYERS>[A-Za-z]+ {
-  yylval.identifier = malloc(sizeof(char) * 100);
-  strcpy(yylval.identifier, yytext);
+  yylval.identifier = strdup(yytext);
   return LAYER_NAME;
 }
 
@@ -98,9 +93,7 @@ homepage[ ]+ { BEGIN IDENTIFIER; return HOMEPAGE; }
   return END_LAYER;
 }
 
-<COLLISIONLAYERS>[, ]+ {
-  // Ignore commas and spaces
-}
+<COLLISIONLAYERS>[, ]+
 
 <RULES>\[ {
   return OPEN_SQUARE;
@@ -111,14 +104,58 @@ homepage[ ]+ { BEGIN IDENTIFIER; return HOMEPAGE; }
 <RULES>\| {
   return VIRTICAL_PIPE;
 }
-<RULES>{direction} {
-  yylval.identifier = malloc(sizeof(char) * 100);
-  strcpy(yylval.identifier, yytext);
+<RULES>up {
+  yylval.enumValue = 0;
+  return DIRECTION;
+}
+
+<RULES>down {
+  yylval.enumValue = 1;
+  return DIRECTION;
+}
+
+<RULES>left {
+  yylval.enumValue = 2;
+  return DIRECTION;
+}
+
+<RULES>right {
+  yylval.enumValue = 3;
+  return DIRECTION;
+}
+
+<RULES>horizontal {
+  yylval.enumValue = 4;
+  return DIRECTION;
+}
+
+<RULES>virtical {
+  yylval.enumValue = 5;
+  return DIRECTION;
+}
+
+<RULES>\^ {
+  yylval.enumValue = 6;
+  return DIRECTION;
+}
+
+<RULES>v {
+  yylval.enumValue = 7;
+  return DIRECTION;
+}
+
+<RULES>\< {
+  yylval.enumValue = 8;
+  return DIRECTION;
+}
+
+<RULES>\> {
+  yylval.enumValue = 9;
   return DIRECTION;
 }
 
 <RULES>^late {
-  yylval.identifier = strdup(yytext);
+  yylval.enumValue = 1;
   return EXECUTION_TIME;
 }
 
@@ -126,18 +163,24 @@ homepage[ ]+ { BEGIN IDENTIFIER; return HOMEPAGE; }
   return ARROW;
 }
 <RULES>[a-zA-Z.]+ {
-  yylval.identifier = malloc(sizeof(char) * 100);
-  strcpy(yylval.identifier, yytext);
+  yylval.identifier = strdup(yytext);
   return OBJID;
 }
-<RULES>[\n]+ {
-              return END_OF_RULE;
-}
-
-
 
 <WINCONDITIONS>(all|no|on|some) {
-  yylval.identifier = strdup(yytext);
+  // the enum is not available here
+  // so we use the integer value directly.
+  if (strcasecmp(yytext, "all")) {
+    yylval.enumValue = 0;
+  } else if (strcasecmp(yytext, "any")) {
+    yylval.enumValue = 1;
+  } else if (strcasecmp(yytext, "no")) {
+    yylval.enumValue = 2;
+  } else if (strcasecmp(yytext, "some")) {
+    yylval.enumValue = 3;
+  } else if (strcasecmp(yytext, "on")) {
+    yylval.enumValue = 4;
+  }
   return LOGIC_WORD;
 }
 
@@ -157,4 +200,5 @@ homepage[ ]+ { BEGIN IDENTIFIER; return HOMEPAGE; }
 }
 
 [ \n]
+\(.*\)
 %%

@@ -17,8 +17,12 @@ Green
 Player
 Blue
 
+Swapper
+green
+
 Crate
 Orange
+
 
 Temp
 transparent
@@ -33,6 +37,7 @@ P = Player
 * = Crate
 @ = Crate and Target
 O = Target
+S = Swapper
 
 
 (=======)
@@ -44,17 +49,16 @@ O = Target
 ================
 COLLISIONLAYERS
 ================
-
 Background
 Target
-Player, Wall, Crate
-
+player, Crate
 ======
 RULES
 ======
 
-late [ Player | Crate ] -> [ Crate | Temp ]
-late [ Temp ] -> [ Player ]
+[ Player | Swapper ] -> [ Swapper | Player ]
+
+([ up Player | Crate ] -> [ up Player | up Crate ])
 
 ==============
 WINCONDITIONS
@@ -66,13 +70,13 @@ All Target on Crate
 LEVELS
 =======
 
-#######
-#.....#
-#.#P..#
-#...*.#
-#.....#
-#..*..#
-#######
+########
+#......#
+#..P...#
+#...*..#
+#......#
+#..*...#
+########
 
 
 ####..

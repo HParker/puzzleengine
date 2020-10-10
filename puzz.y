@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "puzzleData.h"
-#define MAX_STRING 100
 extern FILE *yyin;
 PuzzleData pd;
 int yylex();
@@ -13,15 +12,19 @@ int yyerror(const char *p) { printf("ERROR: %s\n", p); return 1; }
 %union {
   char * identifier;
   char cell;
+  int enumValue;
 };
 
-%token TITLE AUTHOR HOMEPAGE MODEHEADER EQUALS END_LAYER
-%token  <identifier> ID OBJID COLOR LEGEND_VALUE LAYER_NAME DIRECTION LOGIC_WORD EXECUTION_TIME
+%token TITLE AUTHOR HOMEPAGE MODEHEADER EQUALS END_LAYER END_OF_RULE
+%token  <identifier> ID OBJID COLOR LEGEND_VALUE LAYER_NAME
 
 // Rules tokens (ALSO USES OBJID)
-%token OPEN_SQUARE CLOSE_SQUARE VIRTICAL_PIPE MOVE_RIGHT MOVE_UP MOVE_LEFT MOVE_DOWN ARROW
-%token END_OF_RULE LEVEL_EOL
+%token MOVE_RIGHT MOVE_UP MOVE_LEFT MOVE_DOWN
+%token OPEN_SQUARE CLOSE_SQUARE VIRTICAL_PIPE ARROW
+%token LEVEL_EOL
 %token <cell> LEVEL_CELL LEGEND_ID
+// ADD EXECUTION_TIME
+%token <enumValue> LOGIC_WORD DIRECTION EXECUTION_TIME
 
 %%
 puzzlescript:
@@ -54,7 +57,9 @@ homepage: HOMEPAGE ID {
 
 modechange: MODEHEADER ID MODEHEADER { printf("FOUND MODE CHANGE '%s'\n", $2); }
 
-object_definitions: object_definition object_definitions | object_definition
+object_definitions: object_definition object_definitions
+                  | object_definition
+
 object_definition: OBJID COLOR {
   pd.objects[pd.objectCount].name = strdup($1);
 
@@ -63,7 +68,9 @@ object_definition: OBJID COLOR {
   pd.objectCount++;
 }
 
-legend_lines: legend_line legend_lines | legend_line
+legend_lines: legend_line legend_lines
+            | legend_line
+
 legend_line: LEGEND_ID EQUALS LEGEND_VALUE {
   int found = 0;
   for (int i = 0; i < pd.objectCount; i++) {
@@ -79,42 +86,38 @@ legend_line: LEGEND_ID EQUALS LEGEND_VALUE {
   }
 }
 
-collision_lines: maybe_endlines collision_line collision_lines maybe_endlines | maybe_endlines collision_line maybe_endlines
-collision_line: layers END_LAYER {
+collision_lines: collision_line collision_lines
+               | collision_line
+
+collision_line: layer_objects END_LAYER {
   pd.layerCount++;
 }
-maybe_endlines: END_LAYER maybe_endlines | END_LAYER |
-layers: layer layers | layer
-layer: LAYER_NAME {
+
+layer_objects: layer_object layer_objects | layer_object
+
+layer_object: LAYER_NAME {
   pd.layers[pd.layerCount].objectNames[pd.layers[pd.layerCount].width] = strdup($1);
   pd.layers[pd.layerCount].width++;
 }
 
-rules: rule rules | rule
-maybe_newline: END_OF_RULE |
-rule: maybe_newline rule_side arrow rule_side END_OF_RULE {
+rules: rule rules
+     | rule
+
+
+rule: rule_prefix state_definitions arrow state_definitions
+    | state_definitions arrow state_definitions {
   pd.ruleCount++;
 }
+
 arrow: ARROW {
   pd.rules[pd.ruleCount].matchStateDone = 1;
 }
-rule_side: rule_with_global_direction | rule_with_execution_time | state_definitions
 
-rule_with_global_direction: DIRECTION state_definitions {
-  pd.rules[pd.ruleCount].directionConstraint = strdup($1);
-  pd.rules[pd.ruleCount].hasDirectionConstraint = 1;
-}
+rule_prefix: EXECUTION_TIME { pd.rules[pd.ruleCount].executionTime = $1; pd.rules[pd.ruleCount].directionConstraint = NONE; }
+           | DIRECTION { pd.rules[pd.ruleCount].executionTime = NORMAL; pd.rules[pd.ruleCount].directionConstraint = $1; }
 
-rule_with_execution_time: EXECUTION_TIME state_definitions {
-  if (strcasecmp($1, "late") == 0) {
-    pd.rules[pd.ruleCount].executionTime = LATE;
-  } else {
-    pd.rules[pd.ruleCount].executionTime = NORMAL;
-  }
-
-}
-
-state_definitions: state_definition state_definitions | state_definition
+state_definitions: state_definition state_definitions
+                 | state_definition
 state_definition: OPEN_SQUARE state_internals CLOSE_SQUARE {
   if (pd.rules[pd.ruleCount].matchStateDone == 0) {
     pd.rules[pd.ruleCount].matchStateCount++;
@@ -123,22 +126,25 @@ state_definition: OPEN_SQUARE state_internals CLOSE_SQUARE {
   }
 }
 
-state_internals: state_part VIRTICAL_PIPE state_internals | state_part
-state_part: state_part_with_direction | state_part_without_direction
+state_internals: state_part VIRTICAL_PIPE state_internals
+               | state_part
+
+state_part: state_part_with_direction
+          | state_part_without_direction
+
 state_part_with_direction: DIRECTION OBJID {
   if (pd.rules[pd.ruleCount].matchStateDone == 0) {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->matchStates[r->matchStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
-    rsp->direction = strdup($1);
+    rsp->direction = $1;
     rsp->identifier = strdup($2);
-    rsp->hasDirection = 1;
     rs->partCount++;
   } else {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->resultStates[r->resultStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
-    rsp->direction = strdup($1);
+    rsp->direction = $1;
     rsp->identifier = strdup($2);
     rs->partCount++;
   }
@@ -149,34 +155,38 @@ state_part_without_direction: OBJID {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->matchStates[r->matchStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
+    rsp->direction = 10; // NONE
     rsp->identifier = strdup($1);
     rs->partCount++;
   } else {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->resultStates[r->resultStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
+    rsp->direction = 10; // NONE
     rsp->identifier = strdup($1);
     rs->partCount++;
   }
 }
 
-winconditions: wincondition winconditions | wincondition
-wincondition: wincondition_unconditional | wincondition_conditional
+winconditions: wincondition winconditions
+             | wincondition
+wincondition: wincondition_unconditional
+            | wincondition_conditional
 wincondition_conditional: LOGIC_WORD OBJID LOGIC_WORD OBJID {
   pd.winConditions[pd.winConditionCount].hasOnQualifier = 1;
-  pd.winConditions[pd.winConditionCount].winQualifier = strdup($1);
+  pd.winConditions[pd.winConditionCount].winQualifier = $1;
   pd.winConditions[pd.winConditionCount].winIdentifier = strdup($2);
   pd.winConditions[pd.winConditionCount].onIndentifier = strdup($4);
   pd.winConditionCount++;
 }
 wincondition_unconditional: LOGIC_WORD OBJID {
-  pd.winConditions[pd.winConditionCount].winQualifier = strdup($1);
+  pd.winConditions[pd.winConditionCount].winQualifier = $1;
   pd.winConditions[pd.winConditionCount].winIdentifier = strdup($2);
   pd.winConditionCount++;
 }
 
 levels: level levels | level
-level:  maybe_level_newlines rows maybe_level_newlines {
+level:  any_level_newlines rows {
   pd.levelCount++;
 }
 rows: row rows | row
@@ -193,5 +203,5 @@ cell: LEVEL_CELL {
   pd.levels[pd.levelCount].cellIndex++;
 
 }
-maybe_level_newlines: LEVEL_EOL maybe_level_newlines | LEVEL_EOL |
+any_level_newlines: LEVEL_EOL any_level_newlines | LEVEL_EOL
 %%
