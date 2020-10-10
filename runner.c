@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 /* #include "puzzleData.h" */
-#include "puzz.tab.c"
+#include "puzzle.tab.c"
 
 typedef struct ToMove {
   int from;

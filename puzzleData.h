@@ -4,10 +4,16 @@ typedef struct Object {
   char legendKey;
   int height; // TODO these can be global
   int width;
-  int shape[25];
+  char sprite[25];
   int colorCount;
   char * colors[9];
 } Object;
+
+typedef struct Legend {
+  char key;
+  int valueCount;
+  char * values[10];
+} Legend;
 
 typedef struct Layer {
   int width;
@@ -75,7 +81,7 @@ typedef struct Rule {
 typedef enum LevelType
   {
    SQUARES,
-   MESSAGE
+   MESSAGE_TEXT
   } LevelType;
 
 typedef struct Level {
@@ -126,8 +132,11 @@ typedef struct PuzzleData {
   Object objects[100];
 
   // sounds
-
   // blah. I don't wanna do it...
+
+  // legend
+  int legendCount;
+  Legend legend[100];
 
   // collision layers
   int layerCount;

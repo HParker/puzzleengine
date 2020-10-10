@@ -1,5 +1,5 @@
 TODAY:
-- swap some strings with enums from the parser
+- redo legend as key -> list of objects
 - redo the current level as "layers"
 
 TODO:

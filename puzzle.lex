@@ -1,7 +1,7 @@
 %{
 #include <stdio.h>
 #include <string.h>
-#include "puzz.tab.h"
+#include "puzzle.tab.h"
   int modeToEnter;
 %}
 
@@ -9,12 +9,15 @@
 
 %s IDENTIFIER
 %x MODE
+%x COMMENT
 %s OBJECT
 %s LEGEND
+%s SOUNDS
 %s COLLISIONLAYERS
 %s RULES
 %s WINCONDITIONS
 %s LEVELS
+%s MESSAGE_CONTENTS
 
 direction (action|up|down|left|right|\^|v|\<|\>|moving|stationary|parallel|perpendicular|horizontal|orthogonal|vertical|no|randomdir|random)
 
@@ -24,19 +27,18 @@ color (black|white|lightgray|lightgrey|gray|grey|darkgray|darkgrey|red|darkred|l
 title[ ]+ { BEGIN IDENTIFIER; return TITLE; }
 author[ ]+ { BEGIN IDENTIFIER; return AUTHOR; }
 homepage[ ]+ { BEGIN IDENTIFIER; return HOMEPAGE; }
-<IDENTIFIER>[a-zA-Z. ]+$ {
+<IDENTIFIER>[a-zA-Z\./ ]+$ {
   BEGIN INITIAL;
   yylval.identifier = strdup(yytext);
-  strcpy(yylval.identifier, yytext);
   return ID;
 }
 
-={2,}\n {
+={2,}$ {
   BEGIN MODE;
   return MODEHEADER;
 }
 
-<MODE>[a-zA-Z. ]+$ {
+<MODE>[a-zA-Z\. ]+$ {
   yylval.identifier = malloc(sizeof(char) * 100);
   strcpy(yylval.identifier, yytext);
 
@@ -44,6 +46,8 @@ homepage[ ]+ { BEGIN IDENTIFIER; return HOMEPAGE; }
     modeToEnter = OBJECT;
   } else if (strcmp(yytext, "LEGEND") == 0) {
     modeToEnter = LEGEND;
+  } else if (strcmp(yytext, "SOUNDS") == 0) {
+    modeToEnter = SOUNDS;
   } else if (strcmp(yytext, "COLLISIONLAYERS") == 0) {
     modeToEnter = COLLISIONLAYERS;
   } else if (strcmp(yytext, "RULES") == 0) {
@@ -56,7 +60,7 @@ homepage[ ]+ { BEGIN IDENTIFIER; return HOMEPAGE; }
 
   return ID;
  }
-<MODE>={2,}\n {
+<MODE>={2,}[\n]+ {
   BEGIN modeToEnter;
   return MODEHEADER;
 }
@@ -71,18 +75,33 @@ homepage[ ]+ { BEGIN IDENTIFIER; return HOMEPAGE; }
   return OBJID;
 }
 
+<OBJECT>[0-9.] {
+  yylval.cell = yytext[0];
+  return SPRITE_CELL;
+}
+
 
 <LEGEND>^[a-zA-Z\.#*@] {
+                        printf("KEY SENT %c\n", yytext[0]);
   yylval.cell = yytext[0];
   return LEGEND_ID;
 }
 
-<LEGEND>= { return EQUALS; }
+<LEGEND>= { printf("EQ SENT =\n"); return EQUALS; }
 
-<LEGEND>[a-zA-Z]+$ {
+<LEGEND>and // ignore and
+
+<LEGEND>[\n] { return END_LEGEND_LINE; }
+
+<LEGEND>[a-zA-Z]+ {
+                   printf("VAL SENT %s\n", yytext);
   yylval.identifier = strdup(yytext);
   return LEGEND_VALUE;
 }
+
+
+
+<SOUNDS>[^=]+
 
 <COLLISIONLAYERS>[A-Za-z]+ {
   yylval.identifier = strdup(yytext);
@@ -162,7 +181,7 @@ homepage[ ]+ { BEGIN IDENTIFIER; return HOMEPAGE; }
 <RULES>-> {
   return ARROW;
 }
-<RULES>[a-zA-Z.]+ {
+<RULES>[a-zA-Z0-9.]+ {
   yylval.identifier = strdup(yytext);
   return OBJID;
 }
@@ -199,6 +218,25 @@ homepage[ ]+ { BEGIN IDENTIFIER; return HOMEPAGE; }
   return LEVEL_EOL;
 }
 
+<LEVELS>message[ ]+ {
+  BEGIN MESSAGE_CONTENTS;
+  return MESSAGE;
+}
+
+<MESSAGE_CONTENTS>[a-zA-Z.0-9\! ]+ {
+  BEGIN LEVELS;
+  yylval.identifier = strdup(yytext);
+  return ID;
+}
+
 [ \n]
-\(.*\)
+\( {
+  BEGIN COMMENT;
+}
+
+<COMMENT>[^\)]* {
+ }
+<COMMENT>\) {
+  BEGIN INITIAL;
+}
 %%
