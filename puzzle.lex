@@ -7,9 +7,10 @@
 
 %option noyywrap caseless
 
-%s IDENTIFIER
 %x MODE
-%x COMMENT
+
+%s IDENTIFIER
+%s COMMENT
 %s OBJECT
 %s LEGEND
 %s SOUNDS
@@ -24,23 +25,22 @@ direction (action|up|down|left|right|\^|v|\<|\>|moving|stationary|parallel|perpe
 color (black|white|lightgray|lightgrey|gray|grey|darkgray|darkgrey|red|darkred|lightred|brown|darkbrown|lightbrown|orange|yellow|green|darkgreen|lightgreen|blue|lightblue|darkblue|purple|pink|transparent)
 
 %%
-title[ ]+ { BEGIN IDENTIFIER; return TITLE; }
-author[ ]+ { BEGIN IDENTIFIER; return AUTHOR; }
-homepage[ ]+ { BEGIN IDENTIFIER; return HOMEPAGE; }
-<IDENTIFIER>[a-zA-Z\./ ]+$ {
+^title[ ]+ { BEGIN IDENTIFIER; return TITLE; }
+^author[ ]+ { BEGIN IDENTIFIER; return AUTHOR; }
+^homepage[ ]+ { BEGIN IDENTIFIER; return HOMEPAGE; }
+<IDENTIFIER>[a-zA-Z\./ ]+/[\n] {
   BEGIN INITIAL;
   yylval.identifier = strdup(yytext);
   return ID;
 }
 
-={2,}$ {
+={2,}[\n]+ {
   BEGIN MODE;
   return MODEHEADER;
 }
 
-<MODE>[a-zA-Z\. ]+$ {
-  yylval.identifier = malloc(sizeof(char) * 100);
-  strcpy(yylval.identifier, yytext);
+<MODE>[a-zA-Z\.]+ {
+  yylval.identifier = strdup(yytext);
 
   if (strcmp(yytext, "OBJECTS") == 0) {
     modeToEnter = OBJECT;
@@ -56,10 +56,13 @@ homepage[ ]+ { BEGIN IDENTIFIER; return HOMEPAGE; }
     modeToEnter = WINCONDITIONS;
   } else if (strcmp(yytext, "LEVELS") == 0) {
     modeToEnter = LEVELS;
+  } else {
+    printf("DIDN'T MATCH A MODE\n");
   }
 
   return ID;
  }
+<MODE>[\n]+
 <MODE>={2,}[\n]+ {
   BEGIN modeToEnter;
   return MODEHEADER;
@@ -82,26 +85,22 @@ homepage[ ]+ { BEGIN IDENTIFIER; return HOMEPAGE; }
 
 
 <LEGEND>^[a-zA-Z\.#*@] {
-                        printf("KEY SENT %c\n", yytext[0]);
   yylval.cell = yytext[0];
   return LEGEND_ID;
 }
 
-<LEGEND>= { printf("EQ SENT =\n"); return EQUALS; }
+<LEGEND>= { return EQUALS; }
 
 <LEGEND>and // ignore and
 
 <LEGEND>[\n] { return END_LEGEND_LINE; }
 
 <LEGEND>[a-zA-Z]+ {
-                   printf("VAL SENT %s\n", yytext);
   yylval.identifier = strdup(yytext);
   return LEGEND_VALUE;
 }
 
-
-
-<SOUNDS>[^=]+
+<SOUNDS>[^=]+/[\n]+
 
 <COLLISIONLAYERS>[A-Za-z]+ {
   yylval.identifier = strdup(yytext);
@@ -214,7 +213,7 @@ homepage[ ]+ { BEGIN IDENTIFIER; return HOMEPAGE; }
   return LEVEL_CELL;
 }
 
-<LEVELS>[\n] {
+<LEVELS>[\n]+ {
   return LEVEL_EOL;
 }
 
@@ -223,20 +222,21 @@ homepage[ ]+ { BEGIN IDENTIFIER; return HOMEPAGE; }
   return MESSAGE;
 }
 
-<MESSAGE_CONTENTS>[a-zA-Z.0-9\! ]+ {
+<MESSAGE_CONTENTS>[a-zA-Z.0-9\! ]+/[\n]+ {
   BEGIN LEVELS;
   yylval.identifier = strdup(yytext);
   return ID;
 }
 
-[ \n]
+[ \n] { /* do nothing */ }
+
 \( {
   BEGIN COMMENT;
 }
 
 <COMMENT>[^\)]* {
  }
-<COMMENT>\) {
+<COMMENT>\)[\n]+ {
   BEGIN INITIAL;
 }
 %%

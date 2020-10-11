@@ -58,7 +58,7 @@ homepage: HOMEPAGE ID {
   pd.homepage = strdup($2);
 }
 
-modechange: MODEHEADER ID MODEHEADER { printf("FOUND MODE CHANGE '%s'\n", $2); }
+modechange: MODEHEADER ID MODEHEADER { /* printf("FOUND MODE CHANGE '%s'\n", $2); */ }
 
 object_definitions: object_definition object_definitions
                   | object_definition
@@ -187,7 +187,6 @@ state_part: state_part_with_direction
           | state_part_without_direction
 
 state_part_with_direction: DIRECTION OBJID {
-                               printf("moving id: %s\n", $2);
   if (pd.rules[pd.ruleCount].matchStateDone == 0) {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->matchStates[r->matchStateCount];
@@ -206,7 +205,6 @@ state_part_with_direction: DIRECTION OBJID {
 }
 
 state_part_without_direction: OBJID {
-    printf("id: %s\n", $1);
   if (pd.rules[pd.ruleCount].matchStateDone == 0) {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->matchStates[r->matchStateCount];

@@ -154,3 +154,16 @@ typedef struct PuzzleData {
   int levelCount;
   Level levels[100];
 } PuzzleData;
+
+typedef struct ToMove {
+  int from;
+  int to;
+} ToMove;
+
+typedef struct Runtime {
+  int levelIndex;
+  Level currentLevel;
+  int toMoveCount;
+  ToMove toMove[100];
+  // move history?
+} Runtime;

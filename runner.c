@@ -1,20 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-/* #include "puzzleData.h" */
 #include "puzzle.tab.c"
-
-typedef struct ToMove {
-  int from;
-  int to;
-} ToMove;
-
-typedef struct Runtime {
-  int levelIndex;
-  Level currentLevel;
-  int toMoveCount;
-  ToMove toMove[100];
-  // move history?
-} Runtime;
 
 void addToMove(Runtime * rt, int from, int to)  {
   printf("adding '%c' f:%i t:%i\n", rt->currentLevel.cells[from], from, to);
@@ -288,7 +274,7 @@ int main(int argc, char ** argv) {
 
   Runtime rt = startGame();
 
-  char input[100];
+  /* char input[100]; */
   /* while (1) { */
   /*   render(&rt); */
   /*   printf("Enter Move: "); */
