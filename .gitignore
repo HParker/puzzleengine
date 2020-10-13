@@ -1,1 +1,8 @@
 *.o
+puzzle.tab.c
+puzzle.tab.h
+lex.yy.c
+puzzlescript
+test
+test.dSYM/
+puzzles/

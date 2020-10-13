@@ -12,7 +12,7 @@ typedef struct Object {
 typedef struct Legend {
   char key;
   int valueCount;
-  char * values[10];
+  char * values[100];
 } Legend;
 
 typedef struct Layer {
@@ -89,7 +89,7 @@ typedef struct Level {
   int height;
   int width;
   int cellIndex;
-  char cells[100];
+  char cells[1000];
   char * message;
 } Level;
 
@@ -126,6 +126,7 @@ typedef struct PuzzleData {
 
   // debug
   int verboseLogging;
+  int debug;
 
   // Objects (with Legend tag)
   int objectCount;

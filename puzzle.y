@@ -13,18 +13,25 @@ int spriteIndex = 0;
 %union {
   char * identifier;
   char cell;
+  float decimal;
   int enumValue;
 };
 
-%token TITLE AUTHOR HOMEPAGE MODEHEADER EQUALS END_LAYER END_OF_RULE MESSAGE END_LEGEND_LINE
+%token TITLE AUTHOR HOMEPAGE COLOR_PALETTE AGAIN_INTERVAL BACKGROUND_COLOR
+%token FLICKSCREEN KEY_REPEAT_INTERVAL NOACTION NOREPEAT_ACTION NOUNDO NORESTART
+%token REALTIME_INTERVAL REQUIRE_PLAYER_MOVEMENT RUN_RULES_ON_LEVEL_START
+%token SCANLINE TEXT_COLOR THROTTLE_MOVEMENT ZOOMSCREEN
+%token DEBUG VERBOSE_LOGGING
+
+%token MODEHEADER EQUALS END_LAYER END_OF_RULE MESSAGE END_LEGEND_LINE
 %token  <identifier> ID OBJID COLOR LEGEND_VALUE LAYER_NAME
+%token  <decimal> DECIMAL
 
 // Rules tokens (ALSO USES OBJID)
 %token MOVE_RIGHT MOVE_UP MOVE_LEFT MOVE_DOWN
 %token OPEN_SQUARE CLOSE_SQUARE VIRTICAL_PIPE ARROW
 %token LEVEL_EOL
 %token <cell> LEVEL_CELL LEGEND_ID SPRITE_CELL
-// ADD EXECUTION_TIME
 %token <enumValue> LOGIC_WORD DIRECTION EXECUTION_TIME
 
 %%
@@ -46,7 +53,27 @@ puzzlescript:
                 levels
         ;
 
-preamble: title author homepage
+preamble: preamble_option preamble | preamble_option
+
+preamble_option: title
+               | author
+               | homepage
+               | color_palette
+               | again_interval
+               | background_color
+               | flickscreen
+               | key_repeat_interval
+               | noaction
+               | norepeat_action
+               | noundo
+               | norestart
+               | scanline
+               | text_color
+               | throttle_movement
+               | zoomscreen
+               | debug
+               | verbose_logging
+               | require_player_movement
 
 title: TITLE ID {
   pd.title = strdup($2);
@@ -58,26 +85,54 @@ homepage: HOMEPAGE ID {
   pd.homepage = strdup($2);
 }
 
-modechange: MODEHEADER ID MODEHEADER { /* printf("FOUND MODE CHANGE '%s'\n", $2); */ }
+require_player_movement: REQUIRE_PLAYER_MOVEMENT { pd.requirePlayerMovement = 1; }
+
+color_palette: COLOR_PALETTE ID { pd.colorPalette = strdup($2); }
+        ;
+again_interval: AGAIN_INTERVAL ID { pd.againInterval = 0.1f; }
+        ;
+background_color: BACKGROUND_COLOR ID { pd.backgroundColor = strdup($2); }
+
+        ;
+flickscreen: FLICKSCREEN ID { yyerror("FLICKSCREEN IS NOT YET SUPPORTED\n"); }
+        ;
+key_repeat_interval: KEY_REPEAT_INTERVAL DECIMAL { pd.keyRepeatInterval = 0.1f; }
+
+        ;
+noaction: NOACTION { pd.noAction = 1; }
+        ;
+norepeat_action: NOREPEAT_ACTION { pd.noRepeatAction = 1; }
+
+        ;
+noundo: NOUNDO { pd.noUndo = 1; }
+        ;
+norestart: NORESTART { pd.noRestart = 1; }
+        ;
+scanline: SCANLINE { pd.scanLine = 1; }
+        ;
+text_color: TEXT_COLOR ID { pd.textColor = strdup($2); }
+        ;
+throttle_movement: THROTTLE_MOVEMENT ID { pd.throttleMovement = 1; }
+
+        ;
+zoomscreen: ZOOMSCREEN ID { yyerror("ZOOMSCREEN IS NOT YET SUPPORTED\n"); }
+        ;
+debug: DEBUG { pd.debug = 1; }
+        ;
+verbose_logging: VERBOSE_LOGGING { pd.verboseLogging = 1; }
+
+        ;
+
+modechange: MODEHEADER ID MODEHEADER
 
 object_definitions: object_definition object_definitions
                   | object_definition
 
-object_definition: basic_object_definition
-                 | sprite_object_definition
+object_definition: object_name colors sprite { pd.objectCount++; }
+                 | object_name color { pd.objectCount++; }
 
-basic_object_definition: OBJID COLOR {
-  pd.objects[pd.objectCount].name = strdup($1);
-
-  pd.objects[pd.objectCount].colors[pd.objects[pd.objectCount].colorCount] = strdup($2);
-  pd.objects[pd.objectCount].colorCount++;
-  pd.objectCount++;
-}
-
-sprite_object_definition: OBJID colors sprite {
-  pd.objects[pd.objectCount].name = strdup($1);
-  pd.objectCount++;
-}
+object_name: OBJID SPRITE_CELL { pd.objects[pd.objectCount].name = strdup($1); }
+           | OBJID { pd.objects[pd.objectCount].name = strdup($1); }
 
 colors: color colors | color
 
@@ -103,28 +158,16 @@ legend_lines: legend_line legend_lines
 legend_line: LEGEND_ID EQUALS legend_values end_legend_line {
   pd.legend[pd.legendCount].key = $1;
   pd.legendCount++;
-  /* int found = 0; */
-  /* for (int i = 0; i < pd.objectCount; i++) { */
-  /*   if (strcmp(pd.objects[i].name, $3) == 0) { */
-  /*     found = 1; */
-  /*     pd.objects[i].legendKey = $1; */
-  /*   } */
-  /* } */
-  /* if (found == 0) { */
-  /*   char * errorMessage = malloc(sizeof(char) * 100); */
-  /*   sprintf(errorMessage, "legend line references object '%s' that is not defined in the list of objects\n", $3); */
-  /*   yyerror(errorMessage); */
-  /* } */
 }
 
 end_legend_line: END_LEGEND_LINE end_legend_line | END_LEGEND_LINE
 
 legend_values: legend_value legend_values
-        |       legend_value
+             | legend_value
 
 legend_value: LEGEND_VALUE {
-                  pd.legend[pd.legendCount].values[pd.legend[pd.legendCount].valueCount] = strdup($1);
-                  pd.legend[pd.legendCount].valueCount++;
+  pd.legend[pd.legendCount].values[pd.legend[pd.legendCount].valueCount] = strdup($1);
+  pd.legend[pd.legendCount].valueCount++;
 }
 
 sounds: // Nothing for now
@@ -144,16 +187,19 @@ layer_object: LAYER_NAME {
   pd.layers[pd.layerCount].width++;
 }
 
-rules: rule rules
-     | rule
+rules: rule_line  rules
+     | rule_line
 
 
-rule: rule_prefix state_definitions arrow state_definitions rule_postfix
-    | rule_prefix state_definitions arrow state_definitions
-    | state_definitions arrow state_definitions rule_postfix
-    | state_definitions arrow state_definitions {
-  pd.ruleCount++;
-}
+rule_line:      rule END_OF_RULE
+        ;
+
+rule: rule_prefix rule_infix rule_postfix { pd.ruleCount++; }
+    | rule_prefix rule_infix { pd.ruleCount++; }
+    |             rule_infix rule_postfix { pd.ruleCount++; }
+    | state_definitions arrow state_definitions { pd.ruleCount++; }
+
+rule_infix: state_definitions arrow state_definitions
 
 arrow: ARROW {
   pd.rules[pd.ruleCount].matchStateDone = 1;
@@ -168,10 +214,11 @@ rule_prefix: EXECUTION_TIME {
   pd.rules[pd.ruleCount].directionConstraint = $1;
 }
 
-rule_postfix: OBJID // sfx
+rule_postfix: OBJID { printf("sfx don't work yet\n"); }// sfx
 
 state_definitions: state_definition state_definitions
                  | state_definition
+
 state_definition: OPEN_SQUARE state_internals CLOSE_SQUARE {
   if (pd.rules[pd.ruleCount].matchStateDone == 0) {
     pd.rules[pd.ruleCount].matchStateCount++;
@@ -185,6 +232,7 @@ state_internals: state_part VIRTICAL_PIPE state_internals
 
 state_part: state_part_with_direction
           | state_part_without_direction
+          |
 
 state_part_with_direction: DIRECTION OBJID {
   if (pd.rules[pd.ruleCount].matchStateDone == 0) {
@@ -225,8 +273,10 @@ state_part_without_direction: OBJID {
 winconditions: wincondition winconditions
              | wincondition
              | // PLEASE DON'T GET MAD BISON, SOMETIMTES YOU CAN'T WIN
+
 wincondition: wincondition_unconditional
             | wincondition_conditional
+
 wincondition_conditional: LOGIC_WORD OBJID LOGIC_WORD OBJID {
   pd.winConditions[pd.winConditionCount].hasOnQualifier = 1;
   pd.winConditions[pd.winConditionCount].winQualifier = $1;
@@ -234,15 +284,20 @@ wincondition_conditional: LOGIC_WORD OBJID LOGIC_WORD OBJID {
   pd.winConditions[pd.winConditionCount].onIndentifier = strdup($4);
   pd.winConditionCount++;
 }
+
 wincondition_unconditional: LOGIC_WORD OBJID {
   pd.winConditions[pd.winConditionCount].winQualifier = $1;
   pd.winConditions[pd.winConditionCount].winIdentifier = strdup($2);
   pd.winConditionCount++;
 }
 
-levels: level any_level_newlines levels | level
-level: MESSAGE ID LEVEL_EOL
-     | rows {
+
+
+levels: level levels
+      | level
+
+level: MESSAGE ID any_level_newlines
+     | rows any_level_newlines {
   pd.levelCount++;
 }
 rows: row rows | row
@@ -259,5 +314,5 @@ cell: LEVEL_CELL {
   pd.levels[pd.levelCount].cellIndex++;
 
 }
-any_level_newlines: LEVEL_EOL any_level_newlines | LEVEL_EOL
+any_level_newlines: LEVEL_EOL any_level_newlines | LEVEL_EOL |
 %%
