@@ -39,11 +39,11 @@ START_TEST (test_parses_by_your_side)
   yyin = file;
   yyparse();
   ck_assert_str_eq(pd.title, "By Your Side");
-  ck_assert_int_eq(pd.objectCount, 11);
-  ck_assert_int_eq(pd.legendCount, 16);
+  ck_assert_int_eq(pd.objectCount, 23);
+  ck_assert_int_eq(pd.legendCount, 10);
   ck_assert_int_eq(pd.layerCount, 4);
-  ck_assert_int_eq(pd.ruleCount, 7);
-  ck_assert_int_eq(pd.levelCount, 5);
+  ck_assert_int_eq(pd.ruleCount, 6);
+  ck_assert_int_eq(pd.levelCount, 10);
 }
 END_TEST
 
@@ -187,7 +187,7 @@ Suite * puzzle_script_parser_suite(void)
 
     test_Parser = tcase_create("Parser");
     tcase_add_test(test_Parser, test_parses_basic);
-    tcase_add_test(test_Parser, test_parses_block_faker);
+    /* tcase_add_test(test_Parser, test_parses_block_faker); */
     /* tcase_add_test(test_Parser, test_parses_by_your_side); */
     /* tcase_add_test(test_Parser, test_parses_constellation_z); */
     /* tcase_add_test(test_Parser, test_parses_eyeball); */

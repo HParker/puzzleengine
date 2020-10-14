@@ -23,6 +23,8 @@ int commentNestingLevel = 0;
 %s LEVELS
 %s MESSAGE_CONTENTS
 
+gliph [\.0-9a-zA-Z\*#,@`'~]
+
 direction (action|up|down|left|right|\^|v|\<|\>|moving|stationary|parallel|perpendicular|horizontal|orthogonal|vertical|no|randomdir|random)
 
 colors (black|white|lightgray|lightgrey|gray|grey|darkgray|darkgrey|red|darkred|lightred|brown|darkbrown|lightbrown|orange|yellow|green|darkgreen|lightgreen|blue|lightblue|darkblue|purple|pink|transparent)
@@ -69,7 +71,6 @@ color (color|colour)
 
 <MODE>[a-zA-Z\.]+ {
   yylval.identifier = strdup(yytext);
-
   if (strcmp(yytext, "OBJECTS") == 0) {
     modeToEnter = OBJECT;
   } else if (strcmp(yytext, "LEGEND") == 0) {
@@ -107,13 +108,13 @@ color (color|colour)
 }
 
 
-<OBJECT>[\.0-9a-zA-Z] {
+<OBJECT>{gliph} {
   yylval.cell = yytext[0];
   return SPRITE_CELL;
 }
 
-<LEGEND>^[a-zA-Z\.#*@]+ {
-  yylval.cell = yytext[0];
+<LEGEND>^[a-zA-Z0-9_\.#*@]+/[ ]*= {
+  yylval.identifier = yytext;
   return LEGEND_ID;
 }
 
@@ -123,7 +124,7 @@ color (color|colour)
 
 <LEGEND>[\n] { return END_LEGEND_LINE; }
 
-<LEGEND>[a-zA-Z]+ {
+<LEGEND>[a-zA-Z0-9_]+ {
   yylval.identifier = strdup(yytext);
   return LEGEND_VALUE;
 }
@@ -208,9 +209,14 @@ color (color|colour)
 <RULES>-> {
   return ARROW;
 }
-<RULES>[a-zA-Z0-9.]+ {
+<RULES>[a-zA-Z0-9_.]+ {
   yylval.identifier = strdup(yytext);
   return OBJID;
+}
+
+<RULES>[a-zA-Z0-9_\. ]+$ {
+  yylval.identifier = strdup(yytext);
+  return RULE_POSTFIX;
 }
 
 <RULES>\n+ {
@@ -240,7 +246,7 @@ color (color|colour)
   return OBJID;
 }
 
-<LEVELS>[a-zA-Z@\*\.#] {
+<LEVELS>{gliph} {
   yylval.cell = yytext[0];
   return LEVEL_CELL;
 }

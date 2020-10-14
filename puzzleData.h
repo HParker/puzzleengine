@@ -10,7 +10,7 @@ typedef struct Object {
 } Object;
 
 typedef struct Legend {
-  char key;
+  char * key;
   int valueCount;
   char * values[100];
 } Legend;

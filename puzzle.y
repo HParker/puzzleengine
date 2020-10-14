@@ -24,14 +24,14 @@ int spriteIndex = 0;
 %token DEBUG VERBOSE_LOGGING
 
 %token MODEHEADER EQUALS END_LAYER END_OF_RULE MESSAGE END_LEGEND_LINE
-%token  <identifier> ID OBJID COLOR LEGEND_VALUE LAYER_NAME
+%token  <identifier> ID OBJID COLOR LEGEND_VALUE LAYER_NAME LEGEND_ID RULE_POSTFIX
 %token  <decimal> DECIMAL
 
 // Rules tokens (ALSO USES OBJID)
 %token MOVE_RIGHT MOVE_UP MOVE_LEFT MOVE_DOWN
 %token OPEN_SQUARE CLOSE_SQUARE VIRTICAL_PIPE ARROW
 %token LEVEL_EOL
-%token <cell> LEVEL_CELL LEGEND_ID SPRITE_CELL
+%token <cell> LEVEL_CELL SPRITE_CELL
 %token <enumValue> LOGIC_WORD DIRECTION EXECUTION_TIME
 
 %%
@@ -191,7 +191,10 @@ rules: rule_line  rules
      | rule_line
 
 
-rule_line:      rule END_OF_RULE
+rule_line: any_eor rule END_OF_RULE any_eor
+        ;
+
+any_eor:        END_OF_RULE any_eor | END_OF_RULE |
         ;
 
 rule: rule_prefix rule_infix rule_postfix { pd.ruleCount++; }
@@ -200,6 +203,7 @@ rule: rule_prefix rule_infix rule_postfix { pd.ruleCount++; }
     | state_definitions arrow state_definitions { pd.ruleCount++; }
 
 rule_infix: state_definitions arrow state_definitions
+
 
 arrow: ARROW {
   pd.rules[pd.ruleCount].matchStateDone = 1;
@@ -214,10 +218,11 @@ rule_prefix: EXECUTION_TIME {
   pd.rules[pd.ruleCount].directionConstraint = $1;
 }
 
-rule_postfix: OBJID { printf("sfx don't work yet\n"); }// sfx
+rule_postfix: RULE_POSTFIX { printf("sfx don't work yet\n"); }// sfx
 
 state_definitions: state_definition state_definitions
                  | state_definition
+                 | rule_postfix
 
 state_definition: OPEN_SQUARE state_internals CLOSE_SQUARE {
   if (pd.rules[pd.ruleCount].matchStateDone == 0) {
@@ -234,41 +239,56 @@ state_part: state_part_with_direction
           | state_part_without_direction
           |
 
-state_part_with_direction: DIRECTION OBJID {
+state_part_with_direction: DIRECTION objects_on_same_square {
   if (pd.rules[pd.ruleCount].matchStateDone == 0) {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->matchStates[r->matchStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
     rsp->direction = $1;
-    rsp->identifier = strdup($2);
     rs->partCount++;
   } else {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->resultStates[r->resultStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
     rsp->direction = $1;
-    rsp->identifier = strdup($2);
     rs->partCount++;
   }
 }
 
-state_part_without_direction: OBJID {
+state_part_without_direction: objects_on_same_square {
   if (pd.rules[pd.ruleCount].matchStateDone == 0) {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->matchStates[r->matchStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
     rsp->direction = 10; // NONE
-    rsp->identifier = strdup($1);
     rs->partCount++;
   } else {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->resultStates[r->resultStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
     rsp->direction = 10; // NONE
-    rsp->identifier = strdup($1);
     rs->partCount++;
   }
 }
+
+objects_on_same_square: object objects_on_same_square | object
+
+object: OBJID {
+  if (pd.rules[pd.ruleCount].matchStateDone == 0) {
+    Rule * r = &pd.rules[pd.ruleCount];
+    RuleState * rs = &r->matchStates[r->matchStateCount];
+    RuleStatePart * rsp = &rs->parts[rs->partCount];
+    rsp->direction = 10; // NONE
+    rsp->identifier = strdup($1);
+  } else {
+    Rule * r = &pd.rules[pd.ruleCount];
+    RuleState * rs = &r->resultStates[r->resultStateCount];
+    RuleStatePart * rsp = &rs->parts[rs->partCount];
+    rsp->direction = 10; // NONE
+    rsp->identifier = strdup($1);
+  }
+}
+
 
 winconditions: wincondition winconditions
              | wincondition
