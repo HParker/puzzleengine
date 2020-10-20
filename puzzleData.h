@@ -11,8 +11,9 @@ typedef struct Object {
 
 typedef struct Legend {
   char * key;
-  int valueCount;
-  char * values[100];
+  int objectRelation; // TODO: enum unknown = 0, and = 1, or = 2
+  int objectCount;
+  int objectIndex[100];
 } Legend;
 
 typedef struct Layer {
@@ -49,7 +50,8 @@ typedef enum Direction
    REL_DOWN   = 7,
    REL_LEFT   = 8,
    REL_RIGHT  = 9,
-   NONE       = 10
+   USE        = 10,
+   NONE       = 11
   } Direction;
 
 typedef enum ExecutionTime
@@ -60,7 +62,7 @@ typedef enum ExecutionTime
 
 typedef struct RuleStatePart {
   Direction direction;
-  char * identifier;
+  char * identifier; // TODO: this can probably be an object or legend id
 } RuleStatePart;
 
 typedef struct RuleState {
@@ -157,13 +159,25 @@ typedef struct PuzzleData {
 } PuzzleData;
 
 typedef struct ToMove {
-  int from;
-  int to;
+  int objId;
+  int sourceLoc;
+  int destinationLoc;
+  Direction direction;
 } ToMove;
+
+typedef struct Obj {
+  int loc;
+  int objId;
+} Obj;
+
 
 typedef struct Runtime {
   int levelIndex;
-  Level currentLevel;
+  char background;
+  int height;
+  int width;
+  int objectCount;
+  Obj objects[100];
   int toMoveCount;
   ToMove toMove[100];
   // move history?

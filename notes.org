@@ -11,3 +11,5 @@ TODO:
 - make sure all objects are in a layer
 - When PS finds a circular rule it only applies the right and down versions
 - redo active level as layers (maybe just objects with x,y)?
+- Need a concept for the match data like `...` distance for when it gets applied
+- Object id is not uniq. I need to use their indexes instead more.

@@ -7,6 +7,18 @@ PuzzleData pd;
 int yylex();
 int yyerror();
 int yyerror(const char *p) { printf("ERROR: %s\n", p); return 1; }
+int objectId(char * name) {
+    for (int i = 0; i < pd.objectCount; i++) {
+        if (strcmp(pd.objects[i].name, name) == 0) {
+            return i;
+        }
+    }
+    printf("Legend references object: '%s' which does not exist\n", name);
+    return -1;
+}
+char * objectName(int id) {
+    return pd.objects[id].name;
+}
 int spriteIndex = 0;
 %}
 
@@ -23,7 +35,7 @@ int spriteIndex = 0;
 %token SCANLINE TEXT_COLOR THROTTLE_MOVEMENT ZOOMSCREEN
 %token DEBUG VERBOSE_LOGGING
 
-%token MODEHEADER EQUALS END_LAYER END_OF_RULE MESSAGE END_LEGEND_LINE
+%token MODEHEADER EQUALS END_LAYER END_OF_RULE MESSAGE END_LEGEND_LINE LEGEND_AND LEGEND_OR
 %token  <identifier> ID OBJID COLOR LEGEND_VALUE LAYER_NAME LEGEND_ID RULE_POSTFIX
 %token  <decimal> DECIMAL
 
@@ -162,13 +174,18 @@ legend_line: LEGEND_ID EQUALS legend_values end_legend_line {
 
 end_legend_line: END_LEGEND_LINE end_legend_line | END_LEGEND_LINE
 
-legend_values: legend_value legend_values
+legend_values: legend_value legend_joiner legend_values
              | legend_value
 
 legend_value: LEGEND_VALUE {
-  pd.legend[pd.legendCount].values[pd.legend[pd.legendCount].valueCount] = strdup($1);
-  pd.legend[pd.legendCount].valueCount++;
+  Legend l = pd.legend[pd.legendCount];
+  l.objectIndex[l.objectCount] = objectId($1);
+  l.objectCount++;
+  pd.legend[pd.legendCount] = l;
 }
+
+legend_joiner: LEGEND_AND { pd.legend[pd.legendCount].objectRelation = 1; }
+             | LEGEND_OR  { pd.legend[pd.legendCount].objectRelation = 2; }
 
 sounds: // Nothing for now
 
@@ -260,7 +277,7 @@ state_part_without_direction: objects_on_same_square {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->matchStates[r->matchStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
-    rsp->direction = 10; // NONE
+    rsp->direction = NONE; // NONE
     rs->partCount++;
   } else {
     Rule * r = &pd.rules[pd.ruleCount];

@@ -120,7 +120,9 @@ color (color|colour)
 
 <LEGEND>= { return EQUALS; }
 
-<LEGEND>(and|or)
+<LEGEND>and { return LEGEND_AND; }
+
+<LEGEND>or { return LEGEND_OR; }
 
 <LEGEND>[\n] { return END_LEGEND_LINE; }
 

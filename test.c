@@ -187,8 +187,8 @@ Suite * puzzle_script_parser_suite(void)
 
     test_Parser = tcase_create("Parser");
     tcase_add_test(test_Parser, test_parses_basic);
-    /* tcase_add_test(test_Parser, test_parses_block_faker); */
-    /* tcase_add_test(test_Parser, test_parses_by_your_side); */
+    tcase_add_test(test_Parser, test_parses_block_faker);
+    tcase_add_test(test_Parser, test_parses_by_your_side);
     /* tcase_add_test(test_Parser, test_parses_constellation_z); */
     /* tcase_add_test(test_Parser, test_parses_eyeball); */
     /* tcase_add_test(test_Parser, test_parses_kettle); */
