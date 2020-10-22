@@ -47,10 +47,10 @@ typedef struct WinCondition {
 
 typedef enum Direction
   {
-   UP         = 0,
-   DOWN       = 1,
+   RIGHT      = 0,
+   UP         = 1,
    LEFT       = 2,
-   RIGHT      = 3,
+   DOWN       = 3,
    HORIZONTAL = 4,
    VIRTICAL   = 5,
    REL_UP     = 6,

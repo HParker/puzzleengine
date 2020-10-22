@@ -31,22 +31,35 @@ Direction directionMoving(Runtime * rt, int objIndex) {
   return NONE;
 }
 
-int locDeltaFor(Runtime * rt, Direction dir) {
-  switch (dir) {
+Direction absoluteDirection(Direction applicationDirection, Direction ruleDir) {
+  switch (ruleDir) {
   case UP:
-    return (rt->width * -1);
+    return ruleDir;
   case DOWN:
-    return rt->width;
+    return ruleDir;
   case LEFT:
-    return -1;
+    return ruleDir;
   case RIGHT:
-    return 1;
+    return ruleDir;
+  case REL_RIGHT:
+    printf("rel_right to %i -> %i\n", applicationDirection, ((applicationDirection + 0) % 4));
+    return (Direction)((applicationDirection + 0) % 4);
+  case REL_UP:
+    printf("rel_up to %i -> %i\n", applicationDirection, ((applicationDirection + 1) % 4));
+    return (Direction)((applicationDirection + 1) % 4);
+  case REL_LEFT:
+    printf("rel_left to %i -> %i\n", applicationDirection, ((applicationDirection + 2) % 4));
+    return (Direction)((applicationDirection + 2) % 4);
+  case REL_DOWN:
+    printf("rel_down to %i -> %i\n", applicationDirection, ((applicationDirection + 3) % 4));
+    return (Direction)((applicationDirection + 3) % 4);
   default:
-    return 0;
+    printf("err: unsupported direction\n");
+    return NONE;
   }
 }
 
-void addToMove(Runtime * rt, int objIndex, Direction direction) {
+void addToMove(Runtime * rt, Direction applicationDirection, int objIndex, Direction direction) {
   for (int i = 0; i < rt->toMoveCount; i++) {
     if (rt->toMove[i].objIndex == objIndex) {
       // skip if you already have this object index
@@ -54,18 +67,8 @@ void addToMove(Runtime * rt, int objIndex, Direction direction) {
     }
   }
   rt->toMove[rt->toMoveCount].objIndex = objIndex;
-  rt->toMove[rt->toMoveCount].direction = direction;
+  rt->toMove[rt->toMoveCount].direction = absoluteDirection(applicationDirection, direction);
   rt->toMoveCount++;
-}
-
-char nameToLegendKey(char * name) {
-  for (int i = 0; i < pd.objectCount; i++) {
-    if (strcmp(pd.objects[i].name, name) == 0) {
-      return pd.objects[i].legendKey;
-    }
-  }
-  printf("err: Didn't find a legend key for '%s'\n", name);
-  return '%';
 }
 
 int keyToObjId(char * key) {
@@ -184,24 +187,6 @@ int isMovable(Runtime * rt, int loc) {
   }
 }
 
-int doResultState(Runtime * rt, Direction applicationDirection, int ruleIndex, int loc) {
-  for (int i = 0; i < pd.rules[ruleIndex].resultStateCount; i++) {
-    for (int j = 0; j < pd.rules[ruleIndex].resultStates[i].partCount; j++) {
-      if (pd.rules[ruleIndex].resultStates[i].parts[j].direction != NONE) {
-        int source = (loc + locDeltaFor(rt, applicationDirection));
-        addToMove(rt, objectIndex(rt, pd.rules[ruleIndex].resultStates[i].parts[j].identifier, source), pd.rules[ruleIndex].resultStates[i].parts[j].direction);
-      }
-
-      for (int k = 0; k < rt->objectCount; k++) {
-        if (objectId(pd.rules[ruleIndex].matchStates[i].parts[j].identifier) == rt->objects[k].objId && rt->objects[k].loc == loc + (j * locDeltaFor(rt, applicationDirection))) {
-          rt->objects[k].objId = objectId(pd.rules[ruleIndex].resultStates[i].parts[j].identifier);
-        }
-      }
-    }
-  }
-  return 0;
-}
-
 int ruleApplies(Runtime * rt, Rule * rule, ExecutionTime execTime) {
   // TODO: this should check global direction constraints
   if (rule->executionTime != execTime) {
@@ -210,9 +195,76 @@ int ruleApplies(Runtime * rt, Rule * rule, ExecutionTime execTime) {
   return 1;
 }
 
-int partMatches(Runtime * rt, int loc, RuleStatePart * rsp) {
+int locDeltaFor(Runtime * rt, Direction applicationDirection, Direction dir) {
+  switch (absoluteDirection(applicationDirection, dir)) {
+  case UP:
+    return (rt->width * -1);
+  case DOWN:
+    return rt->width;
+  case LEFT:
+    return -1;
+  case RIGHT:
+    return 1;
+  default:
+    return 0;
+  }
+}
+
+int doResultState(Runtime * rt, Direction applicationDirection, int ruleIndex, int loc) {
+  for (int i = 0; i < pd.rules[ruleIndex].resultStateCount; i++) {
+    for (int j = 0; j < pd.rules[ruleIndex].resultStates[i].partCount; j++) {
+      if (pd.rules[ruleIndex].resultStates[i].parts[j].direction != NONE) {
+        int source = (loc + locDeltaFor(rt, applicationDirection, pd.rules[ruleIndex].resultStates[i].parts[j].direction));
+        printf("Adding Movement\n");
+        addToMove(rt, applicationDirection, objectIndex(rt, pd.rules[ruleIndex].resultStates[i].parts[j].identifier, source), pd.rules[ruleIndex].resultStates[i].parts[j].direction);
+      }
+
+      for (int k = 0; k < rt->objectCount; k++) {
+        if (objectId(pd.rules[ruleIndex].matchStates[i].parts[j].identifier) == rt->objects[k].objId && rt->objects[k].loc == loc + (j * locDeltaFor(rt, applicationDirection, pd.rules[ruleIndex].resultStates[i].parts[j].direction))) {
+          printf("Doing swap\n");
+          rt->objects[k].objId = objectId(pd.rules[ruleIndex].resultStates[i].parts[j].identifier);
+        }
+      }
+    }
+  }
+  return 0;
+}
+
+int matchesDirection(Direction ruleDir, Direction applicationDirection, Direction dir) {
+  switch (ruleDir) {
+  case UP:
+    return (dir == UP);
+  case DOWN:
+    return (dir == DOWN);
+  case LEFT:
+    return (dir == LEFT);
+  case RIGHT:
+    return (dir == RIGHT);
+  case HORIZONTAL:
+    return (dir == LEFT || dir == RIGHT);
+  case VIRTICAL:
+    return (dir == UP || dir == DOWN);
+  case REL_RIGHT:
+    printf("ad: %i, dir: %i\n", applicationDirection, dir);
+    return ((applicationDirection + 0) % 4 == dir);
+  case REL_UP:
+    return ((applicationDirection + 1) % 4 == dir);
+  case REL_LEFT:
+    return ((applicationDirection + 2) % 4 == dir);
+  case REL_DOWN:
+    return ((applicationDirection + 3) % 4 == dir);
+  case NONE:
+    return (dir == NONE);
+  default:
+    printf("err: unsupported Direction\n");
+    return -1;
+  }
+}
+
+int partMatches(Runtime * rt, Direction applicationDirection, int loc, RuleStatePart * rsp) {
   for (int i = 0; i < rt->objectCount; i++) {
-    if (objectId(rsp->identifier) == rt->objects[i].objId && rt->objects[i].loc == loc && directionMoving(rt, i) == rsp->direction) {
+
+    if (objectId(rsp->identifier) == rt->objects[i].objId && rt->objects[i].loc == loc && matchesDirection(rsp->direction, applicationDirection, directionMoving(rt, i))){
       printf("(loc %i):- part '%s' matched\n", loc, rsp->identifier);
       return 1;
     }
@@ -221,19 +273,13 @@ int partMatches(Runtime * rt, int loc, RuleStatePart * rsp) {
 }
 
 int cellsMatch(Runtime * rt, int loc, Direction applicationDirection, RuleState * rs) {
-  int matchingCells = 0;
   for (int i = 0; i < rs->partCount; i++) {
-    if (partMatches(rt, loc + i * locDeltaFor(rt, applicationDirection), &rs->parts[i]) == 1) {
-        matchingCells++;
+    if (partMatches(rt, applicationDirection, loc + i * locDeltaFor(rt, applicationDirection, applicationDirection), &rs->parts[i]) != 1) {
+      // TODO: this locDeltafor call is bad...
+      return 0;
       }
   }
-
-  if (matchingCells == rs->partCount) {
-    printf("rule matched\n");
-    return 1;
-  } else {
-    return 0;
-  }
+  return 1;
 }
 
 int checkMatches(Runtime * rt, Direction applicationDirection, int ruleIndex, int loc) {
@@ -275,9 +321,11 @@ int applyRules(Runtime * rt, ExecutionTime execTime, Direction act) {
 
 void moveObjects(Runtime * rt) {
   for (int i = 0; i < rt->toMoveCount; i++) {
-    printf("moving %s (delta %i)\n", objectName(rt->objects[rt->toMove[i].objIndex].objId), locDeltaFor(rt, rt->toMove[i].direction));
+    printf("moving %s (delta %i)\n", objectName(rt->objects[rt->toMove[i].objIndex].objId), locDeltaFor(rt, rt->toMove[i].direction, rt->toMove[i].direction));
+    // TODO: this is a bad call to locDeltafor
     printf("before %i\n", rt->objects[rt->toMove[i].objIndex].loc);
-    rt->objects[rt->toMove[i].objIndex].loc += locDeltaFor(rt, rt->toMove[i].direction);
+    rt->objects[rt->toMove[i].objIndex].loc += locDeltaFor(rt, rt->toMove[i].direction, rt->toMove[i].direction);
+    // TODO: fix this one too ^
     printf("after %i\n", rt->objects[rt->toMove[i].objIndex].loc);
   }
   rt->toMoveCount = 0;
@@ -300,7 +348,7 @@ void update(Runtime * rt, char * input) {
     dir = NONE;
   }
 
-  addToMove(rt, objectIndex(rt, "Player", playerLocation(rt)), dir);
+  addToMove(rt, NONE, objectIndex(rt, "Player", playerLocation(rt)), dir);
 
   // apply rule
   applyRules(rt, NORMAL, dir);
