@@ -9,9 +9,16 @@ typedef struct Object {
   char * colors[9];
 } Object;
 
+typedef enum LegendRelation
+  {
+   LEGEND_RELATION_UNKNOWN = 0,
+   LEGEND_RELATION_AND = 1,
+   LEGEND_RELATION_OR = 2
+  } LegendRelation;
+
 typedef struct Legend {
   char * key;
-  int objectRelation; // TODO: enum unknown = 0, and = 1, or = 2
+  LegendRelation objectRelation;
   int objectCount;
   int objectIndex[100];
 } Legend;
@@ -159,9 +166,7 @@ typedef struct PuzzleData {
 } PuzzleData;
 
 typedef struct ToMove {
-  int objId;
-  int sourceLoc;
-  int destinationLoc;
+  int objIndex;
   Direction direction;
 } ToMove;
 
@@ -169,6 +174,8 @@ typedef struct Obj {
   int loc;
   int objId;
 } Obj;
+
+
 
 
 typedef struct Runtime {

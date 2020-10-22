@@ -243,8 +243,7 @@ color (color|colour)
 }
 
 <WINCONDITIONS>[a-zA-Z.]+ {
-  yylval.identifier = malloc(sizeof(char) * 100);
-  strcpy(yylval.identifier, yytext);
+  yylval.identifier = strdup(yytext);
   return OBJID;
 }
 
