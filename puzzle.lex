@@ -113,7 +113,8 @@ color (color|colour)
   return SPRITE_CELL;
 }
 
-<LEGEND>^[a-zA-Z0-9_\.#*@]+/[ ]*= {
+<LEGEND>^[a-zA-Z0-9_\.#*@]+ {
+  printf("LEX legend_id: '%s'\n", yytext);
   yylval.identifier = yytext;
   return LEGEND_ID;
 }
@@ -127,6 +128,7 @@ color (color|colour)
 <LEGEND>[\n] { return END_LEGEND_LINE; }
 
 <LEGEND>[a-zA-Z0-9_]+ {
+  // TODO: we can legend right here
   yylval.identifier = strdup(yytext);
   return LEGEND_VALUE;
 }

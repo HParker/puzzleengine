@@ -7,13 +7,24 @@ PuzzleData pd;
 int yylex();
 int yyerror();
 int yyerror(const char *p) { printf("ERROR: %s\n", p); return 1; }
+int legendId(char * name) {
+    for (int i = 0; i < pd.legendCount; i++) {
+        /* printf("legendId: >>>>>>>>>%s<<<<<<<<<<\n", pd.legend[i].key); */
+        if (strcmp(pd.legend[i].key, name) == 0) {
+            return i;
+        }
+    }
+    printf("err: '%s' which does not exist in legend\n", name);
+    return -1;
+}
+
 int objectId(char * name) {
     for (int i = 0; i < pd.objectCount; i++) {
         if (strcmp(pd.objects[i].name, name) == 0) {
             return i;
         }
     }
-    printf("Legend references object: '%s' which does not exist\n", name);
+printf("err: '%s' which does not exist (%i objects)\n", name, pd.objectCount);
     return -1;
 }
 char * objectName(int id) {
@@ -143,8 +154,27 @@ object_definitions: object_definition object_definitions
 object_definition: object_name colors sprite { pd.objectCount++; }
                  | object_name color { pd.objectCount++; }
 
-object_name: OBJID SPRITE_CELL { pd.objects[pd.objectCount].name = strdup($1); }
-           | OBJID { pd.objects[pd.objectCount].name = strdup($1); }
+object_name: OBJID SPRITE_CELL {
+                 pd.objects[pd.objectCount].name = strdup($1);
+                 pd.legend[pd.legendCount].key = $1;
+                 pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;
+                 pd.legend[pd.legendCount].objectValues[0].isLegend = 0;
+                 pd.legendCount++;
+                 // TODO: this is an annoying hack...
+                 char key[1];
+                 key[0] = $2;
+                 pd.legend[pd.legendCount].key = key;
+                 pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;
+                 pd.legend[pd.legendCount].objectValues[0].isLegend = 0;
+                 pd.legendCount++;
+}
+           | OBJID {
+               pd.objects[pd.objectCount].name = strdup($1);
+               pd.legend[pd.legendCount].key = $1;
+               pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;
+                 pd.legend[pd.legendCount].objectValues[0].isLegend = 0;
+               pd.legendCount++;
+}
 
 colors: color colors | color
 
@@ -167,9 +197,13 @@ sprite_cell: SPRITE_CELL {
 legend_lines: legend_line legend_lines
             | legend_line
 
-legend_line: LEGEND_ID EQUALS legend_values end_legend_line {
-  pd.legend[pd.legendCount].key = $1;
+legend_line: legend_id EQUALS legend_values end_legend_line {
   pd.legendCount++;
+}
+
+legend_id: LEGEND_ID {
+  printf("legend id: <<<<<<<<<<<<%s>>>>>>>>>>\n", $1);
+  pd.legend[pd.legendCount].key = $1;
 }
 
 end_legend_line: END_LEGEND_LINE end_legend_line | END_LEGEND_LINE
@@ -178,14 +212,16 @@ legend_values: legend_value legend_joiner legend_values
              | legend_value
 
 legend_value: LEGEND_VALUE {
+                  printf("legend value: '%s'\n", $1);
   Legend l = pd.legend[pd.legendCount];
-  l.objectIndex[l.objectCount] = objectId($1);
+  l.objectValues[l.objectCount].id = legendId($1);
+  l.objectValues[l.objectCount].isLegend = 1;
   l.objectCount++;
   pd.legend[pd.legendCount] = l;
 }
 
-legend_joiner: LEGEND_AND { pd.legend[pd.legendCount].objectRelation = 1; }
-             | LEGEND_OR  { pd.legend[pd.legendCount].objectRelation = 2; }
+legend_joiner: LEGEND_AND { pd.legend[pd.legendCount].objectRelation = LEGEND_RELATION_AND; }
+             | LEGEND_OR  { pd.legend[pd.legendCount].objectRelation = LEGEND_RELATION_OR; }
 
 sounds: // Nothing for now
 
@@ -208,10 +244,13 @@ rules: rule_line  rules
      | rule_line
 
 
-rule_line: any_eor rule END_OF_RULE any_eor
+rule_line: any_eor rule some_eor
         ;
 
-any_eor:        END_OF_RULE any_eor | END_OF_RULE |
+some_eor:       END_OF_RULE some_eor | END_OF_RULE
+        ;
+
+any_eor:        some_eor |
         ;
 
 rule: rule_prefix rule_infix rule_postfix { pd.ruleCount++; }
@@ -277,13 +316,13 @@ state_part_without_direction: objects_on_same_square {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->matchStates[r->matchStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
-    rsp->direction = NONE; // NONE
+    rsp->direction = NONE;
     rs->partCount++;
   } else {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->resultStates[r->resultStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
-    rsp->direction = 10; // NONE
+    rsp->direction = NONE;
     rs->partCount++;
   }
 }
@@ -295,14 +334,14 @@ object: OBJID {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->matchStates[r->matchStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
-    rsp->direction = 10; // NONE
-    rsp->identifier = strdup($1);
+    rsp->direction = NONE;
+    rsp->legendId = legendId($1);
   } else {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->resultStates[r->resultStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
-    rsp->direction = 10; // NONE
-    rsp->identifier = strdup($1);
+    rsp->direction = NONE;
+    rsp->legendId = legendId($1);
   }
 }
 

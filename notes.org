@@ -2,7 +2,7 @@
 
 TODO:
 - redo the current level as "layers"
-
+- fix calls to locDeltaFor
 - replace malloc strcpy with strdup
 - validate object names used in rules exist or are `...`
 - validate has background

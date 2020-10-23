@@ -16,11 +16,16 @@ typedef enum LegendRelation
    LEGEND_RELATION_OR = 2
   } LegendRelation;
 
+typedef struct LegendValue {
+  int isLegend;
+  int id;
+} LegendValue;
+
 typedef struct Legend {
   char * key;
   LegendRelation objectRelation;
   int objectCount;
-  int objectIndex[100];
+  LegendValue objectValues[100];
 } Legend;
 
 typedef struct Layer {
@@ -40,9 +45,9 @@ typedef enum WinQualifier // TODO: rename to logic words?
 
 typedef struct WinCondition {
   WinQualifier winQualifier;
-  char * winIdentifier;
+  char * winIdentifier; // TODO: objid
   int hasOnQualifier;
-  char * onIndentifier;
+  char * onIndentifier; // TODO: objid
 } WinCondition;
 
 typedef enum Direction
@@ -69,7 +74,8 @@ typedef enum ExecutionTime
 
 typedef struct RuleStatePart {
   Direction direction;
-  char * identifier; // TODO: this can probably be an object or legend id
+  int legendId;
+  /* char * identifier; // TODO: this can probably be an object or legend id */
 } RuleStatePart;
 
 typedef struct RuleState {
@@ -137,7 +143,6 @@ typedef struct PuzzleData {
   int verboseLogging;
   int debug;
 
-  // Objects (with Legend tag)
   int objectCount;
   Object objects[100];
 
@@ -174,9 +179,6 @@ typedef struct Obj {
   int loc;
   int objId;
 } Obj;
-
-
-
 
 typedef struct Runtime {
   int levelIndex;

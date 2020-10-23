@@ -10,7 +10,7 @@ START_TEST (test_parses_basic)
   yyparse();
   ck_assert_str_eq(pd.title, "Simple Block Pushing Game");
   ck_assert_int_eq(pd.objectCount, 5);
-  ck_assert_int_eq(pd.legendCount, 6);
+  ck_assert_int_eq(pd.legendCount, 11);
   ck_assert_int_eq(pd.layerCount, 3);
   ck_assert_int_eq(pd.ruleCount, 1);
   ck_assert_int_eq(pd.levelCount, 2);
@@ -25,7 +25,7 @@ START_TEST (test_parses_block_faker)
   yyparse();
   ck_assert_str_eq(pd.title, "Block Faker");
   ck_assert_int_eq(pd.objectCount, 11);
-  ck_assert_int_eq(pd.legendCount, 16);
+  ck_assert_int_eq(pd.legendCount, 27);
   ck_assert_int_eq(pd.layerCount, 4);
   ck_assert_int_eq(pd.ruleCount, 7);
   ck_assert_int_eq(pd.levelCount, 5);
@@ -40,7 +40,7 @@ START_TEST (test_parses_by_your_side)
   yyparse();
   ck_assert_str_eq(pd.title, "By Your Side");
   ck_assert_int_eq(pd.objectCount, 23);
-  ck_assert_int_eq(pd.legendCount, 10);
+  ck_assert_int_eq(pd.legendCount, 55);
   ck_assert_int_eq(pd.layerCount, 4);
   ck_assert_int_eq(pd.ruleCount, 6);
   ck_assert_int_eq(pd.levelCount, 10);
