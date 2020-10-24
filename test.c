@@ -1,6 +1,6 @@
 #include <check.h>
 #include <stdio.h>
-#include "puzzle.tab.c"
+#include "puzzleData.h"
 
 START_TEST (test_parses_basic)
 {

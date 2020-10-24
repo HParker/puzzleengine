@@ -1,3 +1,6 @@
+#ifndef PUZZLE_DATA
+#define PUZZLE_DATA
+
 // Object
 typedef struct Object {
   char * name;
@@ -30,7 +33,7 @@ typedef struct Legend {
 
 typedef struct Layer {
   int width;
-  char * objectNames[100];
+  int objectIds[100];
 } Layer;
 
 typedef enum WinQualifier // TODO: rename to logic words?
@@ -191,3 +194,10 @@ typedef struct Runtime {
   ToMove toMove[100];
   // move history?
 } Runtime;
+
+extern PuzzleData pd; // TODO: I explicitly return this instead of using a global
+extern int legendId(char * name);
+extern int yyparse();
+extern FILE * yyin;
+
+#endif

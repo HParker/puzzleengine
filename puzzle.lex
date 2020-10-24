@@ -71,22 +71,22 @@ color (color|colour)
 
 <MODE>[a-zA-Z\.]+ {
   yylval.identifier = strdup(yytext);
-  if (strcmp(yytext, "OBJECTS") == 0) {
+  if (strcasecmp(yytext, "OBJECTS") == 0) {
     modeToEnter = OBJECT;
-  } else if (strcmp(yytext, "LEGEND") == 0) {
+  } else if (strcasecmp(yytext, "LEGEND") == 0) {
     modeToEnter = LEGEND;
-  } else if (strcmp(yytext, "SOUNDS") == 0) {
+  } else if (strcasecmp(yytext, "SOUNDS") == 0) {
     modeToEnter = SOUNDS;
-  } else if (strcmp(yytext, "COLLISIONLAYERS") == 0) {
+  } else if (strcasecmp(yytext, "COLLISIONLAYERS") == 0) {
     modeToEnter = COLLISIONLAYERS;
-  } else if (strcmp(yytext, "RULES") == 0) {
+  } else if (strcasecmp(yytext, "RULES") == 0) {
     modeToEnter = RULES;
-  } else if (strcmp(yytext, "WINCONDITIONS") == 0) {
+  } else if (strcasecmp(yytext, "WINCONDITIONS") == 0) {
     modeToEnter = WINCONDITIONS;
-  } else if (strcmp(yytext, "LEVELS") == 0) {
+  } else if (strcasecmp(yytext, "LEVELS") == 0) {
     modeToEnter = LEVELS;
   } else {
-    printf("DIDN'T MATCH A MODE\n");
+    printf("Err: '%s' didn't match a mode\n", yytext);
   }
 
   return ID;
@@ -113,13 +113,12 @@ color (color|colour)
   return SPRITE_CELL;
 }
 
-<LEGEND>^[a-zA-Z0-9_\.#*@]+ {
-  printf("LEX legend_id: '%s'\n", yytext);
+<LEGEND>^[a-zA-Z0-9_\.#\*@]+ {
   yylval.identifier = yytext;
   return LEGEND_ID;
 }
 
-<LEGEND>= { return EQUALS; }
+<LEGEND>[ ]=[ ] { return EQUALS; }
 
 <LEGEND>and { return LEGEND_AND; }
 

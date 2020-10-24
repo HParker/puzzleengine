@@ -2,15 +2,13 @@
 #include <stdio.h>
 #include <string.h>
 #include "puzzleData.h"
-extern FILE *yyin;
 PuzzleData pd;
 int yylex();
 int yyerror();
 int yyerror(const char *p) { printf("ERROR: %s\n", p); return 1; }
 int legendId(char * name) {
     for (int i = 0; i < pd.legendCount; i++) {
-        /* printf("legendId: >>>>>>>>>%s<<<<<<<<<<\n", pd.legend[i].key); */
-        if (strcmp(pd.legend[i].key, name) == 0) {
+        if (strcasecmp(pd.legend[i].key, name) == 0) {
             return i;
         }
     }
@@ -18,18 +16,6 @@ int legendId(char * name) {
     return -1;
 }
 
-int objectId(char * name) {
-    for (int i = 0; i < pd.objectCount; i++) {
-        if (strcmp(pd.objects[i].name, name) == 0) {
-            return i;
-        }
-    }
-printf("err: '%s' which does not exist (%i objects)\n", name, pd.objectCount);
-    return -1;
-}
-char * objectName(int id) {
-    return pd.objects[id].name;
-}
 int spriteIndex = 0;
 %}
 
@@ -156,9 +142,10 @@ object_definition: object_name colors sprite { pd.objectCount++; }
 
 object_name: OBJID SPRITE_CELL {
                  pd.objects[pd.objectCount].name = strdup($1);
-                 pd.legend[pd.legendCount].key = $1;
+                 pd.legend[pd.legendCount].key = strdup($1);
                  pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;
                  pd.legend[pd.legendCount].objectValues[0].isLegend = 0;
+                 pd.legend[pd.legendCount].objectCount++;
                  pd.legendCount++;
                  // TODO: this is an annoying hack...
                  char key[1];
@@ -166,13 +153,15 @@ object_name: OBJID SPRITE_CELL {
                  pd.legend[pd.legendCount].key = key;
                  pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;
                  pd.legend[pd.legendCount].objectValues[0].isLegend = 0;
+                 pd.legend[pd.legendCount].objectCount++;
                  pd.legendCount++;
 }
            | OBJID {
                pd.objects[pd.objectCount].name = strdup($1);
-               pd.legend[pd.legendCount].key = $1;
+               pd.legend[pd.legendCount].key = strdup($1);
                pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;
-                 pd.legend[pd.legendCount].objectValues[0].isLegend = 0;
+               pd.legend[pd.legendCount].objectValues[0].isLegend = 0;
+               pd.legend[pd.legendCount].objectCount++;
                pd.legendCount++;
 }
 
@@ -202,8 +191,7 @@ legend_line: legend_id EQUALS legend_values end_legend_line {
 }
 
 legend_id: LEGEND_ID {
-  printf("legend id: <<<<<<<<<<<<%s>>>>>>>>>>\n", $1);
-  pd.legend[pd.legendCount].key = $1;
+  pd.legend[pd.legendCount].key = strdup($1);
 }
 
 end_legend_line: END_LEGEND_LINE end_legend_line | END_LEGEND_LINE
@@ -212,7 +200,6 @@ legend_values: legend_value legend_joiner legend_values
              | legend_value
 
 legend_value: LEGEND_VALUE {
-                  printf("legend value: '%s'\n", $1);
   Legend l = pd.legend[pd.legendCount];
   l.objectValues[l.objectCount].id = legendId($1);
   l.objectValues[l.objectCount].isLegend = 1;
@@ -236,7 +223,7 @@ layer_objects: layer_object layer_objects
              | layer_object
 
 layer_object: LAYER_NAME {
-  pd.layers[pd.layerCount].objectNames[pd.layers[pd.layerCount].width] = strdup($1);
+  pd.layers[pd.layerCount].objectIds[pd.layers[pd.layerCount].width] = legendId($1);
   pd.layers[pd.layerCount].width++;
 }
 
@@ -356,14 +343,14 @@ wincondition: wincondition_unconditional
 wincondition_conditional: LOGIC_WORD OBJID LOGIC_WORD OBJID {
   pd.winConditions[pd.winConditionCount].hasOnQualifier = 1;
   pd.winConditions[pd.winConditionCount].winQualifier = $1;
-  pd.winConditions[pd.winConditionCount].winIdentifier = strdup($2);
-  pd.winConditions[pd.winConditionCount].onIndentifier = strdup($4);
+  pd.winConditions[pd.winConditionCount].winIdentifier = $2;
+  pd.winConditions[pd.winConditionCount].onIndentifier = $4;
   pd.winConditionCount++;
 }
 
 wincondition_unconditional: LOGIC_WORD OBJID {
   pd.winConditions[pd.winConditionCount].winQualifier = $1;
-  pd.winConditions[pd.winConditionCount].winIdentifier = strdup($2);
+  pd.winConditions[pd.winConditionCount].winIdentifier = $2;
   pd.winConditionCount++;
 }
 
