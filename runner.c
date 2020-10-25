@@ -8,7 +8,7 @@ char * objectName(int id) {
 
 int objectIndex(Runtime * rt, int id, int loc) {
   for (int i = 0; i < rt->objectCount; i++) {
-    if (id == rt->objects[i].objId) {
+    if (id == rt->objects[i].objId && loc == rt->objects[i].loc) {
       return i;
     }
   }
@@ -119,23 +119,60 @@ char objIdToChar(int id) {
   for (int i = 0; i < pd.legendCount; i++) {
     for (int j = 0; j < pd.legend[i].objectCount; j++) {
       if (pd.legend[i].objectValues[j].id == id && strlen(pd.legend[i].key) == 1) {
-
         return pd.legend[i].key[0];
       }
     }
   }
-  printf("err: no key found\n");
+  printf("err: no key found %i\n", id);
   return '!';
 }
 
-void loadCell(Runtime * rt, char cell) {
-  for (int i = 0; i < pd.legendCount; i++) {
-    if (pd.legend[i].key[0] == cell && strlen(pd.legend[i].key) == 1 && pd.legend[i].objectRelation == LEGEND_RELATION_AND) {
-      for (int j = 0; j < pd.legend[i].objectCount; j++) {
+int objectLayer(int objId) {
+  for (int i = 0; i < pd.layerCount; i++) {
+    for (int j = 0; j < pd.layers[i].width; j++) {
+      if (pd.layers[i].objectIds[j] == objId) {
+        return i;
+      }
+    }
+  }
+  printf("err: layer not found for objid: '%i'\n", objId);
+  return -1;
+}
 
-        rt->objects[rt->objectCount].objId = pd.legend[i].objectValues[j].id;
-        rt->objects[rt->objectCount].loc = i;
-        rt->objectCount++;
+char charForLoc(Runtime * rt, int loc) {
+  int maxHeight = -1;
+  int id = -1;
+  int currentHeight;
+  for (int i = 0; i < rt->objectCount; i++) {
+    currentHeight = objectLayer(rt->objects[i].objId);
+    if (rt->objects[i].loc == loc && currentHeight > maxHeight) {
+      maxHeight = currentHeight;
+      id = rt->objects[i].objId;
+    }
+  }
+  return objIdToChar(id);
+}
+
+void fillBackground(Runtime * rt) {
+  for (int i = 0; i < rt->height * rt->width; i++) {
+    rt->objects[rt->objectCount].objId = legendId("Background");
+    rt->objects[rt->objectCount].loc = i;
+    rt->objectCount++;
+  }
+}
+
+void loadCell(Runtime * rt, char cell, int loc) {
+  // TODO: I think this can ignore background cells I guess...
+  for (int i = 0; i < pd.legendCount; i++) {
+    if (pd.legend[i].key[0] == cell && strlen(pd.legend[i].key) == 1) {
+      if (pd.legend[i].objectRelation != LEGEND_RELATION_OR) {
+        for (int j = 0; j < pd.legend[i].objectCount; j++) {
+          if (pd.legend[i].objectValues[j].id != legendId("Background")) {
+            rt->objects[rt->objectCount].objId = pd.legend[i].objectValues[j].id;
+            rt->objects[rt->objectCount].loc = loc;
+            rt->objectCount++;
+          }
+        }
       }
     }
   }
@@ -145,13 +182,11 @@ void loadLevel(Runtime * rt, Level * level) {
   // TODO: height and width
   rt->height = level->height;
   rt->width = level->width;
+
+  fillBackground(rt);
+
   for (int i = 0; i < level->cellIndex; i++) {
-    loadCell(rt, level->cells[i]);
-    if (keyCharToObjId(level->cells[i]) != -1) {
-      rt->objects[rt->objectCount].objId = keyCharToObjId(level->cells[i]);
-      rt->objects[rt->objectCount].loc = i;
-      rt->objectCount++;
-    }
+    loadCell(rt, level->cells[i], i);
   }
   printf("Finished Loading %i objects\n", rt->objectCount);
 }
@@ -171,12 +206,7 @@ void render(Runtime * rt) {
   char map[rt->height * rt->width];
   for (int i = 0; i < rt->height * rt->width; i++) {
     map[i] = '.';
-    for (int j = 0; j < rt->objectCount; j++) {
-      if (rt->objects[j].loc == i && rt->objects[j].objId != 0) {
-        map[i] = objIdToChar(rt->objects[j].objId);
-      }
-    }
-    // TODO: layers
+    map[i] = charForLoc(rt, i);
   }
 
   // draw
@@ -204,18 +234,6 @@ int layerIncludes(int layerId, int objId) {
     }
   }
   return 0;
-}
-
-int objectLayer(int objId) {
-  for (int i = 0; i < pd.layerCount; i++) {
-    for (int j = 0; j < pd.layers[i].width; j++) {
-      if (pd.layers[i].objectIds[j] == objId) {
-        return i;
-      }
-    }
-  }
-  printf("err: layer not found for objid: '%i'\n", objId);
-  return -1;
 }
 
 int isMovable(Runtime * rt, int loc, int layerIndex) {
@@ -273,8 +291,9 @@ int doResultState(Runtime * rt, Direction applicationDirection, int ruleIndex, i
   for (int i = 0; i < pd.rules[ruleIndex].resultStateCount; i++) {
     for (int j = 0; j < pd.rules[ruleIndex].resultStates[i].partCount; j++) {
       if (pd.rules[ruleIndex].resultStates[i].parts[j].direction != NONE) {
-        int source = (loc + locDeltaFor(rt, applicationDirection, pd.rules[ruleIndex].resultStates[i].parts[j].direction));
-        printf("Adding Movement\n");
+        int source = (loc + j * locDeltaFor(rt, applicationDirection, pd.rules[ruleIndex].resultStates[i].parts[j].direction));
+        printf("Adding Movement objindex: %i\n",
+               objectIndex(rt, pd.rules[ruleIndex].resultStates[i].parts[j].legendId, source));
         addToMove(rt, applicationDirection, objectIndex(rt, pd.rules[ruleIndex].resultStates[i].parts[j].legendId, source), pd.rules[ruleIndex].resultStates[i].parts[j].direction);
       }
 
