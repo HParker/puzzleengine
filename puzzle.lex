@@ -229,16 +229,16 @@ color (color|colour)
 <WINCONDITIONS>(all|no|on|some) {
   // the enum is not available here
   // so we use the integer value directly.
-  if (strcasecmp(yytext, "all")) {
-    yylval.enumValue = 0;
-  } else if (strcasecmp(yytext, "any")) {
-    yylval.enumValue = 1;
-  } else if (strcasecmp(yytext, "no")) {
-    yylval.enumValue = 2;
-  } else if (strcasecmp(yytext, "some")) {
-    yylval.enumValue = 3;
-  } else if (strcasecmp(yytext, "on")) {
-    yylval.enumValue = 4;
+  if (strcasecmp(yytext, "all") == 0) {
+    yylval.enumValue = ALL;
+  } else if (strcasecmp(yytext, "any") == 0) {
+    yylval.enumValue = ANY;
+  } else if (strcasecmp(yytext, "no") == 0) {
+    yylval.enumValue = NO;
+  } else if (strcasecmp(yytext, "some") == 0) {
+    yylval.enumValue = SOME;
+  } else if (strcasecmp(yytext, "on") == 0) {
+    yylval.enumValue = ON;
   }
   return LOGIC_WORD;
 }

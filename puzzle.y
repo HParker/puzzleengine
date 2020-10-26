@@ -188,6 +188,7 @@ legend_lines: legend_line legend_lines
 
 legend_line: legend_id EQUALS legend_values end_legend_line {
   pd.legendCount++;
+  pd.legend[pd.legendCount].objectRelation = LEGEND_RELATION_UNKNOWN;
 }
 
 legend_id: LEGEND_ID {
@@ -343,14 +344,14 @@ wincondition: wincondition_unconditional
 wincondition_conditional: LOGIC_WORD OBJID LOGIC_WORD OBJID {
   pd.winConditions[pd.winConditionCount].hasOnQualifier = 1;
   pd.winConditions[pd.winConditionCount].winQualifier = $1;
-  pd.winConditions[pd.winConditionCount].winIdentifier = $2;
-  pd.winConditions[pd.winConditionCount].onIndentifier = $4;
+  pd.winConditions[pd.winConditionCount].winIdentifier = legendId($2);
+  pd.winConditions[pd.winConditionCount].onIndentifier = legendId($4);
   pd.winConditionCount++;
 }
 
 wincondition_unconditional: LOGIC_WORD OBJID {
   pd.winConditions[pd.winConditionCount].winQualifier = $1;
-  pd.winConditions[pd.winConditionCount].winIdentifier = $2;
+  pd.winConditions[pd.winConditionCount].winIdentifier = legendId($2);
   pd.winConditionCount++;
 }
 

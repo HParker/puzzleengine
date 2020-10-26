@@ -48,9 +48,9 @@ typedef enum WinQualifier // TODO: rename to logic words?
 
 typedef struct WinCondition {
   WinQualifier winQualifier;
-  char * winIdentifier; // TODO: objid
+  int winIdentifier;
   int hasOnQualifier;
-  char * onIndentifier; // TODO: objid
+  int onIndentifier;
 } WinCondition;
 
 typedef enum Direction

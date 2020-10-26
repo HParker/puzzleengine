@@ -118,7 +118,7 @@ int keyCharToObjId(char key) {
 char objIdToChar(int id) {
   for (int i = 0; i < pd.legendCount; i++) {
     for (int j = 0; j < pd.legend[i].objectCount; j++) {
-      if (pd.legend[i].objectValues[j].id == id && strlen(pd.legend[i].key) == 1) {
+      if (pd.legend[i].objectValues[j].id == id && strlen(pd.legend[i].key) == 1 && pd.legend[i].objectCount == 1) {
         return pd.legend[i].key[0];
       }
     }
@@ -279,7 +279,6 @@ int locDeltaFor(Runtime * rt, Direction applicationDirection, Direction dir) {
 
 int legendContains(int legendId, int objId) {
   for (int i = 0; i < pd.legend[legendId].objectCount; i++) {
-    /* printf("checking %i == %i\n", pd.legend[legendId].objectValues[i].id, objId); */
     if (pd.legend[legendId].objectValues[i].id == objId) {
       return 1;
     }
@@ -292,18 +291,11 @@ int doResultState(Runtime * rt, Direction applicationDirection, int ruleIndex, i
     for (int j = 0; j < pd.rules[ruleIndex].resultStates[i].partCount; j++) {
       if (pd.rules[ruleIndex].resultStates[i].parts[j].direction != NONE) {
         int source = (loc + j * locDeltaFor(rt, applicationDirection, pd.rules[ruleIndex].resultStates[i].parts[j].direction));
-        printf("Adding Movement objindex: %i\n",
-               objectIndex(rt, pd.rules[ruleIndex].resultStates[i].parts[j].legendId, source));
         addToMove(rt, applicationDirection, objectIndex(rt, pd.rules[ruleIndex].resultStates[i].parts[j].legendId, source), pd.rules[ruleIndex].resultStates[i].parts[j].direction);
       }
 
       for (int k = 0; k < rt->objectCount; k++) {
         if (legendContains(pd.rules[ruleIndex].matchStates[i].parts[j].legendId, rt->objects[k].objId) && rt->objects[k].loc == loc + (j * locDeltaFor(rt, applicationDirection, pd.rules[ruleIndex].resultStates[i].parts[j].direction))) {
-          printf("Doing swap (loc: %i modifier: %i) (before: %i after: %i)\n",
-                 rt->objects[k].loc,
-                 locDeltaFor(rt, applicationDirection, pd.rules[ruleIndex].resultStates[i].parts[j].direction),
-                 rt->objects[k].objId, pd.rules[ruleIndex].resultStates[i].parts[j].legendId);
-
           rt->objects[k].objId = pd.rules[ruleIndex].resultStates[i].parts[j].legendId;
         }
       }
@@ -315,7 +307,6 @@ int doResultState(Runtime * rt, Direction applicationDirection, int ruleIndex, i
 int partMatches(Runtime * rt, Direction applicationDirection, int loc, RuleStatePart * rsp) {
   for (int i = 0; i < rt->objectCount; i++) {
     if (legendContains(rsp->legendId, rt->objects[i].objId) && rt->objects[i].loc == loc && matchesDirection(rsp->direction, applicationDirection, directionMoving(rt, i))){
-      printf("(loc %i):---- part '%i' matched\n", loc, rsp->legendId);
       return 1;
     }
   }
@@ -426,6 +417,42 @@ void update(Runtime * rt, char * input) {
   applyRules(rt, LATE, dir);
 }
 
+int verifyAll(Runtime * rt, int thing, int container) {
+  int satisfied = 1;
+  for (int i = 0; i < rt->objectCount; i++) {
+    if (rt->objects[i].objId == thing) {
+      satisfied = 0;
+      for (int j = 0; j < rt->objectCount; j++) {
+        if (rt->objects[j].objId == container && rt->objects[i].loc == rt->objects[j].loc) {
+          satisfied = 1;
+        }
+      }
+    }
+    if (satisfied == 0) {
+      return 0;
+    }
+  }
+  return satisfied;
+}
+
+int checkWinCondition(Runtime * rt, int winConditionIndex) {
+  switch (pd.winConditions[winConditionIndex].winQualifier) {
+  case ALL:
+    return verifyAll(rt, pd.winConditions[winConditionIndex].winIdentifier, pd.winConditions[winConditionIndex].onIndentifier);
+  default:
+    printf("err: unsupported win condition '%i'\n", pd.winConditions[winConditionIndex].winQualifier);
+    return 0;
+  }
+}
+
+int checkWinConditions(Runtime * rt) {
+  int satisfied = 0;
+  for (int i = 0; i < pd.winConditionCount; i++) {
+    satisfied = checkWinCondition(rt, i);
+  }
+  return satisfied;
+}
+
 int main(int argc, char ** argv) {
   FILE *file;
   if (argc > 1) {
@@ -447,6 +474,10 @@ int main(int argc, char ** argv) {
 
   char input[100];
   while (1) {
+    if (checkWinConditions(&rt) == 1) {
+      printf("you won!\n");
+
+    }
     render(&rt);
     printf("Enter Move: ");
     gets(input);
