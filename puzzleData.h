@@ -5,7 +5,7 @@
 typedef struct Object {
   char * name;
   char legendKey;
-  int height; // TODO these can be global
+  int height;
   int width;
   char sprite[25];
   int colorCount;
@@ -78,7 +78,6 @@ typedef enum ExecutionTime
 typedef struct RuleStatePart {
   Direction direction;
   int legendId;
-  /* char * identifier; // TODO: this can probably be an object or legend id */
 } RuleStatePart;
 
 typedef struct RuleState {
@@ -184,6 +183,8 @@ typedef struct Obj {
 } Obj;
 
 typedef struct Runtime {
+  PuzzleData * pd;
+  int gameWon;
   int levelIndex;
   char background;
   int height;
@@ -192,12 +193,40 @@ typedef struct Runtime {
   Obj objects[100];
   int toMoveCount;
   ToMove toMove[100];
+  int historyCount;
+  Direction history[100];
   // move history?
 } Runtime;
 
+// parser
 extern PuzzleData pd; // TODO: I explicitly return this instead of using a global
+extern PuzzleData * parsePuzzle(FILE * file);
+
+// runner
+// Levels
+extern Runtime startGame(FILE * file);
+extern void nextLevel(Runtime * rt);
+
+// Winning
+extern int checkWinCondition(Runtime * rt, int winConditionIndex);
+extern int checkWinConditions(Runtime * rt);
+
+// Drawing
+extern void render(Runtime * rt);
+
+// Update
+extern Direction handleInput(Runtime * rt, char * input);
+extern void setLevel(Runtime * rt);
+extern void update(Runtime * rt, Direction dir);
+
+// Debug
+void printHistory(Runtime * rt);
+
+// Parser methods
 extern int legendId(char * name);
 extern int yyparse();
+extern int yylex();
+extern int yyerror();
 extern FILE * yyin;
 
 #endif

@@ -3,9 +3,8 @@
 #include <string.h>
 #include "puzzleData.h"
 PuzzleData pd;
-int yylex();
-int yyerror();
 int yyerror(const char *p) { printf("ERROR: %s\n", p); return 1; }
+
 int legendId(char * name) {
     for (int i = 0; i < pd.legendCount; i++) {
         if (strcasecmp(pd.legend[i].key, name) == 0) {
@@ -380,3 +379,9 @@ cell: LEVEL_CELL {
 }
 any_level_newlines: LEVEL_EOL any_level_newlines | LEVEL_EOL |
 %%
+
+PuzzleData * parsePuzzle(FILE * file) {
+  yyin = file;
+  yyparse();
+  return &pd;
+}

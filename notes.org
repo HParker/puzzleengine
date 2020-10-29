@@ -1,14 +1,26 @@
-
-
 TODO:
-- redo the current level as "layers"
 - fix calls to locDeltaFor
-- replace malloc strcpy with strdup
 - validate object names used in rules exist or are `...`
 - validate has background
 - make sure all objects are in a layer
-- When PS finds a circular rule it only applies the right and down versions
-- redo active level as layers
 - maybe just objects with x,y
 - Need a concept for the match data like `...` distance for when it gets applied
 - sounds
+- "levels must be rectangular" We don't have to do this, but can.
+- replace `pd` with methods to query the puzzle data
+
+
+3d api:
+- transfer levels with `lift` and `lower`
+- maybe specify 3d levels with,
+#####
+#.O.#
+#OOO#
+#.O.#
+#####
+-----
+#####
+#   #
+# O #
+#   #
+#####

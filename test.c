@@ -183,7 +183,7 @@ Suite * puzzle_script_parser_suite(void)
     Suite * s;
     TCase * test_Parser;
 
-    s = suite_create("PuzzleScript");
+    s = suite_create("Parser");
 
     test_Parser = tcase_create("Parser");
     tcase_add_test(test_Parser, test_parses_basic);

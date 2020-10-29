@@ -55,6 +55,8 @@ Direction absoluteDirection(Direction applicationDirection, Direction ruleDir) {
     return (Direction)((applicationDirection + 3) % 4);
   case NONE:
     return NONE;
+  case USE:
+    return NONE;
   default:
     printf("err: (absoluteDirection) unsupported direction (ad: %i rd: %i)\n", applicationDirection, ruleDir);
     return NONE;
@@ -178,26 +180,31 @@ void loadCell(Runtime * rt, char cell, int loc) {
   }
 }
 
-void loadLevel(Runtime * rt, Level * level) {
-  // TODO: height and width
-  rt->height = level->height;
-  rt->width = level->width;
+void loadLevel(Runtime * rt) {
+  rt->height = pd.levels[rt->levelIndex].height;
+  rt->width = pd.levels[rt->levelIndex].width;
+  rt->toMoveCount = 0;
+  rt->objectCount = 0;
 
   fillBackground(rt);
 
-  for (int i = 0; i < level->cellIndex; i++) {
-    loadCell(rt, level->cells[i], i);
+  for (int i = 0; i < pd.levels[rt->levelIndex].cellIndex; i++) {
+    loadCell(rt, pd.levels[rt->levelIndex].cells[i], i);
   }
-  printf("Finished Loading %i objects\n", rt->objectCount);
 }
 
-Runtime startGame() {
-  Runtime rt;
-  rt.levelIndex = 0;
-  rt.toMoveCount = 0;
-  rt.objectCount = 0;
+void nextLevel(Runtime * rt) {
+  rt->levelIndex++;
+  loadLevel(rt);
+}
 
-  loadLevel(&rt, &pd.levels[0]);
+Runtime startGame(FILE * file) {
+  Runtime rt;
+  rt.pd = parsePuzzle(file);
+  rt.levelIndex = 0;
+  rt.gameWon = 0;
+  rt.historyCount = 0;
+  loadLevel(&rt);
   return rt;
 }
 
@@ -327,7 +334,7 @@ int checkMatches(Runtime * rt, Direction applicationDirection, int ruleIndex, in
   int appliedSomething = 0;
   for (int matchIndex = 0; matchIndex < pd.rules[ruleIndex].matchStateCount; matchIndex++) {
     if (cellsMatch(rt, loc, applicationDirection, &pd.rules[ruleIndex].matchStates[matchIndex]) == 1) {
-      printf("Rule matched at index: '%i'\n", ruleIndex);
+      /* printf("Rule matched at index: '%i'\n", ruleIndex); */
       doResultState(rt, applicationDirection, ruleIndex, loc);
       appliedSomething = 1;
     }
@@ -387,26 +394,68 @@ void moveObjects(Runtime * rt) {
   rt->toMoveCount = 0;
 }
 
-void update(Runtime * rt, char * input) {
-  Direction dir;
-  // mark player to move
-  if (input[0] == 'u' || input[0] == 'U') {
-    dir = UP;
-  } else if (input[0] == 'd' || input[0] == 'D') {
-    dir = DOWN;
-  } else if (input[0] == 'l' || input[0] == 'L') {
-    dir = LEFT;
-  } else if (input[0] == 'r' || input[0] == 'R') {
-    dir = RIGHT;
-  } else if (input[0] == 'u' || input[0] == 'U') {
-    dir = USE;
-  } else {
-    dir = NONE;
+void printHistory(Runtime * rt) {
+  char * directionNames[] = {
+                             "RIGHT",
+                             "UP",
+                             "LEFT",
+                             "DOWN",
+                             "HORIZONTAL",
+                             "VIRTICAL",
+                             "REL_UP",
+                             "REL_DOWN",
+                             "REL_LEFT",
+                             "REL_RIGHT",
+                             "USE",
+                             "NONE"
+  };
+
+  for (int i = 0; i < rt->historyCount; i++) {
+    printf("%s\n", directionNames[rt->history[i]]);
   }
+}
+
+Direction handleInput(Runtime * rt, char * input) {
+  // TODO: doesn't need rt
+  if (input[0] == 'u' || input[0] == 'U') {
+    return UP;
+  } else if (input[0] == 'd' || input[0] == 'D') {
+    return DOWN;
+  } else if (input[0] == 'l' || input[0] == 'L') {
+    return LEFT;
+  } else if (input[0] == 'r' || input[0] == 'R') {
+    return RIGHT;
+  } else if (input[0] == 'x' || input[0] == 'X') {
+    return USE;
+  } else {
+    return NONE;
+  }
+}
+
+void setLevel(Runtime * rt) {
+  if (checkWinConditions(rt) == 1) {
+    if (rt->levelIndex < pd.levelCount - 1) {
+      nextLevel(rt);
+    } else {
+      if (rt->pd->debug == 1) {
+        printHistory(rt);
+      }
+      rt->gameWon = 1;
+    }
+  }
+}
+
+void recordInput(Runtime * rt, Direction dir) {
+  rt->history[rt->historyCount] = dir;
+  rt->historyCount++;
+}
+
+void update(Runtime * rt, Direction dir) {
+  recordInput(rt, dir);
 
   addToMove(rt, NONE, objectIndex(rt, legendId("Player"), playerLocation(rt)), dir);
 
-  // apply rule
+  // apply rules
   applyRules(rt, NORMAL, dir);
 
   // apply marked for move
@@ -451,38 +500,4 @@ int checkWinConditions(Runtime * rt) {
     satisfied = checkWinCondition(rt, i);
   }
   return satisfied;
-}
-
-int main(int argc, char ** argv) {
-  FILE *file;
-  if (argc > 1) {
-    file = fopen(argv[1], "r");
-    if (!file) {
-      fprintf(stderr,"could not open %s\n", argv[1]);
-      return 1;
-    }
-  } else {
-    printf("Please provide a puzzlescript file\n");
-    return 1;
-  }
-
-  yyin = file;
-  yyparse();
-
-  Runtime rt = startGame();
-  printf("game ready: %i levels\n", pd.levelCount);
-
-  char input[100];
-  while (1) {
-    if (checkWinConditions(&rt) == 1) {
-      printf("you won!\n");
-
-    }
-    render(&rt);
-    printf("Enter Move: ");
-    gets(input);
-    update(&rt, input);
-    rt.toMoveCount = 0;
-  }
-  return 0;
 }
