@@ -16,12 +16,12 @@ int main(int argc, char ** argv) {
   }
 
   Runtime rt = startGame(file);
-  printf("game ready: %i levels\n", pd.levelCount);
+  printf("game ready: %i levels\n", levelCount());
 
   char input[100];
   while (1) {
     if (checkWinConditions(&rt) == 1) {
-      if (rt.levelIndex < pd.levelCount - 1) {
+      if (rt.levelIndex < levelCount() - 1) {
         nextLevel(&rt);
       } else {
         render(&rt);
@@ -34,6 +34,7 @@ int main(int argc, char ** argv) {
     printf("Enter Move: ");
     gets(input);
     update(&rt, handleInput(&rt, input));
+    setLevel(&rt);
     rt.toMoveCount = 0;
   }
   return 0;

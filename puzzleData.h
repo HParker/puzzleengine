@@ -25,7 +25,9 @@ typedef struct LegendValue {
 } LegendValue;
 
 typedef struct Legend {
-  char * key;
+  int hasStringKey;
+  char key;
+  char * stringKey;
   LegendRelation objectRelation;
   int objectCount;
   LegendValue objectValues[100];
@@ -198,14 +200,37 @@ typedef struct Runtime {
   // move history?
 } Runtime;
 
-// parser
-extern PuzzleData pd; // TODO: I explicitly return this instead of using a global
+// PuzzleData
 extern PuzzleData * parsePuzzle(FILE * file);
+extern char objectGlyph(int objId);
+
+// legend
+extern int legendIdForGlyph(char glyph);
+extern int legendObjectCount(int id);
+extern int legendObject(int legendId, int objectIndex);
+extern int legendContains(int legendId, int objId);
+
+// layers
+extern int objectLayer(int objId);
+
+// level
+extern int levelHeight(int levelIndex);
+extern int levelWidth(int levelIndex);
+extern int levelCellCount(int levelIndex);
+extern int levelCell(int levelIndex, int cellIndex);
+
+// layers
+int layerIncludes(int layerId, int objId);
+
+//rules
+extern int ruleCount();
+extern Rule * rule(int index);
 
 // runner
 // Levels
 extern Runtime startGame(FILE * file);
 extern void nextLevel(Runtime * rt);
+extern int levelCount();
 
 // Winning
 extern int checkWinCondition(Runtime * rt, int winConditionIndex);
@@ -222,11 +247,13 @@ extern void update(Runtime * rt, Direction dir);
 // Debug
 void printHistory(Runtime * rt);
 
+// Win Condition
+extern int winConditionCount();
+extern WinCondition * winCondition(int winConditionIndex);
+
 // Parser methods
 extern int legendId(char * name);
-extern int yyparse();
-extern int yylex();
-extern int yyerror();
 extern FILE * yyin;
+extern int yyparse();
 
 #endif

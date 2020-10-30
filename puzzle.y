@@ -2,12 +2,14 @@
 #include <stdio.h>
 #include <string.h>
 #include "puzzleData.h"
+#include "parser.h"
+
 PuzzleData pd;
 int yyerror(const char *p) { printf("ERROR: %s\n", p); return 1; }
 
 int legendId(char * name) {
     for (int i = 0; i < pd.legendCount; i++) {
-        if (strcasecmp(pd.legend[i].key, name) == 0) {
+        if (pd.legend[i].hasStringKey == 1 && strcasecmp(pd.legend[i].stringKey, name) == 0) {
             return i;
         }
     }
@@ -141,15 +143,15 @@ object_definition: object_name colors sprite { pd.objectCount++; }
 
 object_name: OBJID SPRITE_CELL {
                  pd.objects[pd.objectCount].name = strdup($1);
-                 pd.legend[pd.legendCount].key = strdup($1);
+                 pd.legend[pd.legendCount].hasStringKey = 1;
+                 pd.legend[pd.legendCount].stringKey = strdup($1);
                  pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;
                  pd.legend[pd.legendCount].objectValues[0].isLegend = 0;
                  pd.legend[pd.legendCount].objectCount++;
                  pd.legendCount++;
-                 // TODO: this is an annoying hack...
-                 char key[1];
-                 key[0] = $2;
-                 pd.legend[pd.legendCount].key = key;
+                 // single char key
+                 pd.legend[pd.legendCount].hasStringKey = 0;
+                 pd.legend[pd.legendCount].key = $2;
                  pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;
                  pd.legend[pd.legendCount].objectValues[0].isLegend = 0;
                  pd.legend[pd.legendCount].objectCount++;
@@ -157,7 +159,8 @@ object_name: OBJID SPRITE_CELL {
 }
            | OBJID {
                pd.objects[pd.objectCount].name = strdup($1);
-               pd.legend[pd.legendCount].key = strdup($1);
+               pd.legend[pd.legendCount].hasStringKey = 1;
+               pd.legend[pd.legendCount].stringKey = strdup($1);
                pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;
                pd.legend[pd.legendCount].objectValues[0].isLegend = 0;
                pd.legend[pd.legendCount].objectCount++;
@@ -191,7 +194,14 @@ legend_line: legend_id EQUALS legend_values end_legend_line {
 }
 
 legend_id: LEGEND_ID {
-  pd.legend[pd.legendCount].key = strdup($1);
+               if (strlen($1) == 1) {
+                   pd.legend[pd.legendCount].hasStringKey = 0;
+                   pd.legend[pd.legendCount].key = $1[0];
+               } else {
+                   pd.legend[pd.legendCount].hasStringKey = 1;
+                   pd.legend[pd.legendCount].stringKey = strdup($1);
+               }
+
 }
 
 end_legend_line: END_LEGEND_LINE end_legend_line | END_LEGEND_LINE
@@ -379,9 +389,3 @@ cell: LEVEL_CELL {
 }
 any_level_newlines: LEVEL_EOL any_level_newlines | LEVEL_EOL |
 %%
-
-PuzzleData * parsePuzzle(FILE * file) {
-  yyin = file;
-  yyparse();
-  return &pd;
-}
