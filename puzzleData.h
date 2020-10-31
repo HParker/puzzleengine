@@ -97,6 +97,29 @@ typedef struct Rule {
   RuleState resultStates[100];
 } Rule;
 
+typedef struct MatchData {
+  int objIndex;
+  // legend id in rules could be things like `movable = Block or Player`
+  // which isn't the legend id of the thing to actually place when applying the result state
+  int actualLegendId;
+  int ruleLegendId;
+  int actualLocation;
+  int actualDirection;
+  // goal
+  int goalId;
+  int goalLocation;
+  int goalDirection;
+} MatchData;
+
+typedef struct Match {
+  // legend id in rules could be things like `movable = Block or Player`
+  // which isn't the legend id of the thing to actually place when applying the result state
+  int partCount;
+  int startLoc; // TODO: hopefully not needed
+  Direction appliedDirection;
+  MatchData parts[100];
+} Match;
+
 typedef enum LevelType
   {
    SQUARES,
@@ -192,7 +215,7 @@ typedef struct Runtime {
   int height;
   int width;
   int objectCount;
-  Obj objects[100];
+  Obj objects[10000];
   int toMoveCount;
   ToMove toMove[100];
   int historyCount;
@@ -201,13 +224,15 @@ typedef struct Runtime {
 } Runtime;
 
 // PuzzleData
-extern PuzzleData * parsePuzzle(FILE * file);
+extern void parsePuzzle(PuzzleData * puzzDat, FILE * file);
 extern char objectGlyph(int objId);
+extern char * objectName(int id);
 
 // legend
 extern int legendIdForGlyph(char glyph);
 extern int legendObjectCount(int id);
-extern int legendObject(int legendId, int objectIndex);
+extern LegendValue legendObject(int legendId, int objectIndex);
+extern Legend legend(int legendId);
 extern int legendContains(int legendId, int objId);
 
 // layers
@@ -228,7 +253,7 @@ extern Rule * rule(int index);
 
 // runner
 // Levels
-extern Runtime startGame(FILE * file);
+extern void startGame(Runtime * rt, FILE * file);
 extern void nextLevel(Runtime * rt);
 extern int levelCount();
 

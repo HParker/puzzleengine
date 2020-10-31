@@ -18,7 +18,8 @@ START_TEST (test_runs_stumper)
 {
   FILE *file;
   file = fopen("./puzzles/stumper.puzz", "r");
-  Runtime rt = startGame(file);
+  Runtime rt;
+  startGame(&rt, file);
 
   int moves[] = {
                   RIGHT, // 0
@@ -48,7 +49,9 @@ START_TEST (test_runs_basic)
 {
   FILE *file;
   file = fopen("./puzzles/basic.ps", "r");
-  Runtime rt = startGame(file);
+  Runtime rt;
+  startGame(&rt, file);
+
   int moves[] = {
                  DOWN,
                  LEFT,

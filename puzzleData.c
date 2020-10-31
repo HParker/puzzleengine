@@ -4,10 +4,10 @@
 #include "puzzleData.h"
 #include "parser.h"
 
-PuzzleData * parsePuzzle(FILE * file) {
+void parsePuzzle(PuzzleData * puzzDat, FILE * file) {
   yyin = file;
   yyparse();
-  return &pd;
+  puzzDat = &pd;
 }
 
 char * objectName(int id) {
@@ -40,15 +40,29 @@ int legendObjectCount(int id) {
   return pd.legend[id].objectCount;
 }
 
-int legendObject(int legendId, int objectIndex) {
-  return pd.legend[legendId].objectValues[objectIndex].id;
+LegendValue legendObject(int legendId, int objectIndex) {
+  return pd.legend[legendId].objectValues[objectIndex];
 }
 
-extern int legendContains(int legendId, int objId) {
+Legend legend(int legendId) {
+  return pd.legend[legendId];
+}
+
+int legendContains(int legendId, int objId) {
+  int recursingValue;
+  LegendValue lv;
   int count = legendObjectCount(legendId);
   for (int i = 0; i < count; i++) {
-    if (legendObject(legendId, i) == objId) {
+    lv = legendObject(legendId, i);
+    if (lv.id == objId) {
       return 1;
+    }
+    if (lv.isLegend == 1) {
+      // TODO: this assumes an `OR` condition used in the legend
+      recursingValue = legendContains(lv.id, objId);
+      if (recursingValue == 1) {
+        return 1;
+      }
     }
   }
   return 0;

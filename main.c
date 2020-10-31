@@ -14,9 +14,15 @@ int main(int argc, char ** argv) {
     printf("Please provide a puzzlescript file\n");
     return 1;
   }
+  Runtime rt;
+  rt.objectCount = 0;
+  startGame(&rt, file);
+  rt.toMoveCount = 0;
 
-  Runtime rt = startGame(file);
-  printf("game ready: %i levels\n", levelCount());
+  for (int i = 0; i < rt.objectCount; i++) {
+    printf("object %i: '%s' (%i)\n", i, objectName(rt.objects[i].objId), rt.objects[i].objId);
+  }
+
 
   char input[100];
   while (1) {
@@ -35,7 +41,6 @@ int main(int argc, char ** argv) {
     gets(input);
     update(&rt, handleInput(&rt, input));
     setLevel(&rt);
-    rt.toMoveCount = 0;
   }
   return 0;
 }

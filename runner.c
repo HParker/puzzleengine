@@ -60,7 +60,8 @@ Direction absoluteDirection(Direction applicationDirection, Direction ruleDir) {
 }
 
 int matchesDirection(Direction ruleDir, Direction applicationDirection, Direction dir) {
-  if (absoluteDirection(applicationDirection, ruleDir) == dir) {
+  Direction absoluteDir = absoluteDirection(applicationDirection, ruleDir);
+  if (absoluteDir == dir) {
     return 1;
   } else {
     return 0;
@@ -75,7 +76,8 @@ void addToMove(Runtime * rt, Direction applicationDirection, int objIndex, Direc
     }
   }
   rt->toMove[rt->toMoveCount].objIndex = objIndex;
-  rt->toMove[rt->toMoveCount].direction = absoluteDirection(applicationDirection, direction);
+  Direction absoluteDir = absoluteDirection(applicationDirection, direction);
+  rt->toMove[rt->toMoveCount].direction = absoluteDir;
   rt->toMoveCount++;
 }
 
@@ -104,17 +106,20 @@ void fillBackground(Runtime * rt) {
 void loadCell(Runtime * rt, char cell, int loc) {
   int id = legendIdForGlyph(cell);
   int count = legendObjectCount(id);
+  LegendValue lv;
   for (int i = 0; i < count; i++) {
-    rt->objects[rt->objectCount].objId = legendObject(id, i);
-    rt->objects[rt->objectCount].loc = loc;
-    rt->objectCount++;
-  }
+    lv = legendObject(id, i);
+    if (lv.id != legendId("Background")) {
+      rt->objects[rt->objectCount].objId = legendObject(id, i).id;
+      rt->objects[rt->objectCount].loc = loc;
+      rt->objectCount++;
+    }
+ }
 }
 
 void loadLevel(Runtime * rt) {
   rt->height = levelHeight(rt->levelIndex);
   rt->width = levelWidth(rt->levelIndex);
-
   rt->toMoveCount = 0;
   rt->objectCount = 0;
 
@@ -131,14 +136,14 @@ void nextLevel(Runtime * rt) {
   loadLevel(rt);
 }
 
-Runtime startGame(FILE * file) {
-  Runtime rt;
-  rt.pd = parsePuzzle(file);
-  rt.levelIndex = 0;
-  rt.gameWon = 0;
-  rt.historyCount = 0;
-  loadLevel(&rt);
-  return rt;
+void startGame(Runtime * rt, FILE * file) {
+  rt->levelIndex = 0;
+  rt->gameWon = 0;
+  rt->historyCount = 0;
+  rt->toMoveCount = 0;
+  rt->objectCount = 0;
+  parsePuzzle(rt->pd, file);
+  loadLevel(rt);
 }
 
 void render(Runtime * rt) {
@@ -192,7 +197,8 @@ int ruleApplies(Runtime * rt, int ruleIndex, ExecutionTime execTime) {
 }
 
 int locDeltaFor(Runtime * rt, Direction applicationDirection, Direction dir) {
-  switch (absoluteDirection(applicationDirection, dir)) {
+  Direction absoluteDir = absoluteDirection(applicationDirection, dir);
+  switch (absoluteDir) {
   case UP:
     return (rt->width * -1);
   case DOWN:
@@ -209,6 +215,7 @@ int locDeltaFor(Runtime * rt, Direction applicationDirection, Direction dir) {
   }
 }
 
+// TODO: DELETE ME
 int doResultState(Runtime * rt, Direction applicationDirection, int ruleIndex, int loc) {
   for (int i = 0; i < rule(ruleIndex)->resultStateCount; i++) {
     for (int j = 0; j < rule(ruleIndex)->resultStates[i].partCount; j++) {
@@ -218,7 +225,9 @@ int doResultState(Runtime * rt, Direction applicationDirection, int ruleIndex, i
       }
 
       for (int k = 0; k < rt->objectCount; k++) {
-        if (legendContains(rule(ruleIndex)->matchStates[i].parts[j].legendId, rt->objects[k].objId) && rt->objects[k].loc == loc + (j * locDeltaFor(rt, applicationDirection, rule(ruleIndex)->resultStates[i].parts[j].direction))) {
+        int legendId = rule(ruleIndex)->matchStates[i].parts[j].legendId;
+        int offsetLoc = loc + (j * locDeltaFor(rt, applicationDirection, rule(ruleIndex)->resultStates[i].parts[j].direction));
+        if (legendContains(legendId, rt->objects[k].objId) && rt->objects[k].loc == offsetLoc) {
           rt->objects[k].objId = rule(ruleIndex)->resultStates[i].parts[j].legendId;
         }
       }
@@ -227,75 +236,162 @@ int doResultState(Runtime * rt, Direction applicationDirection, int ruleIndex, i
   return 0;
 }
 
-int partMatches(Runtime * rt, Direction applicationDirection, int loc, RuleStatePart * rsp) {
-  for (int i = 0; i < rt->objectCount; i++) {
-    if (legendContains(rsp->legendId, rt->objects[i].objId) && rt->objects[i].loc == loc && matchesDirection(rsp->direction, applicationDirection, directionMoving(rt, i))){
-      return 1;
+void applyMatch(Runtime * rt, Match * match) {
+  for (int i = 0; i < match->partCount; i++) {
+    printf("Applying match part id: '%s' -> '%s' location: %i -> %i goalMovment: %i\n",
+           objectName(rt->objects[match->parts[i].objIndex].objId),
+           objectName(match->parts[i].goalId),
+           rt->objects[match->parts[i].objIndex].loc,
+           match->parts[i].goalLocation,
+           match->parts[i].goalDirection);
+
+    if (legend(match->parts[i].goalId).objectCount > 1) {
+      // This must be a match based on a legend that includes this object.
+      // Stay the same
+
+    } else {
+      rt->objects[match->parts[i].objIndex].objId = match->parts[i].goalId;
     }
+
+
+    rt->objects[match->parts[i].objIndex].loc = match->parts[i].goalLocation;
+    addToMove(rt, match->appliedDirection, match->parts[i].objIndex,  match->parts[i].goalDirection);
   }
-  return 0;
 }
 
-int cellsMatch(Runtime * rt, int loc, Direction applicationDirection, RuleState * rs) {
-  for (int i = 0; i < rs->partCount; i++) {
-    if (partMatches(rt, applicationDirection, loc + i * locDeltaFor(rt, applicationDirection, applicationDirection), &rs->parts[i]) != 1) {
-      // TODO: this locDeltafor call is bad...
-      return 0;
+int ruleStateMatchDir(Runtime * rt, Match * match, int ruleIndex, int matchStateIndex, int loc, Direction dir) {
+  match->appliedDirection = dir;
+
+  int success = 1;
+  int count = rule(ruleIndex)->matchStates[matchStateIndex].partCount;
+  // Technically we can start at one since we know we are on a good spot to start
+  for (int i = 0; i < count; i++) {
+    int adjustedLoc = loc + (i * locDeltaFor(rt, dir, dir));
+    int legendId = rule(ruleIndex)->matchStates[matchStateIndex].parts[i].legendId;
+    Direction ruleDir = rule(ruleIndex)->matchStates[matchStateIndex].parts[i].direction;
+
+    success = 0;
+    for (int j = 0; j < rt->objectCount; j++) {
+
+      /* printf("checking '%s' contains: %i, loc %i == %i\n", */
+      /*        objectName(rt->objects[j].objId), */
+      /*        legendContains(legendId, rt->objects[j].objId), */
+      /*        rt->objects[j].loc, */
+      /*        adjustedLoc); */
+      if (legendContains(legendId, rt->objects[j].objId) &&
+          rt->objects[j].loc == adjustedLoc &&
+          matchesDirection(ruleDir, dir, directionMoving(rt, j))
+          ) {
+        // cell matched
+        printf("'%s' at %i matched rule %i\n", objectName(rt->objects[j].objId), adjustedLoc, ruleIndex);
+        match->parts[match->partCount].objIndex = j;
+        match->parts[match->partCount].actualLegendId = rt->objects[j].objId;
+        match->parts[match->partCount].actualLocation = adjustedLoc;
+        match->parts[match->partCount].actualDirection = directionMoving(rt, j);
+
+        match->parts[match->partCount].goalDirection = absoluteDirection(dir, rule(ruleIndex)->resultStates[matchStateIndex].parts[i].direction); // TODO: this might be wrong.
+
+        match->parts[match->partCount].ruleLegendId = legendId;
+
+
+        match->parts[match->partCount].goalId = rule(ruleIndex)->resultStates[matchStateIndex].parts[i].legendId;
+        // TODO: does this ever change?
+        match->parts[match->partCount].goalLocation = adjustedLoc;
+        success = 1;
       }
+    }
+    if (success == 1) {
+      // found a matching object continue
+      match->partCount++;
+      printf("applying in direction found %i matching parts\n", match->partCount);
+    } else {
+      // failed to find an object that matches the next part, fail
+      match->partCount = 0;
+      return 0;
+    }
   }
   return 1;
 }
 
-int checkMatches(Runtime * rt, Direction applicationDirection, int ruleIndex, int loc) {
-  int appliedSomething = 0;
-  for (int matchIndex = 0; matchIndex < rule(ruleIndex)->matchStateCount; matchIndex++) {
-    if (cellsMatch(rt, loc, applicationDirection, &rule(ruleIndex)->matchStates[matchIndex]) == 1) {
-      doResultState(rt, applicationDirection, ruleIndex, loc);
-      appliedSomething = 1;
+int ruleStateMatched(Runtime * rt, Match * match, int ruleIndex, int matchStateIndex) {
+  int matchedOne = 0;
+  if (rule(ruleIndex)->matchStates[matchStateIndex].partCount > 0) {
+    for (int i = 0; i < rt->objectCount; i++) {
+      int legendIdentity = rule(ruleIndex)->matchStates[matchStateIndex].parts[0].legendId;
+      int objId = rt->objects[i].objId;
+      if (objId != legendId("Background") && objId != legendId("Wall")) {
+        printf("EVALUATING starting point '%s'\n at %i\n", objectName(objId), rt->objects[i].loc);
+      }
+
+      if (legendContains(legendIdentity, objId) == 1) {
+        printf("Found starting point for rule with '%s' at %i\n", objectName(objId), rt->objects[i].loc);
+        // start of rue state matched, we can continue the rest of the rule state
+        // try directions
+        if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].loc, RIGHT) == 1) {
+          return 1;
+        } else if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].loc, UP) == 1) {
+          return 1;
+        } else if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].loc, LEFT) == 1) {
+          return 1;
+        } else if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].loc, DOWN) == 1) {
+          return 1;
+        }
+      } else {
+        // Nothing to do unless you matched it.
+      }
     }
+  } else {
+    // no parts? in the match side? is this allowed? what does it do?
+    // wildcard?
+    return 0;
   }
-  return appliedSomething;
+  return matchedOne;
 }
 
-int applyRules(Runtime * rt, ExecutionTime execTime, Direction act) {
+int ruleMatched(Runtime * rt, Match * match, int ruleIndex) {
+  int ruleStateResult = 1;
+  for (int matchStateIndex = 0; matchStateIndex < rule(ruleIndex)->matchStateCount; matchStateIndex++) {
+    if (ruleStateResult == 0) {
+      return 0;
+    } else {
+      ruleStateResult = ruleStateMatched(rt, match, ruleIndex, matchStateIndex);
+    }
+
+  }
+  return ruleStateResult;
+}
+
+int applyRules(Runtime * rt, ExecutionTime execTime) {
+  int applied;
+  Match match;
+  match.partCount = 0;
   int count = ruleCount();
   for (int ruleIndex = 0; ruleIndex < count; ruleIndex++) {
     if (ruleApplies(rt, ruleIndex, execTime)) {
-      int totalApplications = 0;
-      int appliedSomething = 1;
-      while (appliedSomething == 1 && totalApplications < 6) {
-        appliedSomething = 0;
-        // applies to the right
-        for (int cellIndex = 0; cellIndex < rt->height * rt->width; cellIndex++) {
-          // up
-          appliedSomething = appliedSomething || checkMatches(rt, UP, ruleIndex, cellIndex);
-          //down
-          appliedSomething = appliedSomething || checkMatches(rt, DOWN, ruleIndex, cellIndex);
-          // left
-          appliedSomething = appliedSomething || checkMatches(rt, LEFT, ruleIndex, cellIndex);
-          // right
-          appliedSomething = appliedSomething || checkMatches(rt, RIGHT, ruleIndex, cellIndex);
-        }
-        totalApplications++;
+      applied = ruleMatched(rt, &match, ruleIndex);
+      printf("APPLY RULES applied: %i\n", applied);
+      if (applied == 1) {
+
+        applyMatch(rt, &match);
       }
-      if (totalApplications >= 6) {
-        printf("Warning: performed max rule executions\n");
-      }
+
     }
   }
-  return 0;
+  return applied;
 }
 
 void moveObjects(Runtime * rt) {
   int moveApplied[rt->toMoveCount];
   for (int i = 0; i < rt->toMoveCount; i++) {
+    printf("WillTryToMove '%s' dir %i\n",
+           objectName(rt->objects[rt->toMove[i].objIndex].objId),
+           rt->toMove[i].direction);
     moveApplied[i] = 0;
   }
 
   int somethingApplied = 1;
   while (somethingApplied == 1) {
     somethingApplied = 0;
-
     for (int i = 0; i < rt->toMoveCount; i++) {
       int movingToLoc = rt->objects[rt->toMove[i].objIndex].loc + locDeltaFor(rt, rt->toMove[i].direction, rt->toMove[i].direction);
       int layerIndex = objectLayer(rt->objects[rt->toMove[i].objIndex].objId);
@@ -353,9 +449,10 @@ void setLevel(Runtime * rt) {
     if (rt->levelIndex < levelCount() - 1) {
       nextLevel(rt);
     } else {
-      if (rt->pd->debug == 1) {
-        printHistory(rt);
-      }
+      printf("you won!!!\n");
+      /* if (rt->pd->debug == 1) { */
+      /*   printHistory(rt); */
+      /* } */
       rt->gameWon = 1;
     }
   }
@@ -372,14 +469,29 @@ void update(Runtime * rt, Direction dir) {
   addToMove(rt, NONE, objectIndex(rt, legendId("Player"), playerLocation(rt)), dir);
 
   // apply rules
-  applyRules(rt, NORMAL, dir);
+  /* applyRules(rt, NORMAL, dir); */
+  applyRules(rt, NORMAL);
+
 
   // apply marked for move
   moveObjects(rt);
   rt->toMoveCount = 0;
 
   // apply late rules
-  applyRules(rt, LATE, dir);
+  applyRules(rt, LATE);
+}
+
+int verifyOne(Runtime * rt, int thing, int container) {
+  for (int i = 0; i < rt->objectCount; i++) {
+    if (rt->objects[i].objId == thing) {
+      for (int j = 0; j < rt->objectCount; j++) {
+        if (rt->objects[j].objId == container && rt->objects[i].loc == rt->objects[j].loc) {
+          return 1;
+        }
+      }
+    }
+  }
+  return 0;
 }
 
 int verifyAll(Runtime * rt, int thing, int container) {
@@ -404,6 +516,8 @@ int checkWinCondition(Runtime * rt, int winConditionIndex) {
   switch (winCondition(winConditionIndex)->winQualifier) {
   case ALL:
     return verifyAll(rt, winCondition(winConditionIndex)->winIdentifier, winCondition(winConditionIndex)->onIndentifier);
+  case SOME:
+    return verifyOne(rt, winCondition(winConditionIndex)->winIdentifier, winCondition(winConditionIndex)->onIndentifier);
   default:
     printf("err: unsupported win condition '%i'\n", winCondition(winConditionIndex)->winQualifier);
     return 0;
