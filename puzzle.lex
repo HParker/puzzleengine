@@ -204,6 +204,11 @@ color (color|colour)
   return DIRECTION;
 }
 
+<RULES>no {
+  yylval.enumValue = COND_NO;
+  return DIRECTION;
+}
+
 <RULES>^late {
   yylval.enumValue = LATE;
   return EXECUTION_TIME;

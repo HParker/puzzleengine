@@ -4,11 +4,13 @@
 #include "puzzleData.h"
 #include "parser.h"
 
-void parsePuzzle(PuzzleData * puzzDat, FILE * file) {
+PuzzleData * parsePuzzle(FILE * file) {
+  pd.legendCount = 0;
+  pd.objectCount = 0;
   pd.debug = 0;
   yyin = file;
   yyparse();
-  puzzDat = &pd;
+  return &pd;
 }
 
 int debug() {
@@ -45,8 +47,12 @@ int legendObjectCount(int id) {
   return pd.legend[id].objectCount;
 }
 
-LegendValue legendObject(int legendId, int objectIndex) {
-  return pd.legend[legendId].objectValues[objectIndex];
+int legendObjectId(int legendId, int objectIndex) {
+  return pd.legend[legendId].objectValues[objectIndex].id;
+}
+
+int legendObjectIsLegend(int legendId, int objectIndex) {
+  return pd.legend[legendId].objectValues[objectIndex].isLegend;
 }
 
 Legend legend(int legendId) {
@@ -55,16 +61,14 @@ Legend legend(int legendId) {
 
 int legendContains(int legendId, int objId) {
   int recursingValue;
-  LegendValue lv;
   int count = legendObjectCount(legendId);
   for (int i = 0; i < count; i++) {
-    lv = legendObject(legendId, i);
-    if (lv.id == objId) {
+    if (legendObjectId(legendId, i) == objId) {
       return 1;
     }
-    if (lv.isLegend == 1) {
+    if (legendObjectIsLegend(legendId, i) == 1) {
       // TODO: this assumes an `OR` condition used in the legend
-      recursingValue = legendContains(lv.id, objId);
+      recursingValue = legendContains(legendObjectId(legendId, i), objId);
       if (recursingValue == 1) {
         return 1;
       }

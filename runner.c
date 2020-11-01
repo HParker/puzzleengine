@@ -106,11 +106,9 @@ void fillBackground(Runtime * rt) {
 void loadCell(Runtime * rt, char cell, int loc) {
   int id = legendIdForGlyph(cell);
   int count = legendObjectCount(id);
-  LegendValue lv;
   for (int i = 0; i < count; i++) {
-    lv = legendObject(id, i);
-    if (lv.id != legendId("Background")) {
-      rt->objects[rt->objectCount].objId = legendObject(id, i).id;
+    if (legendObjectId(id, i) != legendId("Background")) {
+      rt->objects[rt->objectCount].objId = legendObjectId(id, i);
       rt->objects[rt->objectCount].loc = loc;
       rt->objectCount++;
     }
@@ -149,7 +147,7 @@ void startGame(Runtime * rt, FILE * file) {
   rt->historyCount = 0;
   rt->toMoveCount = 0;
   rt->objectCount = 0;
-  parsePuzzle(rt->pd, file);
+  rt->pd = parsePuzzle(file);
   loadLevel(rt);
 }
 

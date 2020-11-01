@@ -210,11 +210,9 @@ legend_values: legend_value legend_joiner legend_values
              | legend_value
 
 legend_value: LEGEND_VALUE {
-  Legend l = pd.legend[pd.legendCount];
-  l.objectValues[l.objectCount].id = legendId($1);
-  l.objectValues[l.objectCount].isLegend = 1;
-  l.objectCount++;
-  pd.legend[pd.legendCount] = l;
+  pd.legend[pd.legendCount].objectValues[pd.legend[pd.legendCount].objectCount].id = legendId($1);
+  pd.legend[pd.legendCount].objectValues[pd.legend[pd.legendCount].objectCount].isLegend = 1;
+  pd.legend[pd.legendCount].objectCount++;
 }
 
 legend_joiner: LEGEND_AND { pd.legend[pd.legendCount].objectRelation = LEGEND_RELATION_AND; }

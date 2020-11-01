@@ -68,7 +68,8 @@ typedef enum Direction
    REL_LEFT   = 8,
    REL_RIGHT  = 9,
    USE        = 10,
-   NONE       = 11
+   NONE       = 11,
+   COND_NO    = 12
   } Direction;
 
 typedef enum ExecutionTime
@@ -225,7 +226,7 @@ typedef struct Runtime {
 } Runtime;
 
 // PuzzleData
-extern void parsePuzzle(PuzzleData * puzzDat, FILE * file);
+extern PuzzleData * parsePuzzle(FILE * file);
 extern char objectGlyph(int objId);
 extern char * objectName(int id);
 extern int debug();
@@ -234,6 +235,8 @@ extern int debug();
 extern int legendIdForGlyph(char glyph);
 extern int legendObjectCount(int id);
 extern LegendValue legendObject(int legendId, int objectIndex);
+extern int legendObjectId(int legendId, int objectIndex);
+extern int legendObjectIsLegend(int legendId, int objectIndex);
 extern Legend legend(int legendId);
 extern int legendContains(int legendId, int objId);
 
