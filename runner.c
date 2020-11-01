@@ -118,16 +118,23 @@ void loadCell(Runtime * rt, char cell, int loc) {
 }
 
 void loadLevel(Runtime * rt) {
-  rt->height = levelHeight(rt->levelIndex);
-  rt->width = levelWidth(rt->levelIndex);
-  rt->toMoveCount = 0;
-  rt->objectCount = 0;
+  rt->levelType = levelType(rt->levelIndex);
+  if (rt->levelType == SQUARES) {
+    rt->height = levelHeight(rt->levelIndex);
+    rt->width = levelWidth(rt->levelIndex);
+    rt->toMoveCount = 0;
+    rt->objectCount = 0;
 
-  fillBackground(rt);
+    fillBackground(rt);
 
-  int count = levelCellCount(rt->levelIndex);
-  for (int i = 0; i < count; i++) {
-    loadCell(rt, levelCell(rt->levelIndex, i), i);
+    int count = levelCellCount(rt->levelIndex);
+    for (int i = 0; i < count; i++) {
+      loadCell(rt, levelCell(rt->levelIndex, i), i);
+    }
+  } else {
+    // Message style level
+    // Not sure we have to do anything
+    // Since we can just render the level from the message stored in the puzzle data;
   }
 }
 
@@ -146,7 +153,7 @@ void startGame(Runtime * rt, FILE * file) {
   loadLevel(rt);
 }
 
-void render(Runtime * rt) {
+void renderLevel(Runtime * rt) {
   // build
   int count = levelCellCount(rt->levelIndex);
   char map[count];
@@ -161,6 +168,33 @@ void render(Runtime * rt) {
     if ((i + 1) % (rt->width) == 0) {
       printf("\n");
     }
+  }
+}
+
+void renderMessage(Runtime * rt) {
+  char * message = levelMessage(rt->levelIndex);
+  int messageLength = strlen(message);
+  for (int i = 0; i < messageLength + 4; i++) {
+    printf("*");
+  }
+  printf("\n");
+
+  printf("* %s *\n", message);
+
+  for (int i = 0; i < messageLength + 4; i++) {
+    printf("*");
+  }
+  printf("\n");
+}
+
+void render(Runtime * rt) {
+  switch (rt->levelType) {
+  case SQUARES:
+    renderLevel(rt);
+    break;
+  case MESSAGE_TEXT:
+    renderMessage(rt);
+    break;
   }
 }
 
@@ -238,12 +272,14 @@ int doResultState(Runtime * rt, Direction applicationDirection, int ruleIndex, i
 
 void applyMatch(Runtime * rt, Match * match) {
   for (int i = 0; i < match->partCount; i++) {
-    printf("Applying match part id: '%s' -> '%s' location: %i -> %i goalMovment: %i\n",
-           objectName(rt->objects[match->parts[i].objIndex].objId),
-           objectName(match->parts[i].goalId),
-           rt->objects[match->parts[i].objIndex].loc,
-           match->parts[i].goalLocation,
-           match->parts[i].goalDirection);
+    /* if (rt->pd->debug == 1) { */
+    /*   printf("Applying match part id: '%s' -> '%s' location: %i -> %i goalMovment: %i\n", */
+    /*          objectName(rt->objects[match->parts[i].objIndex].objId), */
+    /*          objectName(match->parts[i].goalId), */
+    /*          rt->objects[match->parts[i].objIndex].loc, */
+    /*          match->parts[i].goalLocation, */
+    /*          match->parts[i].goalDirection); */
+    /* } */
 
     if (legend(match->parts[i].goalId).objectCount > 1) {
       // This must be a match based on a legend that includes this object.
@@ -272,18 +308,10 @@ int ruleStateMatchDir(Runtime * rt, Match * match, int ruleIndex, int matchState
 
     success = 0;
     for (int j = 0; j < rt->objectCount; j++) {
-
-      /* printf("checking '%s' contains: %i, loc %i == %i\n", */
-      /*        objectName(rt->objects[j].objId), */
-      /*        legendContains(legendId, rt->objects[j].objId), */
-      /*        rt->objects[j].loc, */
-      /*        adjustedLoc); */
       if (legendContains(legendId, rt->objects[j].objId) &&
           rt->objects[j].loc == adjustedLoc &&
           matchesDirection(ruleDir, dir, directionMoving(rt, j))
           ) {
-        // cell matched
-        printf("'%s' at %i matched rule %i\n", objectName(rt->objects[j].objId), adjustedLoc, ruleIndex);
         match->parts[match->partCount].objIndex = j;
         match->parts[match->partCount].actualLegendId = rt->objects[j].objId;
         match->parts[match->partCount].actualLocation = adjustedLoc;
@@ -303,7 +331,6 @@ int ruleStateMatchDir(Runtime * rt, Match * match, int ruleIndex, int matchState
     if (success == 1) {
       // found a matching object continue
       match->partCount++;
-      printf("applying in direction found %i matching parts\n", match->partCount);
     } else {
       // failed to find an object that matches the next part, fail
       match->partCount = 0;
@@ -319,12 +346,7 @@ int ruleStateMatched(Runtime * rt, Match * match, int ruleIndex, int matchStateI
     for (int i = 0; i < rt->objectCount; i++) {
       int legendIdentity = rule(ruleIndex)->matchStates[matchStateIndex].parts[0].legendId;
       int objId = rt->objects[i].objId;
-      if (objId != legendId("Background") && objId != legendId("Wall")) {
-        printf("EVALUATING starting point '%s'\n at %i\n", objectName(objId), rt->objects[i].loc);
-      }
-
       if (legendContains(legendIdentity, objId) == 1) {
-        printf("Found starting point for rule with '%s' at %i\n", objectName(objId), rt->objects[i].loc);
         // start of rue state matched, we can continue the rest of the rule state
         // try directions
         if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].loc, RIGHT) == 1) {
@@ -350,31 +372,33 @@ int ruleStateMatched(Runtime * rt, Match * match, int ruleIndex, int matchStateI
 
 int ruleMatched(Runtime * rt, Match * match, int ruleIndex) {
   int ruleStateResult = 1;
-  for (int matchStateIndex = 0; matchStateIndex < rule(ruleIndex)->matchStateCount; matchStateIndex++) {
+  int count = rule(ruleIndex)->matchStateCount;
+  for (int matchStateIndex = 0; matchStateIndex < count; matchStateIndex++) {
     if (ruleStateResult == 0) {
       return 0;
     } else {
       ruleStateResult = ruleStateMatched(rt, match, ruleIndex, matchStateIndex);
     }
-
   }
   return ruleStateResult;
 }
 
 int applyRules(Runtime * rt, ExecutionTime execTime) {
-  int applied;
+  int applied = 1;
   Match match;
   match.partCount = 0;
   int count = ruleCount();
   for (int ruleIndex = 0; ruleIndex < count; ruleIndex++) {
-    if (ruleApplies(rt, ruleIndex, execTime)) {
-      applied = ruleMatched(rt, &match, ruleIndex);
-      printf("APPLY RULES applied: %i\n", applied);
-      if (applied == 1) {
-
-        applyMatch(rt, &match);
+    applied = 1;
+    while (applied == 1) {
+      applied = 0;
+      match.partCount = 0;
+      if (ruleApplies(rt, ruleIndex, execTime)) {
+        applied = ruleMatched(rt, &match, ruleIndex);
+        if (applied == 1) {
+          applyMatch(rt, &match);
+        }
       }
-
     }
   }
   return applied;
@@ -383,9 +407,6 @@ int applyRules(Runtime * rt, ExecutionTime execTime) {
 void moveObjects(Runtime * rt) {
   int moveApplied[rt->toMoveCount];
   for (int i = 0; i < rt->toMoveCount; i++) {
-    printf("WillTryToMove '%s' dir %i\n",
-           objectName(rt->objects[rt->toMove[i].objIndex].objId),
-           rt->toMove[i].direction);
     moveApplied[i] = 0;
   }
 
@@ -445,14 +466,15 @@ Direction handleInput(Runtime * rt, char * input) {
 }
 
 void setLevel(Runtime * rt) {
-  if (checkWinConditions(rt) == 1) {
+  if (rt->levelType == SQUARES && checkWinConditions(rt) == 1) {
     if (rt->levelIndex < levelCount() - 1) {
       nextLevel(rt);
     } else {
-      printf("you won!!!\n");
-      /* if (rt->pd->debug == 1) { */
-      /*   printHistory(rt); */
-      /* } */
+
+      if (debug() == 1) {
+        printf("you won!!!\n");
+        printHistory(rt);
+      }
       rt->gameWon = 1;
     }
   }
@@ -465,20 +487,25 @@ void recordInput(Runtime * rt, Direction dir) {
 
 void update(Runtime * rt, Direction dir) {
   recordInput(rt, dir);
+  if (rt->levelType == SQUARES) {
+    addToMove(rt, NONE, objectIndex(rt, legendId("Player"), playerLocation(rt)), dir);
 
-  addToMove(rt, NONE, objectIndex(rt, legendId("Player"), playerLocation(rt)), dir);
-
-  // apply rules
-  /* applyRules(rt, NORMAL, dir); */
-  applyRules(rt, NORMAL);
+    // apply rules
+    applyRules(rt, NORMAL);
 
 
-  // apply marked for move
-  moveObjects(rt);
-  rt->toMoveCount = 0;
+    // apply marked for move
+    moveObjects(rt);
+    rt->toMoveCount = 0;
 
-  // apply late rules
-  applyRules(rt, LATE);
+    // apply late rules
+    applyRules(rt, LATE);
+    setLevel(rt);
+  } else {
+    if (dir == USE) {
+      nextLevel(rt);
+    }
+  }
 }
 
 int verifyOne(Runtime * rt, int thing, int container) {

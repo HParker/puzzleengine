@@ -5,9 +5,14 @@
 #include "parser.h"
 
 void parsePuzzle(PuzzleData * puzzDat, FILE * file) {
+  pd.debug = 0;
   yyin = file;
   yyparse();
   puzzDat = &pd;
+}
+
+int debug() {
+  return pd.debug;
 }
 
 char * objectName(int id) {
@@ -108,6 +113,14 @@ int levelCellCount(int levelIndex) {
 
 int levelCell(int levelIndex, int cellIndex) {
   return pd.levels[levelIndex].cells[cellIndex];
+}
+
+LevelType levelType(int levelIndex) {
+  return pd.levels[levelIndex].levelType;
+}
+
+char * levelMessage(int levelIndex) {
+  return pd.levels[levelIndex].message;
 }
 
 int layerIncludes(int layerId, int objId) {

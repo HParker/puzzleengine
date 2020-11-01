@@ -19,28 +19,15 @@ int main(int argc, char ** argv) {
   startGame(&rt, file);
   rt.toMoveCount = 0;
 
-  for (int i = 0; i < rt.objectCount; i++) {
-    printf("object %i: '%s' (%i)\n", i, objectName(rt.objects[i].objId), rt.objects[i].objId);
-  }
-
-
   char input[100];
   while (1) {
-    if (checkWinConditions(&rt) == 1) {
-      if (rt.levelIndex < levelCount() - 1) {
-        nextLevel(&rt);
-      } else {
-        render(&rt);
-        printf("you won!\n");
-        return 0;
-        // TODO: return to menu
-      }
-    }
     render(&rt);
     printf("Enter Move: ");
     gets(input);
     update(&rt, handleInput(&rt, input));
-    setLevel(&rt);
+    if (rt.gameWon == 1) {
+      return 0;
+    }
   }
   return 0;
 }

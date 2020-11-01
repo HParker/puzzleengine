@@ -369,11 +369,15 @@ wincondition_unconditional: LOGIC_WORD OBJID {
 levels: level levels
       | level
 
-level: MESSAGE ID any_level_newlines
-     | rows any_level_newlines {
-  pd.levelCount++;
+level: message_level any_level_newlines { pd.levelCount++; }
+     | rows any_level_newlines { pd.levelCount++; }
+
+message_level: MESSAGE ID {
+  pd.levels[pd.levelCount].levelType = MESSAGE_TEXT;
+  pd.levels[pd.levelCount].message = strdup($2);
 }
-rows: row rows | row
+
+rows: row rows | row { pd.levels[pd.levelCount].levelType = SQUARES; }
 row: cells LEVEL_EOL {
   pd.levels[pd.levelCount].height++;
   if (pd.levels[pd.levelCount].width == 0) {

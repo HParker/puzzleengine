@@ -122,8 +122,8 @@ typedef struct Match {
 
 typedef enum LevelType
   {
-   SQUARES,
-   MESSAGE_TEXT
+   SQUARES = 0,
+   MESSAGE_TEXT = 1
   } LevelType;
 
 typedef struct Level {
@@ -214,6 +214,7 @@ typedef struct Runtime {
   char background;
   int height;
   int width;
+  LevelType levelType;
   int objectCount;
   Obj objects[10000];
   int toMoveCount;
@@ -227,6 +228,7 @@ typedef struct Runtime {
 extern void parsePuzzle(PuzzleData * puzzDat, FILE * file);
 extern char objectGlyph(int objId);
 extern char * objectName(int id);
+extern int debug();
 
 // legend
 extern int legendIdForGlyph(char glyph);
@@ -243,7 +245,8 @@ extern int levelHeight(int levelIndex);
 extern int levelWidth(int levelIndex);
 extern int levelCellCount(int levelIndex);
 extern int levelCell(int levelIndex, int cellIndex);
-
+extern LevelType levelType(int levelIndex);
+extern char * levelMessage(int levelIndex);
 // layers
 int layerIncludes(int layerId, int objId);
 

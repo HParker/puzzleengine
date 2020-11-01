@@ -29,7 +29,7 @@ START_TEST (test_parses_block_faker)
   ck_assert_int_eq(pd.legendCount, 27);
   ck_assert_int_eq(pd.layerCount, 4);
   ck_assert_int_eq(pd.ruleCount, 7);
-  ck_assert_int_eq(pd.levelCount, 5);
+  ck_assert_int_eq(pd.levelCount, 10);
 }
 END_TEST
 
@@ -44,7 +44,7 @@ START_TEST (test_parses_by_your_side)
   ck_assert_int_eq(pd.legendCount, 55);
   ck_assert_int_eq(pd.layerCount, 4);
   ck_assert_int_eq(pd.ruleCount, 6);
-  ck_assert_int_eq(pd.levelCount, 10);
+  ck_assert_int_eq(pd.levelCount, 12);
 }
 END_TEST
 
