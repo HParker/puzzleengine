@@ -49,7 +49,7 @@ color (color|colour)
 ^text_color[ ]+ { BEGIN IDENTIFIER; return TEXT_COLOR; }
 ^throttle_movement[ ]+ { BEGIN IDENTIFIER; return THROTTLE_MOVEMENT; }
 ^zoomscreen[ ]+ { BEGIN IDENTIFIER; return ZOOMSCREEN; }
-^debug[ ]+ { BEGIN IDENTIFIER; return DEBUG; }
+^debug { return DEBUG; }
 ^verbose_logging[ ]+ { BEGIN IDENTIFIER; return VERBOSE_LOGGING; }
 
 <IDENTIFIER>[a-zA-Z0-9\./ ]+/[\n] {
