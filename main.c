@@ -17,7 +17,6 @@ int main(int argc, char ** argv) {
     return 1;
   }
   Runtime rt;
-  rt.objectCount = 0;
   startGame(&rt, file);
   rt.toMoveCount = 0;
   initRenderer();

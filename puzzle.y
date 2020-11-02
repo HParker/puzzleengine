@@ -138,24 +138,25 @@ modechange: MODEHEADER ID MODEHEADER
 object_definitions: object_definition object_definitions
                   | object_definition
 
-object_definition: object_name colors sprite { pd.objectCount++; }
-                 | object_name color { pd.objectCount++; }
+object_definition: object_name colors sprite { incObject(); }
+                       | object_name color { incObject(); }
 
 object_name: OBJID SPRITE_CELL {
                  pd.objects[pd.objectCount].name = strdup($1);
+
                  pd.legend[pd.legendCount].hasStringKey = 1;
                  pd.legend[pd.legendCount].stringKey = strdup($1);
                  pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;
                  pd.legend[pd.legendCount].objectValues[0].isLegend = 0;
                  pd.legend[pd.legendCount].objectCount++;
-                 pd.legendCount++;
+                 incLegend();
                  // single char key
                  pd.legend[pd.legendCount].hasStringKey = 0;
                  pd.legend[pd.legendCount].key = $2;
                  pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;
                  pd.legend[pd.legendCount].objectValues[0].isLegend = 0;
                  pd.legend[pd.legendCount].objectCount++;
-                 pd.legendCount++;
+                 incLegend();
 }
            | OBJID {
                pd.objects[pd.objectCount].name = strdup($1);
@@ -164,7 +165,7 @@ object_name: OBJID SPRITE_CELL {
                pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;
                pd.legend[pd.legendCount].objectValues[0].isLegend = 0;
                pd.legend[pd.legendCount].objectCount++;
-               pd.legendCount++;
+               incLegend();
 }
 
 colors: color colors | color
@@ -189,7 +190,7 @@ legend_lines: legend_line legend_lines
             | legend_line
 
 legend_line: legend_id EQUALS legend_values end_legend_line {
-  pd.legendCount++;
+  incLegend();
   pd.legend[pd.legendCount].objectRelation = LEGEND_RELATION_UNKNOWN;
 }
 
@@ -223,9 +224,7 @@ sounds: // Nothing for now
 collision_lines: collision_line collision_lines
                | collision_line
 
-collision_line: layer_objects END_LAYER {
-  pd.layerCount++;
-}
+collision_line: layer_objects END_LAYER { incLayer(); }
 
 layer_objects: layer_object layer_objects
              | layer_object
@@ -248,10 +247,10 @@ some_eor:       END_OF_RULE some_eor | END_OF_RULE
 any_eor:        some_eor |
         ;
 
-rule: rule_prefix rule_infix rule_postfix { pd.ruleCount++; }
-    | rule_prefix rule_infix { pd.ruleCount++; }
-    |             rule_infix rule_postfix { pd.ruleCount++; }
-    | state_definitions arrow state_definitions { pd.ruleCount++; }
+rule: rule_prefix rule_infix rule_postfix { incRule(); }
+          | rule_prefix rule_infix { incRule(); }
+|             rule_infix rule_postfix { incRule(); }
+| state_definitions arrow state_definitions { incRule(); }
 
 rule_infix: state_definitions arrow state_definitions
 
@@ -353,13 +352,13 @@ wincondition_conditional: LOGIC_WORD OBJID LOGIC_WORD OBJID {
   pd.winConditions[pd.winConditionCount].winQualifier = $1;
   pd.winConditions[pd.winConditionCount].winIdentifier = legendId($2);
   pd.winConditions[pd.winConditionCount].onIndentifier = legendId($4);
-  pd.winConditionCount++;
+  incWinCondition();
 }
 
 wincondition_unconditional: LOGIC_WORD OBJID {
   pd.winConditions[pd.winConditionCount].winQualifier = $1;
   pd.winConditions[pd.winConditionCount].winIdentifier = legendId($2);
-  pd.winConditionCount++;
+  incWinCondition();
 }
 
 
@@ -367,8 +366,8 @@ wincondition_unconditional: LOGIC_WORD OBJID {
 levels: level levels
       | level
 
-level: message_level any_level_newlines { pd.levelCount++; }
-     | rows any_level_newlines { pd.levelCount++; }
+level: message_level any_level_newlines { incLevel(); }
+           | rows any_level_newlines { incLevel(); }
 
 message_level: MESSAGE ID {
   pd.levels[pd.levelCount].levelType = MESSAGE_TEXT;

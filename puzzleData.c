@@ -1,15 +1,95 @@
 // Interface to puzzle data extracted from the puzzlescript file
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "puzzleData.h"
 #include "parser.h"
 
-PuzzleData * parsePuzzle(FILE * file) {
-  pd.legendCount = 0;
+void initPuzzleData() {
   pd.objectCount = 0;
-  pd.debug = 0;
+  pd.objectCapacity = 100;
+  pd.objects = malloc(sizeof(Object) * pd.objectCapacity);
+
+  pd.legendCount = 0;
+  pd.legendCapacity = 1000;
+  pd.legend = malloc(sizeof(Legend) * pd.legendCapacity);
+
+  pd.layerCount = 0;
+  pd.layerCapacity = 100;
+  pd.layers = malloc(sizeof(Layer) * pd.layerCapacity);
+
+  pd.ruleCount = 0;
+  pd.ruleCapacity = 100;
+  pd.rules = malloc(sizeof(Rule) * pd.ruleCapacity);
+
+  pd.winConditionCount = 0;
+  pd.winConditionCapacity = 100;
+  pd.winConditions = malloc(sizeof(WinCondition) * pd.winConditionCapacity);
+
+  pd.levelCount = 0;
+  pd.levelCapacity = 100;
+  pd.levels = malloc(sizeof(Level) * pd.levelCapacity);
+}
+
+void incObject() {
+  if (pd.objectCount + 1 == pd.objectCapacity) {
+    printf("object REALLOC\n");
+    pd.objectCapacity += 50;
+    pd.objects = realloc(pd.objects, sizeof(Object) * pd.objectCapacity);
+  }
+  pd.objectCount++;
+}
+
+void incLegend() {
+  if (pd.legendCount + 1 == pd.legendCapacity) {
+    printf("legend REALLOC\n");
+    pd.legendCapacity += 50;
+    pd.legend = realloc(pd.legend, sizeof(Legend) * pd.legendCapacity);
+  }
+  pd.legendCount++;
+}
+
+void incLayer() {
+  if (pd.layerCount + 1 == pd.layerCapacity) {
+    printf("layer REALLOC\n");
+    pd.layerCapacity += 50;
+    pd.layers = realloc(pd.layers, sizeof(Layer) * pd.layerCapacity);
+  }
+  pd.layerCount++;
+}
+
+void incRule() {
+  if (pd.ruleCount + 1 == pd.ruleCapacity) {
+    printf("RULE REALLOC\n");
+    pd.ruleCapacity += 50;
+    pd.rules = realloc(pd.rules, sizeof(Rule) * pd.ruleCapacity);
+  }
+  pd.ruleCount++;
+}
+
+void incWinCondition() {
+  if (pd.winConditionCount + 1 == pd.winConditionCapacity) {
+    printf("winCondition REALLOC\n");
+    pd.winConditionCapacity += 50;
+    pd.winConditions = realloc(pd.winConditions, sizeof(WinCondition) * pd.winConditionCapacity);
+  }
+  pd.winConditionCount++;
+}
+
+void incLevel() {
+  if (pd.levelCount + 1 == pd.levelCapacity) {
+    printf("level REALLOC\n");
+    pd.levelCapacity += 50;
+    pd.levels = realloc(pd.levels, sizeof(Level) * pd.levelCapacity);
+  }
+  pd.levelCount++;
+}
+
+PuzzleData * parsePuzzle(FILE * file) {
+  initPuzzleData();
   yyin = file;
   yyparse();
+
   return &pd;
 }
 

@@ -35,7 +35,7 @@ typedef struct Legend {
 
 typedef struct Layer {
   int width;
-  int objectIds[100];
+  int objectIds[1000];
 } Layer;
 
 typedef enum WinQualifier // TODO: rename to logic words?
@@ -172,30 +172,36 @@ typedef struct PuzzleData {
   int debug;
 
   int objectCount;
-  Object objects[100];
+  int objectCapacity;
+  Object * objects;
 
   // sounds
   // blah. I don't wanna do it...
 
   // legend
   int legendCount;
-  Legend legend[100];
+  int legendCapacity;
+  Legend * legend;
 
   // collision layers
   int layerCount;
-  Layer layers[100];
+  int layerCapacity;
+  Layer * layers;
 
   // rules
   int ruleCount;
-  Rule rules[100];
+  int ruleCapacity;
+  Rule * rules;
 
   // win conditions
   int winConditionCount;
-  WinCondition winConditions[100];
+  int winConditionCapacity;
+  WinCondition * winConditions;
 
   // levels
   int levelCount;
-  Level levels[100];
+  int levelCapacity;
+  Level * levels;
 } PuzzleData;
 
 typedef struct ToMove {
@@ -217,11 +223,14 @@ typedef struct Runtime {
   int width;
   LevelType levelType;
   int objectCount;
-  Obj objects[10000];
+  int objectCapacity;
+  Obj * objects;
   int toMoveCount;
-  ToMove toMove[100];
+  int toMoveCapacity;
+  ToMove * toMove;
   int historyCount;
-  Direction history[100];
+  int historyCapacity;
+  Direction * history;
   // move history?
 } Runtime;
 
@@ -284,6 +293,12 @@ extern WinCondition * winCondition(int winConditionIndex);
 
 // Parser methods
 extern int legendId(char * name);
+extern void incObject();
+extern void incLegend();
+extern void incLayer();
+extern void incRule();
+extern void incWinCondition();
+extern void incLevel();
 extern FILE * yyin;
 extern int yyparse();
 

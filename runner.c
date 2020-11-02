@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <curses.h>
 #include "puzzleData.h"
 
@@ -76,31 +77,35 @@ void addToMove(Runtime * rt, Direction applicationDirection, int objIndex, Direc
       return;
     }
   }
+  /* if (rt->toMoveCount + 1 == rt->toMoveCapacity) { */
+  /*   rt->toMoveCapacity += 50; */
+  /*   printf("tomove realloc\n"); */
+  /*   rt->toMove = realloc(rt->toMove, sizeof(ToMove) * rt->toMoveCapacity); */
+  /* } */
+
   rt->toMove[rt->toMoveCount].objIndex = objIndex;
+  // TODO: having this absolute dir here seems wrong, we should already convert it before trying to do the move.
   Direction absoluteDir = absoluteDirection(applicationDirection, direction);
   rt->toMove[rt->toMoveCount].direction = absoluteDir;
   rt->toMoveCount++;
 }
 
-/* char charForLoc(Runtime * rt, int loc) { */
-/*   int maxHeight = -1; */
-/*   int id = -1; */
-/*   int currentHeight; */
-/*   for (int i = 0; i < rt->objectCount; i++) { */
-/*     currentHeight = objectLayer(rt->objects[i].objId); */
-/*     if (rt->objects[i].loc == loc && currentHeight > maxHeight) { */
-/*       maxHeight = currentHeight; */
-/*       id = rt->objects[i].objId; */
-/*     } */
-/*   } */
-/*   return objectGlyph(id); */
-/* } */
+void addObj(Runtime * rt, int objId, int loc) {
+  if (rt->objectCount + 1 == rt->objectCapacity) {
+    printf("object realloc\n");
+    rt->objectCapacity += 50;
+    rt->objects = realloc(rt->objects, sizeof(Direction) * rt->objectCapacity);
+  }
+
+  rt->objects[rt->objectCount].objId = objId;
+  rt->objects[rt->objectCount].loc = loc;
+  rt->objectCount++;
+}
 
 void fillBackground(Runtime * rt) {
+  int backgroundId = legendId("Background");
   for (int i = 0; i < rt->height * rt->width; i++) {
-    rt->objects[rt->objectCount].objId = legendId("Background");
-    rt->objects[rt->objectCount].loc = i;
-    rt->objectCount++;
+    addObj(rt, backgroundId, i);
   }
 }
 
@@ -108,12 +113,11 @@ void loadCell(Runtime * rt, char cell, int loc) {
   int id = legendIdForGlyph(cell);
   int count = legendObjectCount(id);
   for (int i = 0; i < count; i++) {
-    if (legendObjectId(id, i) != legendId("Background")) {
-      rt->objects[rt->objectCount].objId = legendObjectId(id, i);
-      rt->objects[rt->objectCount].loc = loc;
-      rt->objectCount++;
+    int backgroundId = legendId("Background");
+    if (legendObjectId(id, i) != backgroundId) {
+      addObj(rt, legendObjectId(id, i), loc);
     }
- }
+  }
 }
 
 void loadLevel(Runtime * rt) {
@@ -142,12 +146,27 @@ void nextLevel(Runtime * rt) {
   loadLevel(rt);
 }
 
-void startGame(Runtime * rt, FILE * file) {
+void initGame(Runtime * rt) {
   rt->levelIndex = 0;
   rt->gameWon = 0;
-  rt->historyCount = 0;
   rt->toMoveCount = 0;
+  rt->historyCount = 0;
+
   rt->objectCount = 0;
+  rt->objectCapacity = 1000;
+  rt->objects = malloc(sizeof(Obj) * rt->objectCapacity);
+
+  rt->toMoveCount = 0;
+  rt->toMoveCapacity = 100;
+  rt->toMove = malloc(sizeof(ToMove) * rt->objectCapacity);
+
+  rt->historyCount = 0;
+  rt->historyCapacity = 100;
+  rt->history = malloc(sizeof(Direction) * rt->historyCapacity);
+}
+
+void startGame(Runtime * rt, FILE * file) {
+  initGame(rt);
   rt->pd = parsePuzzle(file);
   loadLevel(rt);
 }
@@ -434,13 +453,18 @@ void setLevel(Runtime * rt) {
   }
 }
 
-void recordInput(Runtime * rt, Direction dir) {
+void addHistory(Runtime * rt, Direction dir) {
+  if (rt->historyCount + 1 == rt->historyCapacity) {
+    printf("history realloc\n");
+    rt->historyCapacity += 50;
+    rt->history = realloc(rt->history, sizeof(Direction) * rt->historyCapacity);
+  }
   rt->history[rt->historyCount] = dir;
   rt->historyCount++;
 }
 
 void update(Runtime * rt, Direction dir) {
-  recordInput(rt, dir);
+  addHistory(rt, dir);
   if (rt->levelType == SQUARES) {
     addToMove(rt, NONE, objectIndex(rt, legendId("Player"), playerLocation(rt)), dir);
 

@@ -8,13 +8,13 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: install check
-    - run: sudo apt-get install check
+      run: sudo apt-get install check
+    - name: install curses
+      run: sudo apt-get install libncurses5-dev libncursesw5-dev
     - name: make
       run: make
     - name: make check
