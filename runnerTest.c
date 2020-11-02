@@ -107,6 +107,20 @@ START_TEST (test_runs_basic)
 }
 END_TEST
 
+START_TEST (test_runs_block_faker)
+{
+  FILE *file;
+  file = fopen("./puzzles/block_faker.ps", "r");
+  Runtime rt;
+  startGame(&rt, file);
+
+  int moves[] = {
+  };
+  test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
+}
+END_TEST
+
+
 Suite * puzzle_script_parser_suite(void)
 {
     Suite * s;
@@ -117,6 +131,7 @@ Suite * puzzle_script_parser_suite(void)
     test_Parser = tcase_create("Runner");
     tcase_add_test(test_Parser, test_runs_stumper);
     tcase_add_test(test_Parser, test_runs_basic);
+    /* tcase_add_test(test_Parser, test_runs_block_faker); */
     /* tcase_add_test(test_Parser, test_parses_constellation_z); */
     /* tcase_add_test(test_Parser, test_parses_eyeball); */
     /* tcase_add_test(test_Parser, test_parses_kettle); */

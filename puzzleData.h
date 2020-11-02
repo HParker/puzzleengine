@@ -271,7 +271,7 @@ extern int checkWinConditions(Runtime * rt);
 extern void render(Runtime * rt);
 
 // Update
-extern Direction handleInput(Runtime * rt, char * input);
+extern Direction handleInput(Runtime * rt, int input);
 extern void setLevel(Runtime * rt);
 extern void update(Runtime * rt, Direction dir);
 

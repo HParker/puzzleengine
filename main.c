@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
+#include <curses.h>
 #include "puzzleData.h"
+#include "render.h"
 
 int main(int argc, char ** argv) {
   FILE *file;
@@ -18,16 +20,18 @@ int main(int argc, char ** argv) {
   rt.objectCount = 0;
   startGame(&rt, file);
   rt.toMoveCount = 0;
+  initRenderer();
 
-  char input[100];
+  int input;
   while (1) {
     render(&rt);
-    printf("Enter Move: ");
-    gets(input);
+    input = getch();
     update(&rt, handleInput(&rt, input));
     if (rt.gameWon == 1) {
-      return 0;
+      break;
     }
   }
+  endwin();
+  printHistory(&rt);
   return 0;
 }

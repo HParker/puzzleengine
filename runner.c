@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <curses.h>
 #include "puzzleData.h"
 
 int objectIndex(Runtime * rt, int id, int loc) {
@@ -81,19 +82,19 @@ void addToMove(Runtime * rt, Direction applicationDirection, int objIndex, Direc
   rt->toMoveCount++;
 }
 
-char charForLoc(Runtime * rt, int loc) {
-  int maxHeight = -1;
-  int id = -1;
-  int currentHeight;
-  for (int i = 0; i < rt->objectCount; i++) {
-    currentHeight = objectLayer(rt->objects[i].objId);
-    if (rt->objects[i].loc == loc && currentHeight > maxHeight) {
-      maxHeight = currentHeight;
-      id = rt->objects[i].objId;
-    }
-  }
-  return objectGlyph(id);
-}
+/* char charForLoc(Runtime * rt, int loc) { */
+/*   int maxHeight = -1; */
+/*   int id = -1; */
+/*   int currentHeight; */
+/*   for (int i = 0; i < rt->objectCount; i++) { */
+/*     currentHeight = objectLayer(rt->objects[i].objId); */
+/*     if (rt->objects[i].loc == loc && currentHeight > maxHeight) { */
+/*       maxHeight = currentHeight; */
+/*       id = rt->objects[i].objId; */
+/*     } */
+/*   } */
+/*   return objectGlyph(id); */
+/* } */
 
 void fillBackground(Runtime * rt) {
   for (int i = 0; i < rt->height * rt->width; i++) {
@@ -149,51 +150,6 @@ void startGame(Runtime * rt, FILE * file) {
   rt->objectCount = 0;
   rt->pd = parsePuzzle(file);
   loadLevel(rt);
-}
-
-void renderLevel(Runtime * rt) {
-  // build
-  int count = levelCellCount(rt->levelIndex);
-  char map[count];
-  for (int i = 0; i < count; i++) {
-    map[i] = '.';
-    map[i] = charForLoc(rt, i);
-  }
-
-  // draw
-  for (int i = 0; i < count; i++) {
-    printf("%c", map[i]);
-    if ((i + 1) % (rt->width) == 0) {
-      printf("\n");
-    }
-  }
-}
-
-void renderMessage(Runtime * rt) {
-  char * message = levelMessage(rt->levelIndex);
-  int messageLength = strlen(message);
-  for (int i = 0; i < messageLength + 4; i++) {
-    printf("*");
-  }
-  printf("\n");
-
-  printf("* %s *\n", message);
-
-  for (int i = 0; i < messageLength + 4; i++) {
-    printf("*");
-  }
-  printf("\n");
-}
-
-void render(Runtime * rt) {
-  switch (rt->levelType) {
-  case SQUARES:
-    renderLevel(rt);
-    break;
-  case MESSAGE_TEXT:
-    renderMessage(rt);
-    break;
-  }
 }
 
 int playerLocation(Runtime * rt) {
@@ -446,17 +402,17 @@ void printHistory(Runtime * rt) {
   }
 }
 
-Direction handleInput(Runtime * rt, char * input) {
+Direction handleInput(Runtime * rt, int input) {
   // TODO: doesn't need rt
-  if (input[0] == 'u' || input[0] == 'U') {
+  if (input == 'w' || input == KEY_UP) {
     return UP;
-  } else if (input[0] == 'd' || input[0] == 'D') {
+  } else if (input == 's' || input == KEY_DOWN) {
     return DOWN;
-  } else if (input[0] == 'l' || input[0] == 'L') {
+  } else if (input == 'a' || input == KEY_LEFT) {
     return LEFT;
-  } else if (input[0] == 'r' || input[0] == 'R') {
+  } else if (input == 'd' || input == KEY_RIGHT) {
     return RIGHT;
-  } else if (input[0] == 'x' || input[0] == 'X') {
+  } else if (input == 'x' || input == 'X') {
     return USE;
   } else {
     return NONE;
