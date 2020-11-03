@@ -5,6 +5,5 @@ lex.yy.c
 puzzlescript
 test
 test.dSYM/
-puzzles/
 runnerTest
 runnerTest.dSYM/

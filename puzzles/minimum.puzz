@@ -1,0 +1,102 @@
+title Simple Block Pushing Game
+author David Skinner
+homepage www.puzzlescript.net
+
+========
+OBJECTS
+========
+
+Background
+Brown
+
+Player
+Blue
+
+Tree
+green
+
+Stump
+brown
+
+Wall
+Black
+
+=======
+LEGEND
+=======
+. = Background
+P = Player
+T = Tree
+O = Stump
+# = Wall
+Treestump = Tree or Stump
+@ = Tree and Stump
+
+=======
+SOUNDS
+=======
+
+Crate MOVE 36772507
+
+================
+COLLISIONLAYERS
+================
+
+Background
+Stump
+player, Tree
+
+======
+RULES
+======
+
+[ > Player | Tree ] -> [ > Player | > Tree ]
+
+==============
+WINCONDITIONS
+==============
+
+All Tree on Stump
+
+=======
+LEVELS
+=======
+#####
+#PTO#
+#####
+
+#####
+#OTP#
+#####
+
+###
+#O#
+#T#
+#P#
+###
+
+###
+#P#
+#T#
+#O#
+###
+
+#####
+#PTO#
+#T..#
+#O..#
+#####
+
+#####
+#..O#
+#..T#
+#OTP#
+#####
+
+#######
+#..O..#
+#..T..#
+#OTPTO#
+#..T..#
+#..O..#
+#######

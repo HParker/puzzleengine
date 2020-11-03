@@ -1,0 +1,110 @@
+title Stumper test puzzle
+author Adam Hess
+homepage none
+debug
+
+========
+OBJECTS
+========
+
+Background
+Brown
+
+Player
+Blue
+
+Tree
+green
+
+Stump
+brown
+
+Wall
+Black
+
+=======
+LEGEND
+=======
+. = Background
+P = Player
+T = Tree
+O = Stump
+# = Wall
+Treestump = Tree or Stump
+@ = Tree and Stump
+Movable = Player or Tree
+
+=======
+SOUNDS
+=======
+
+================
+COLLISIONLAYERS
+================
+
+Background
+Stump
+player, Tree, Wall
+
+======
+RULES
+======
+
+[ > Movable | Movable ] -> [ > Movable | > Movable ]
+
+==============
+WINCONDITIONS
+==============
+
+All Tree on Stump
+
+=======
+LEVELS
+=======
+
+#########
+#...P...#
+#.T.....#
+#########
+
+message hi there
+
+#####
+#PTO#
+#####
+
+#####
+#OTP#
+#####
+
+###
+#O#
+#T#
+#P#
+###
+
+###
+#P#
+#T#
+#O#
+###
+
+#####
+#PTO#
+#T..#
+#O..#
+#####
+
+#####
+#..O#
+#..T#
+#OTP#
+#####
+
+#######
+#..O..#
+#..T..#
+#OTPTO#
+#..T..#
+#..O..#
+#######
