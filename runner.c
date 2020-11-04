@@ -105,7 +105,7 @@ void addObj(Runtime * rt, int objId, int loc) {
 void fillBackground(Runtime * rt) {
   // TODO: objectId here
   int backgroundId = legendId("Background");
-  int count = legendObjectCount(backgroundId);
+  int count = legendObjectCount(backgroundId); // always 1
 
   for (int i = 0; i < rt->height * rt->width; i++) {
     for (int j = 0; j < count; j++) {
@@ -175,6 +175,29 @@ void initGame(Runtime * rt) {
 void startGame(Runtime * rt, FILE * file) {
   initGame(rt);
   rt->pd = parsePuzzle(file);
+
+  printf("OBJECTS\n");
+  for (int i = 0; i < objectCount(); i++) {
+    printf("(%i) '%s'\n", i, objectName(i));
+  }
+
+  printf("LEGEND\n");
+  for (int i = 0; i < legendCount(); i++) {
+    if (legend(i)->hasStringKey == 1) {
+      printf("(%i) '%s' = ", i, legend(i)->stringKey);
+      for (int j = 0; j < legendObjectCount(i); j++) {
+        printf("'%i' ", legendObjectId(i, j));
+      }
+      printf("\n");
+    } else {
+      printf("(%i) '%c' = ", i, legend(i)->key);
+      for (int j = 0; j < legendObjectCount(i); j++) {
+        printf("'%i' ", legendObjectId(i, j));
+      }
+      printf("\n");
+    }
+  }
+
   loadLevel(rt);
 }
 
@@ -241,7 +264,7 @@ void applyMatch(Runtime * rt, Match * match) {
              match->parts[i].goalDirection);
     }
 
-    if (legend(match->parts[i].goalId).objectCount > 1) {
+    if (legend(match->parts[i].goalId)->objectCount > 1) {
       // This must be a match based on a legend that includes this object.
       // Stay the same
 

@@ -17,14 +17,12 @@ int legendId(char * name) {
     return -1;
 }
 
-int objectId(char * name) {
-    for (int i = 0; i < pd.objectCount; i++) {
-        if (strcasecmp(pd.objects[i].name, name) == 0) {
-            return i;
-        }
+void addObjectsToLegend(char * name) {
+    int legId = legendId(name);
+    for (int i = 0; i < pd.legend[legId].objectCount; i++) {
+        pd.legend[pd.legendCount].objectValues[pd.legend[pd.legendCount].objectCount].id = pd.legend[legId].objectValues[i].id;
+        pd.legend[pd.legendCount].objectCount++;
     }
-    printf("err: failed to find objectId '%s'\n", name);
-    return -1;
 }
 
 int spriteIndex = 0;
@@ -157,14 +155,12 @@ object_name: OBJID SPRITE_CELL {
                  pd.legend[pd.legendCount].hasStringKey = 1;
                  pd.legend[pd.legendCount].stringKey = strdup($1);
                  pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;
-                 pd.legend[pd.legendCount].objectValues[0].isLegend = 0;
                  pd.legend[pd.legendCount].objectCount++;
                  incLegend();
                  // single char key
                  pd.legend[pd.legendCount].hasStringKey = 0;
                  pd.legend[pd.legendCount].key = $2;
                  pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;
-                 pd.legend[pd.legendCount].objectValues[0].isLegend = 0;
                  pd.legend[pd.legendCount].objectCount++;
                  incLegend();
 }
@@ -174,7 +170,6 @@ object_name: OBJID SPRITE_CELL {
                pd.legend[pd.legendCount].hasStringKey = 1;
                pd.legend[pd.legendCount].stringKey = strdup($1);
                pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;
-               pd.legend[pd.legendCount].objectValues[0].isLegend = 0;
                pd.legend[pd.legendCount].objectCount++;
                incLegend();
 }
@@ -222,9 +217,8 @@ legend_values: legend_value legend_joiner legend_values
              | legend_value
 
 legend_value: LEGEND_VALUE {
-  pd.legend[pd.legendCount].objectValues[pd.legend[pd.legendCount].objectCount].id = legendId($1);
-  pd.legend[pd.legendCount].objectValues[pd.legend[pd.legendCount].objectCount].isLegend = 1;
-  pd.legend[pd.legendCount].objectCount++;
+  addObjectsToLegend($1);
+
 }
 
 legend_joiner: LEGEND_AND { pd.legend[pd.legendCount].objectRelation = LEGEND_RELATION_AND; }

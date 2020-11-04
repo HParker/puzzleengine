@@ -65,7 +65,6 @@ void initStarterObjects() {
   pd.legend[pd.legendCount].stringKey = "...";
   pd.legend[pd.legendCount].objectCount = 1;
   pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;
-  pd.legend[pd.legendCount].objectValues[0].isLegend = 0;
   pd.objects[pd.objectCount].name = "Spread";
   incObject();
   incLegend();
@@ -145,27 +144,15 @@ int legendObjectId(int legendId, int objectIndex) {
   return pd.legend[legendId].objectValues[objectIndex].id;
 }
 
-int legendObjectIsLegend(int legendId, int objectIndex) {
-  return pd.legend[legendId].objectValues[objectIndex].isLegend;
-}
-
-Legend legend(int legendId) {
-  return pd.legend[legendId];
+Legend * legend(int legendId) {
+  return &pd.legend[legendId];
 }
 
 int legendContains(int legendId, int objId) {
-  int recursingValue;
   int count = legendObjectCount(legendId);
   for (int i = 0; i < count; i++) {
-    if (legendObjectId(legendId, i) == objId) {
+    if (objId == legendObjectId(legendId, i)) {
       return 1;
-    }
-    if (legendObjectIsLegend(legendId, i) == 1) {
-      // TODO: this assumes an `OR` condition used in the legend
-      recursingValue = legendContains(legendObjectId(legendId, i), objId);
-      if (recursingValue == 1) {
-        return 1;
-      }
     }
   }
   return 0;
@@ -232,6 +219,10 @@ int layerIncludes(int layerId, int objId) {
 }
 
 int objectCount() {
+  return pd.objectCount;
+}
+
+int legendCount() {
   return pd.legendCount;
 }
 

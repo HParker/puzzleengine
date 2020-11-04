@@ -7,11 +7,17 @@ debug
 OBJECTS
 ========
 
+Poop
+Green
+
 Background
 Brown
 
 Player
 Blue
+
+Doggie
+Green
 
 Tree
 green
@@ -25,11 +31,13 @@ Black
 =======
 LEGEND
 =======
-. = Background
 P = Player
+. = Background
 T = Tree
 O = Stump
 # = Wall
+God = Player or Stump
+Diety = God or Wall
 
 =======
 SOUNDS
@@ -61,7 +69,7 @@ LEVELS
 
 #########
 #...P...#
-#.T.....#
+#.T...O.#
 #########
 
 message hi there

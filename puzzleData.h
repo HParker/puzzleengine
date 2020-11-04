@@ -20,8 +20,7 @@ typedef enum LegendRelation
   } LegendRelation;
 
 typedef struct LegendValue {
-  int isLegend;
-  int id;
+  int id; // TODO: rename to object id. this is never a legend value anymore
 } LegendValue;
 
 typedef struct Legend {
@@ -239,14 +238,15 @@ extern PuzzleData * parsePuzzle(FILE * file);
 extern char objectGlyph(int objId);
 extern char * objectName(int id);
 extern int debug();
+extern int objectCount();
 
 // legend
+extern int legendCount();
 extern int legendIdForGlyph(char glyph);
 extern int legendObjectCount(int id);
 extern LegendValue legendObject(int legendId, int objectIndex);
 extern int legendObjectId(int legendId, int objectIndex);
-extern int legendObjectIsLegend(int legendId, int objectIndex);
-extern Legend legend(int legendId);
+extern Legend * legend(int legendId);
 extern int legendContains(int legendId, int objId);
 
 // layers
