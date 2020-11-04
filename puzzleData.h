@@ -32,6 +32,20 @@ typedef struct Legend {
   LegendValue objectValues[100];
 } Legend;
 
+typedef struct GlyphLegend {
+  char key;
+  LegendRelation objectRelation;
+  int objectCount;
+  LegendValue objects[100];
+} GlyphLegend;
+
+typedef struct AliasLegend {
+  char * key;
+  LegendRelation objectRelation;
+  int objectCount;
+  LegendValue objects[100];
+} AliasLegend;
+
 typedef struct Layer {
   int width;
   int objectIds[1000];
@@ -177,10 +191,14 @@ typedef struct PuzzleData {
   // sounds
   // blah. I don't wanna do it...
 
-  // legend
-  int legendCount;
-  int legendCapacity;
-  Legend * legend;
+  int aliasLegendCount;
+  int aliasLegendCapacity;
+  AliasLegend * aliasLegend;
+
+  int glyphLegendCount;
+  int glyphLegendCapacity;
+  GlyphLegend * glyphLegend;
+
 
   // collision layers
   int layerCount;
@@ -244,10 +262,27 @@ extern int objectCount();
 extern int legendCount();
 extern int legendIdForGlyph(char glyph);
 extern int legendObjectCount(int id);
+int aliasLegendObjectCount(int id);
+int glyphLegendObjectCount(int id);
+int aliasLegendObjectId(int legendId, int objectIndex);
+int glyphLegendObjectId(int legendId, int objectIndex);
+
 extern LegendValue legendObject(int legendId, int objectIndex);
-extern int legendObjectId(int legendId, int objectIndex);
-extern Legend * legend(int legendId);
+extern LegendValue aliasLegendObject(int legendId, int objectIndex);
+extern LegendValue glyphLegendObject(int legendId, int objectIndex);
+extern int aliasLegendObjectId(int legendId, int objectIndex);
+extern int glyphLgendObjectId(int legendId, int objectIndex);
+extern int aliasLegendObjectIsLegend(int legendId, int objectIndex);
+extern int glyphLegendObjectIsLegend(int legendId, int objectIndex);
 extern int legendContains(int legendId, int objId);
+extern int glyphLegendContains(int legendId, int objId);
+extern int aliasLegendContains(int legendId, int objId);
+extern int aliasLegendId(char * name);
+
+extern int aliasLegendCount();
+extern int glyphLegendCount();
+extern char * aliasLegendKey(int id);
+extern char glyphLegendKey(int id);
 
 // layers
 extern int objectLayer(int objId);
@@ -295,7 +330,8 @@ extern WinCondition * winCondition(int winConditionIndex);
 // Parser methods
 extern int legendId(char * name);
 extern void incObject();
-extern void incLegend();
+extern void incAliasLegend();
+extern void incGlyphLegend();
 extern void incLayer();
 extern void incRule();
 extern void incWinCondition();

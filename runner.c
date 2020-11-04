@@ -103,25 +103,20 @@ void addObj(Runtime * rt, int objId, int loc) {
 }
 
 void fillBackground(Runtime * rt) {
-  // TODO: objectId here
-  int backgroundId = legendId("Background");
-  int count = legendObjectCount(backgroundId); // always 1
+  int backgroundId = objectId("Background");
 
   for (int i = 0; i < rt->height * rt->width; i++) {
-    for (int j = 0; j < count; j++) {
-      addObj(rt, legendObjectId(backgroundId, j), i);
-    }
+    addObj(rt, backgroundId, i);
   }
 }
 
 void loadCell(Runtime * rt, char cell, int loc) {
   int id = legendIdForGlyph(cell);
-
-  int backgroundId = legendId("Background");
-  int count = legendObjectCount(id);
+  int count = glyphLegendObjectCount(id);
+  int backgroundId = objectId("Background");
   for (int i = 0; i < count; i++) {
-    if (id != backgroundId) {
-      int objId = legendObjectId(legendObjectId(id, i), 0);
+    int objId = glyphLegendObjectId(id, i);
+    if (backgroundId != objId) {
       addObj(rt, objId, loc);
     }
   }
@@ -175,35 +170,12 @@ void initGame(Runtime * rt) {
 void startGame(Runtime * rt, FILE * file) {
   initGame(rt);
   rt->pd = parsePuzzle(file);
-
-  printf("OBJECTS\n");
-  for (int i = 0; i < objectCount(); i++) {
-    printf("(%i) '%s'\n", i, objectName(i));
-  }
-
-  printf("LEGEND\n");
-  for (int i = 0; i < legendCount(); i++) {
-    if (legend(i)->hasStringKey == 1) {
-      printf("(%i) '%s' = ", i, legend(i)->stringKey);
-      for (int j = 0; j < legendObjectCount(i); j++) {
-        printf("'%i' ", legendObjectId(i, j));
-      }
-      printf("\n");
-    } else {
-      printf("(%i) '%c' = ", i, legend(i)->key);
-      for (int j = 0; j < legendObjectCount(i); j++) {
-        printf("'%i' ", legendObjectId(i, j));
-      }
-      printf("\n");
-    }
-  }
-
   loadLevel(rt);
 }
 
 int playerLocation(Runtime * rt) {
   for (int i = 0; i < rt->objectCount; i++) {
-    if (rt->objects[i].objId == legendId("Player")) {
+    if (rt->objects[i].objId == objectId("Player")) {
       return rt->objects[i].loc;
     }
   }
@@ -256,18 +228,19 @@ int locDeltaFor(Runtime * rt, Direction applicationDirection, Direction dir) {
 void applyMatch(Runtime * rt, Match * match) {
   for (int i = 0; i < match->partCount; i++) {
     if (rt->pd->debug == 1) {
-      mvprintw(15, 0, "Applying match part id: '%s' -> '%s' location: %i -> %i goalMovment: %i\n",
+      printf("Applying match part id: '%s' (%i) -> '%s' (%i) location: %i -> %i goalMovment: %i\n",
              objectName(rt->objects[match->parts[i].objIndex].objId),
+             rt->objects[match->parts[i].objIndex].objId,
              objectName(match->parts[i].goalId),
+             match->parts[i].goalId,
              rt->objects[match->parts[i].objIndex].loc,
              match->parts[i].goalLocation,
              match->parts[i].goalDirection);
     }
 
-    if (legend(match->parts[i].goalId)->objectCount > 1) {
+    if (aliasLegendObjectCount(match->parts[i].goalId) > 1) {
       // This must be a match based on a legend that includes this object.
       // Stay the same
-
     } else {
       rt->objects[match->parts[i].objIndex].objId =  match->parts[i].goalId;
     }
@@ -290,7 +263,7 @@ int ruleStateMatchDir(Runtime * rt, Match * match, int ruleIndex, int matchState
 
     success = 0;
     for (int j = 0; j < rt->objectCount; j++) {
-      if (legendContains(legendId, rt->objects[j].objId) &&
+      if (aliasLegendContains(legendId, rt->objects[j].objId) == 1 &&
           rt->objects[j].loc == adjustedLoc &&
           matchesDirection(ruleDir, dir, directionMoving(rt, j))
           ) {
@@ -328,7 +301,7 @@ int ruleStateMatched(Runtime * rt, Match * match, int ruleIndex, int matchStateI
     for (int i = 0; i < rt->objectCount; i++) {
       int legendIdentity = rule(ruleIndex)->matchStates[matchStateIndex].parts[0].legendId;
       int objId = rt->objects[i].objId;
-      if (legendContains(legendIdentity, objId) == 1) {
+      if (aliasLegendContains(legendIdentity, objId) == 1) {
         // start of rue state matched, we can continue the rest of the rule state
         // try directions
         if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].loc, RIGHT) == 1) {
@@ -480,7 +453,7 @@ void update(Runtime * rt, Direction dir) {
 
   addHistory(rt, dir);
   if (rt->levelType == SQUARES) {
-    addToMove(rt, NONE, objectIndex(rt, legendId("Player"), playerLocation(rt)), dir);
+    addToMove(rt, NONE, objectIndex(rt, objectId("Player"), playerLocation(rt)), dir);
 
     // apply rules
     applyRules(rt, NORMAL);

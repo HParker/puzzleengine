@@ -7,25 +7,64 @@
 PuzzleData pd;
 int yyerror(const char *p) { printf("ERROR: %s\n", p); return 1; }
 
-int legendId(char * name) {
-    for (int i = 0; i < pd.legendCount; i++) {
-        if (pd.legend[i].hasStringKey == 1 && strcasecmp(pd.legend[i].stringKey, name) == 0) {
+int aliasLegendId(char * name) {
+    for (int i = 0; i < pd.aliasLegendCount; i++) {
+        if (strcasecmp(pd.aliasLegend[i].key, name) == 0) {
             return i;
         }
     }
-    printf("err: '%s' which does not exist in legend\n", name);
+    printf("err: '%s' which does not exist in alias legend\n", name);
     return -1;
 }
 
-void addObjectsToLegend(char * name) {
-    int legId = legendId(name);
-    for (int i = 0; i < pd.legend[legId].objectCount; i++) {
-        pd.legend[pd.legendCount].objectValues[pd.legend[pd.legendCount].objectCount].id = pd.legend[legId].objectValues[i].id;
-        pd.legend[pd.legendCount].objectCount++;
+int glyphLegendId(char glyph) {
+    for (int i = 0; i < pd.glyphLegendCount; i++) {
+        if (pd.glyphLegend[i].key == glyph) {
+            return i;
+        }
+    }
+    printf("err: '%c' which does not exist in glyph legend\n", glyph);
+    return -1;
+}
+
+void addObjectsToLayer(char * name) {
+    int legId = aliasLegendId(name);
+    for (int i = 0; i < pd.aliasLegend[legId].objectCount; i++) {
+        pd.layers[pd.layerCount].objectIds[pd.layers[pd.layerCount].width] = pd.aliasLegend[legId].objects[i].id;
+        pd.layers[pd.layerCount].width++;
     }
 }
 
+void addObjectsToAliasLegend(char * name) {
+    int legId = aliasLegendId(name);
+    for (int i = 0; i < pd.aliasLegend[legId].objectCount; i++) {
+        pd.aliasLegend[pd.aliasLegendCount].objects[pd.aliasLegend[pd.aliasLegendCount].objectCount].id = pd.aliasLegend[legId].objects[i].id;
+        pd.aliasLegend[pd.aliasLegendCount].objectCount++;
+    }
+}
+
+void addObjectsToGlyphLegend(char * name) {
+    int legId = aliasLegendId(name);
+    int count = pd.aliasLegend[legId].objectCount;
+    for (int i = 0; i < count; i++) {
+        pd.glyphLegend[pd.glyphLegendCount].objects[pd.glyphLegend[pd.glyphLegendCount].objectCount].id = pd.aliasLegend[legId].objects[i].id;
+        pd.glyphLegend[pd.glyphLegendCount].objectCount++;
+    }
+}
+
+int objectId(char * name) {
+    for (int i = 0; i < pd.objectCount; i++) {
+        if (strcasecmp(pd.objects[i].name, name) == 0) {
+            return i;
+        }
+    }
+    printf("objectId not found for '%s'\n", name);
+    return -1;
+}
+
+
 int spriteIndex = 0;
+int legendIsAlias = 0;
 %}
 
 %union {
@@ -49,7 +88,7 @@ int spriteIndex = 0;
 %token MOVE_RIGHT MOVE_UP MOVE_LEFT MOVE_DOWN
 %token OPEN_SQUARE CLOSE_SQUARE VIRTICAL_PIPE ARROW
 %token LEVEL_EOL
-%token <cell> LEVEL_CELL SPRITE_CELL
+%token <cell> LEVEL_CELL SPRITE_CELL LEGEND_GLYPH
 %token <enumValue> LOGIC_WORD DIRECTION EXECUTION_TIME
 
 %%
@@ -152,26 +191,24 @@ object_definition: object_name colors sprite { incObject(); }
 object_name: OBJID SPRITE_CELL {
                  pd.objects[pd.objectCount].name = strdup($1);
 
-                 pd.legend[pd.legendCount].hasStringKey = 1;
-                 pd.legend[pd.legendCount].stringKey = strdup($1);
-                 pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;
-                 pd.legend[pd.legendCount].objectCount++;
-                 incLegend();
+                 pd.aliasLegend[pd.aliasLegendCount].key = strdup($1);
+                 pd.aliasLegend[pd.aliasLegendCount].objects[0].id = pd.objectCount;
+                 pd.aliasLegend[pd.aliasLegendCount].objectCount++;
+                 incAliasLegend();
                  // single char key
-                 pd.legend[pd.legendCount].hasStringKey = 0;
-                 pd.legend[pd.legendCount].key = $2;
-                 pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;
-                 pd.legend[pd.legendCount].objectCount++;
-                 incLegend();
+                 // They only reference AliasLegend names that have the actual object ID
+                 pd.glyphLegend[pd.glyphLegendCount].key = $2;
+                 pd.glyphLegend[pd.glyphLegendCount].objects[0].id = pd.objectCount;
+                 pd.glyphLegend[pd.glyphLegendCount].objectCount++;
+                 incGlyphLegend();
 }
            | OBJID {
                pd.objects[pd.objectCount].name = strdup($1);
 
-               pd.legend[pd.legendCount].hasStringKey = 1;
-               pd.legend[pd.legendCount].stringKey = strdup($1);
-               pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;
-               pd.legend[pd.legendCount].objectCount++;
-               incLegend();
+               pd.aliasLegend[pd.aliasLegendCount].key = strdup($1);
+               pd.aliasLegend[pd.aliasLegendCount].objects[0].id = pd.objectCount;
+               pd.aliasLegend[pd.aliasLegendCount].objectCount++;
+               incAliasLegend();
 }
 
 colors: color colors | color
@@ -196,19 +233,24 @@ legend_lines: legend_line legend_lines
             | legend_line
 
 legend_line: legend_id EQUALS legend_values end_legend_line {
-  incLegend();
-  pd.legend[pd.legendCount].objectRelation = LEGEND_RELATION_UNKNOWN;
+  incAliasLegend();
+  pd.aliasLegend[pd.aliasLegendCount].objectRelation = LEGEND_RELATION_UNKNOWN;
+  legendIsAlias = 0;
+}
+           | legend_glyph EQUALS legend_values end_legend_line {
+  incGlyphLegend();
+  pd.glyphLegend[pd.glyphLegendCount].objectRelation = LEGEND_RELATION_UNKNOWN;
+  legendIsAlias = 0;
 }
 
 legend_id: LEGEND_ID {
-               if (strlen($1) == 1) {
-                   pd.legend[pd.legendCount].hasStringKey = 0;
-                   pd.legend[pd.legendCount].key = $1[0];
-               } else {
-                   pd.legend[pd.legendCount].hasStringKey = 1;
-                   pd.legend[pd.legendCount].stringKey = strdup($1);
-               }
+  legendIsAlias = 1;
+  pd.aliasLegend[pd.aliasLegendCount].key = strdup($1);
+}
 
+legend_glyph: LEGEND_GLYPH {
+  legendIsAlias = 0;
+  pd.glyphLegend[pd.glyphLegendCount].key = $1;
 }
 
 end_legend_line: END_LEGEND_LINE end_legend_line | END_LEGEND_LINE
@@ -217,12 +259,27 @@ legend_values: legend_value legend_joiner legend_values
              | legend_value
 
 legend_value: LEGEND_VALUE {
-  addObjectsToLegend($1);
-
+  if (legendIsAlias == 1) {
+    addObjectsToAliasLegend($1);
+  } else {
+    addObjectsToGlyphLegend($1);
+  }
 }
 
-legend_joiner: LEGEND_AND { pd.legend[pd.legendCount].objectRelation = LEGEND_RELATION_AND; }
-             | LEGEND_OR  { pd.legend[pd.legendCount].objectRelation = LEGEND_RELATION_OR; }
+legend_joiner: LEGEND_AND {
+  if (legendIsAlias == 1) {
+    pd.aliasLegend[pd.aliasLegendCount].objectRelation = LEGEND_RELATION_AND;
+  } else {
+    pd.glyphLegend[pd.glyphLegendCount].objectRelation = LEGEND_RELATION_AND;
+  }
+}
+             | LEGEND_OR  {
+  if (legendIsAlias == 1) {
+    pd.aliasLegend[pd.aliasLegendCount].objectRelation = LEGEND_RELATION_OR;
+  } else {
+    pd.glyphLegend[pd.glyphLegendCount].objectRelation = LEGEND_RELATION_OR;
+  }
+}
 
 sounds: // Nothing for now
 
@@ -235,8 +292,7 @@ layer_objects: layer_object layer_objects
              | layer_object
 
 layer_object: LAYER_NAME {
-  pd.layers[pd.layerCount].objectIds[pd.layers[pd.layerCount].width] = legendId($1);
-  pd.layers[pd.layerCount].width++;
+  addObjectsToLayer($1);
 }
 
 rules: rule_line  rules
@@ -334,13 +390,13 @@ object: OBJID {
     RuleState * rs = &r->matchStates[r->matchStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
     rsp->direction = NONE;
-    rsp->legendId = legendId($1);
+    rsp->legendId = aliasLegendId($1);
   } else {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->resultStates[r->resultStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
     rsp->direction = NONE;
-    rsp->legendId = legendId($1);
+    rsp->legendId = aliasLegendId($1);
   }
 }
 
@@ -355,14 +411,14 @@ wincondition: wincondition_unconditional
 wincondition_conditional: LOGIC_WORD OBJID LOGIC_WORD OBJID {
   pd.winConditions[pd.winConditionCount].hasOnQualifier = 1;
   pd.winConditions[pd.winConditionCount].winQualifier = $1;
-  pd.winConditions[pd.winConditionCount].winIdentifier = legendId($2);
-  pd.winConditions[pd.winConditionCount].onIndentifier = legendId($4);
+  pd.winConditions[pd.winConditionCount].winIdentifier = aliasLegendId($2);
+  pd.winConditions[pd.winConditionCount].onIndentifier = aliasLegendId($4);
   incWinCondition();
 }
 
 wincondition_unconditional: LOGIC_WORD OBJID {
   pd.winConditions[pd.winConditionCount].winQualifier = $1;
-  pd.winConditions[pd.winConditionCount].winIdentifier = legendId($2);
+  pd.winConditions[pd.winConditionCount].winIdentifier = aliasLegendId($2);
   incWinCondition();
 }
 

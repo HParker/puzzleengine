@@ -7,17 +7,11 @@ debug
 OBJECTS
 ========
 
-Poop
-Green
-
 Background
 Brown
 
 Player
 Blue
-
-Doggie
-Green
 
 Tree
 green
@@ -36,8 +30,9 @@ P = Player
 T = Tree
 O = Stump
 # = Wall
-God = Player or Stump
-Diety = God or Wall
+Treestump = Tree or Stump
+@ = Tree and Stump
+Movable = Player or Tree
 
 =======
 SOUNDS
@@ -55,7 +50,7 @@ player, Tree, Wall
 RULES
 ======
 
-[ > Player | Tree ] -> [ > Player | > Tree ]
+[ > Movable | Movable ] -> [ > Movable | > Movable ]
 
 ==============
 WINCONDITIONS

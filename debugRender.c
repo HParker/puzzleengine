@@ -62,6 +62,30 @@ void render(Runtime * rt) {
 }
 
 void initRenderer() {
+    printf("OBJECTS\n");
+  for (int i = 0; i < objectCount(); i++) {
+    printf("(%i) '%s'\n", i, objectName(i));
+  }
+
+  printf("ALIAS LEGEND\n");
+  for (int i = 0; i < aliasLegendCount(); i++) {
+    printf("(%i) '%s' = ", i, aliasLegendKey(i));
+    for (int j = 0; j < aliasLegendObjectCount(i); j++) {
+      printf("'%i' ", aliasLegendObjectId(i, j));
+    }
+    printf("\n");
+  }
+
+  printf("GLYPH LEGEND\n");
+  for (int i = 0; i < glyphLegendCount(); i++) {
+    printf("(%i) '%c' = ", i, glyphLegendKey(i));
+    int count = glyphLegendObjectCount(i);
+    printf(" (count %i) ", count);
+    for (int j = 0; j < count; j++) {
+      printf("'%i' ", glyphLegendObjectId(i, j));
+    }
+    printf("\n");
+  }
 }
 
 void closeRenderer() {

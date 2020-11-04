@@ -113,10 +113,16 @@ color (color|colour)
   return SPRITE_CELL;
 }
 
-<LEGEND>^[a-zA-Z0-9_\.#\*@]+ {
+<LEGEND>^[a-zA-Z0-9_\.#\*@]{2,} {
   yylval.identifier = yytext;
   return LEGEND_ID;
 }
+
+<LEGEND>^[a-zA-Z0-9_\.#\*@] {
+  yylval.cell = yytext[0];
+  return LEGEND_GLYPH;
+}
+
 
 <LEGEND>[ ]=[ ] { return EQUALS; }
 

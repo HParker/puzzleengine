@@ -14,13 +14,22 @@ void incObject() {
   pd.objectCount++;
 }
 
-void incLegend() {
-  if (pd.legendCount + 1 == pd.legendCapacity) {
-    printf("legend REALLOC\n");
-    pd.legendCapacity += 50;
-    pd.legend = realloc(pd.legend, sizeof(Legend) * pd.legendCapacity);
+void incAliasLegend() {
+  if (pd.aliasLegendCount + 1 == pd.aliasLegendCapacity) {
+    printf("aliasLegend REALLOC\n");
+    pd.aliasLegendCapacity += 50;
+    pd.aliasLegend = realloc(pd.aliasLegend, sizeof(Legend) * pd.aliasLegendCapacity);
   }
-  pd.legendCount++;
+  pd.aliasLegendCount++;
+}
+
+void incGlyphLegend() {
+  if (pd.glyphLegendCount + 1 == pd.glyphLegendCapacity) {
+    printf("glyphLegend REALLOC\n");
+    pd.glyphLegendCapacity += 50;
+    pd.glyphLegend = realloc(pd.glyphLegend, sizeof(Legend) * pd.glyphLegendCapacity);
+  }
+  pd.glyphLegendCount++;
 }
 
 void incLayer() {
@@ -61,13 +70,12 @@ void incLevel() {
 
 
 void initStarterObjects() {
-  pd.legend[pd.legendCount].hasStringKey = 1;
-  pd.legend[pd.legendCount].stringKey = "...";
-  pd.legend[pd.legendCount].objectCount = 1;
-  pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;
+  pd.aliasLegend[pd.aliasLegendCount].key = "...";
+  pd.aliasLegend[pd.aliasLegendCount].objectCount = 1;
+  pd.aliasLegend[pd.aliasLegendCount].objects[0].id = pd.objectCount;
   pd.objects[pd.objectCount].name = "Spread";
   incObject();
-  incLegend();
+  incAliasLegend();
 }
 
 void initPuzzleData() {
@@ -75,9 +83,13 @@ void initPuzzleData() {
   pd.objectCapacity = 1000;
   pd.objects = malloc(sizeof(Object) * pd.objectCapacity);
 
-  pd.legendCount = 0;
-  pd.legendCapacity = 1000;
-  pd.legend = malloc(sizeof(Legend) * pd.legendCapacity);
+  pd.aliasLegendCount = 0;
+  pd.aliasLegendCapacity = 1000;
+  pd.aliasLegend = malloc(sizeof(Legend) * pd.aliasLegendCapacity);
+
+  pd.glyphLegendCount = 0;
+  pd.glyphLegendCapacity = 1000;
+  pd.glyphLegend = malloc(sizeof(Legend) * pd.glyphLegendCapacity);
 
   pd.layerCount = 0;
   pd.layerCapacity = 100;
@@ -115,11 +127,9 @@ char * objectName(int id) {
 }
 
 char objectGlyph(int objId) {
-  for (int i = 0; i < pd.legendCount; i++) {
-    for (int j = 0; j < pd.legend[i].objectCount; j++) {
-      if (pd.legend[i].hasStringKey == 0 && legendContains(i, objId) == 1 && pd.legend[i].objectCount == 1) {
-        return pd.legend[i].key;
-      }
+  for (int i = 0; i < pd.glyphLegendCount; i++) {
+    if (glyphLegendContains(i, objId) == 1) {
+      return pd.glyphLegend[i].key;
     }
   }
   printf("err: no key found '%s' (%i)\n", objectName(objId), objId);
@@ -127,8 +137,8 @@ char objectGlyph(int objId) {
 }
 
 int legendIdForGlyph(char glyph) {
-  for (int i = 0; i < pd.legendCount; i++) {
-    if (pd.legend[i].hasStringKey == 0 && pd.legend[i].key == glyph) {
+  for (int i = 0; i < pd.glyphLegendCount; i++) {
+    if (pd.glyphLegend[i].key == glyph) {
       return i;
     }
   }
@@ -136,22 +146,36 @@ int legendIdForGlyph(char glyph) {
   return -1;
 }
 
-int legendObjectCount(int id) {
-  return pd.legend[id].objectCount;
+int aliasLegendObjectCount(int id) {
+  return pd.aliasLegend[id].objectCount;
 }
 
-int legendObjectId(int legendId, int objectIndex) {
-  return pd.legend[legendId].objectValues[objectIndex].id;
+int glyphLegendObjectCount(int id) {
+  return pd.glyphLegend[id].objectCount;
 }
 
-Legend * legend(int legendId) {
-  return &pd.legend[legendId];
+int aliasLegendObjectId(int legendId, int objectIndex) {
+  return pd.aliasLegend[legendId].objects[objectIndex].id;
 }
 
-int legendContains(int legendId, int objId) {
-  int count = legendObjectCount(legendId);
+int glyphLegendObjectId(int legendId, int objectIndex) {
+  return pd.glyphLegend[legendId].objects[objectIndex].id;
+}
+
+int aliasLegendContains(int legendId, int objId) {
+  int count = aliasLegendObjectCount(legendId);
   for (int i = 0; i < count; i++) {
-    if (objId == legendObjectId(legendId, i)) {
+    if (objId == aliasLegendObjectId(legendId, i)) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+int glyphLegendContains(int legendId, int objId) {
+  int count = glyphLegendObjectCount(legendId);
+  for (int i = 0; i < count; i++) {
+    if (objId == glyphLegendObjectId(legendId, i)) {
       return 1;
     }
   }
@@ -159,12 +183,12 @@ int legendContains(int legendId, int objId) {
 }
 
 int idForGlyph(char glyph) {
-  for (int i = 0; i < pd.legendCount; i++) {
-    if (pd.legend[i].hasStringKey == 0 && pd.legend[i].key == glyph) {
-      if (pd.legend[i].objectCount > 1) {
+  for (int i = 0; i < pd.glyphLegendCount; i++) {
+    if (pd.glyphLegend[i].key == glyph) {
+      if (pd.glyphLegend[i].objectCount > 1) {
         printf("err: multi object key '%c'\n", glyph);
       } else {
-        return pd.legend[i].objectValues[0].id;
+        return pd.glyphLegend[i].objects[0].id;
       }
     }
   }
@@ -175,8 +199,7 @@ int idForGlyph(char glyph) {
 int objectLayer(int objId) {
   for (int i = 0; i < pd.layerCount; i++) {
     for (int j = 0; j < pd.layers[i].width; j++) {
-      int legendId = pd.layers[i].objectIds[j];
-      if (legendContains(legendId, objId) == 1) {
+      if (objId == pd.layers[i].objectIds[j]) {
         return i;
       }
     }
@@ -222,9 +245,22 @@ int objectCount() {
   return pd.objectCount;
 }
 
-int legendCount() {
-  return pd.legendCount;
+int aliasLegendCount() {
+  return pd.aliasLegendCount;
 }
+
+int glyphLegendCount() {
+  return pd.glyphLegendCount;
+}
+
+char * aliasLegendKey(int id) {
+  return pd.aliasLegend[id].key;
+}
+
+char glyphLegendKey(int id) {
+  return pd.glyphLegend[id].key;
+}
+
 
 int ruleCount() {
   return pd.ruleCount;
