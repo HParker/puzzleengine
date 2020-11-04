@@ -5,32 +5,6 @@
 #include "puzzleData.h"
 #include "parser.h"
 
-void initPuzzleData() {
-  pd.objectCount = 0;
-  pd.objectCapacity = 100;
-  pd.objects = malloc(sizeof(Object) * pd.objectCapacity);
-
-  pd.legendCount = 0;
-  pd.legendCapacity = 1000;
-  pd.legend = malloc(sizeof(Legend) * pd.legendCapacity);
-
-  pd.layerCount = 0;
-  pd.layerCapacity = 100;
-  pd.layers = malloc(sizeof(Layer) * pd.layerCapacity);
-
-  pd.ruleCount = 0;
-  pd.ruleCapacity = 100;
-  pd.rules = malloc(sizeof(Rule) * pd.ruleCapacity);
-
-  pd.winConditionCount = 0;
-  pd.winConditionCapacity = 100;
-  pd.winConditions = malloc(sizeof(WinCondition) * pd.winConditionCapacity);
-
-  pd.levelCount = 0;
-  pd.levelCapacity = 100;
-  pd.levels = malloc(sizeof(Level) * pd.levelCapacity);
-}
-
 void incObject() {
   if (pd.objectCount + 1 == pd.objectCapacity) {
     printf("object REALLOC\n");
@@ -85,6 +59,46 @@ void incLevel() {
   pd.levelCount++;
 }
 
+
+void initStarterObjects() {
+  pd.legend[pd.legendCount].hasStringKey = 1;
+  pd.legend[pd.legendCount].stringKey = "...";
+  pd.legend[pd.legendCount].objectCount = 1;
+  pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;
+  pd.legend[pd.legendCount].objectValues[0].isLegend = 0;
+  pd.objects[pd.objectCount].name = "Spread";
+  incObject();
+  incLegend();
+}
+
+void initPuzzleData() {
+  pd.objectCount = 0;
+  pd.objectCapacity = 1000;
+  pd.objects = malloc(sizeof(Object) * pd.objectCapacity);
+
+  pd.legendCount = 0;
+  pd.legendCapacity = 1000;
+  pd.legend = malloc(sizeof(Legend) * pd.legendCapacity);
+
+  pd.layerCount = 0;
+  pd.layerCapacity = 100;
+  pd.layers = malloc(sizeof(Layer) * pd.layerCapacity);
+
+  pd.ruleCount = 0;
+  pd.ruleCapacity = 100;
+  pd.rules = malloc(sizeof(Rule) * pd.ruleCapacity);
+
+  pd.winConditionCount = 0;
+  pd.winConditionCapacity = 100;
+  pd.winConditions = malloc(sizeof(WinCondition) * pd.winConditionCapacity);
+
+  pd.levelCount = 0;
+  pd.levelCapacity = 100;
+  pd.levels = malloc(sizeof(Level) * pd.levelCapacity);
+
+  initStarterObjects();
+}
+
 PuzzleData * parsePuzzle(FILE * file) {
   initPuzzleData();
   yyin = file;
@@ -104,7 +118,7 @@ char * objectName(int id) {
 char objectGlyph(int objId) {
   for (int i = 0; i < pd.legendCount; i++) {
     for (int j = 0; j < pd.legend[i].objectCount; j++) {
-      if (pd.legend[i].hasStringKey == 0 && pd.legend[i].objectValues[j].id == objId && pd.legend[i].objectCount == 1) {
+      if (pd.legend[i].hasStringKey == 0 && legendContains(i, objId) == 1 && pd.legend[i].objectCount == 1) {
         return pd.legend[i].key;
       }
     }
@@ -174,7 +188,8 @@ int idForGlyph(char glyph) {
 int objectLayer(int objId) {
   for (int i = 0; i < pd.layerCount; i++) {
     for (int j = 0; j < pd.layers[i].width; j++) {
-      if (pd.layers[i].objectIds[j] == objId) {
+      int legendId = pd.layers[i].objectIds[j];
+      if (legendContains(legendId, objId) == 1) {
         return i;
       }
     }
@@ -214,6 +229,10 @@ int layerIncludes(int layerId, int objId) {
     }
   }
   return 0;
+}
+
+int objectCount() {
+  return pd.legendCount;
 }
 
 int ruleCount() {

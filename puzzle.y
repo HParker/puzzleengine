@@ -17,6 +17,16 @@ int legendId(char * name) {
     return -1;
 }
 
+int objectId(char * name) {
+    for (int i = 0; i < pd.objectCount; i++) {
+        if (strcasecmp(pd.objects[i].name, name) == 0) {
+            return i;
+        }
+    }
+    printf("err: failed to find objectId '%s'\n", name);
+    return -1;
+}
+
 int spriteIndex = 0;
 %}
 
@@ -160,6 +170,7 @@ object_name: OBJID SPRITE_CELL {
 }
            | OBJID {
                pd.objects[pd.objectCount].name = strdup($1);
+
                pd.legend[pd.legendCount].hasStringKey = 1;
                pd.legend[pd.legendCount].stringKey = strdup($1);
                pd.legend[pd.legendCount].objectValues[0].id = pd.objectCount;

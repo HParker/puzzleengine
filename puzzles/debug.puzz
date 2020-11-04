@@ -30,9 +30,6 @@ P = Player
 T = Tree
 O = Stump
 # = Wall
-Treestump = Tree or Stump
-@ = Tree and Stump
-Movable = Player or Tree
 
 =======
 SOUNDS
@@ -50,7 +47,7 @@ player, Tree, Wall
 RULES
 ======
 
-[ > Movable | Movable ] -> [ > Movable | > Movable ]
+[ > Player | Tree ] -> [ > Player | > Tree ]
 
 ==============
 WINCONDITIONS

@@ -103,19 +103,26 @@ void addObj(Runtime * rt, int objId, int loc) {
 }
 
 void fillBackground(Runtime * rt) {
+  // TODO: objectId here
   int backgroundId = legendId("Background");
+  int count = legendObjectCount(backgroundId);
+
   for (int i = 0; i < rt->height * rt->width; i++) {
-    addObj(rt, backgroundId, i);
+    for (int j = 0; j < count; j++) {
+      addObj(rt, legendObjectId(backgroundId, j), i);
+    }
   }
 }
 
 void loadCell(Runtime * rt, char cell, int loc) {
   int id = legendIdForGlyph(cell);
+
+  int backgroundId = legendId("Background");
   int count = legendObjectCount(id);
   for (int i = 0; i < count; i++) {
-    int backgroundId = legendId("Background");
-    if (legendObjectId(id, i) != backgroundId) {
-      addObj(rt, legendObjectId(id, i), loc);
+    if (id != backgroundId) {
+      int objId = legendObjectId(legendObjectId(id, i), 0);
+      addObj(rt, objId, loc);
     }
   }
 }
@@ -153,7 +160,7 @@ void initGame(Runtime * rt) {
   rt->historyCount = 0;
 
   rt->objectCount = 0;
-  rt->objectCapacity = 1000;
+  rt->objectCapacity = 10000;
   rt->objects = malloc(sizeof(Obj) * rt->objectCapacity);
 
   rt->toMoveCount = 0;
@@ -177,6 +184,7 @@ int playerLocation(Runtime * rt) {
       return rt->objects[i].loc;
     }
   }
+  printf("Player not found\n");
   return -1;
 }
 
@@ -222,46 +230,24 @@ int locDeltaFor(Runtime * rt, Direction applicationDirection, Direction dir) {
   }
 }
 
-// TODO: DELETE ME
-int doResultState(Runtime * rt, Direction applicationDirection, int ruleIndex, int loc) {
-  for (int i = 0; i < rule(ruleIndex)->resultStateCount; i++) {
-    for (int j = 0; j < rule(ruleIndex)->resultStates[i].partCount; j++) {
-      if (rule(ruleIndex)->resultStates[i].parts[j].direction != NONE) {
-        int source = (loc + j * locDeltaFor(rt, applicationDirection, rule(ruleIndex)->resultStates[i].parts[j].direction));
-        addToMove(rt, applicationDirection, objectIndex(rt, rule(ruleIndex)->resultStates[i].parts[j].legendId, source), rule(ruleIndex)->resultStates[i].parts[j].direction);
-      }
-
-      for (int k = 0; k < rt->objectCount; k++) {
-        int legendId = rule(ruleIndex)->matchStates[i].parts[j].legendId;
-        int offsetLoc = loc + (j * locDeltaFor(rt, applicationDirection, rule(ruleIndex)->resultStates[i].parts[j].direction));
-        if (legendContains(legendId, rt->objects[k].objId) && rt->objects[k].loc == offsetLoc) {
-          rt->objects[k].objId = rule(ruleIndex)->resultStates[i].parts[j].legendId;
-        }
-      }
-    }
-  }
-  return 0;
-}
-
 void applyMatch(Runtime * rt, Match * match) {
   for (int i = 0; i < match->partCount; i++) {
-    /* if (rt->pd->debug == 1) { */
-    /*   printf("Applying match part id: '%s' -> '%s' location: %i -> %i goalMovment: %i\n", */
-    /*          objectName(rt->objects[match->parts[i].objIndex].objId), */
-    /*          objectName(match->parts[i].goalId), */
-    /*          rt->objects[match->parts[i].objIndex].loc, */
-    /*          match->parts[i].goalLocation, */
-    /*          match->parts[i].goalDirection); */
-    /* } */
+    if (rt->pd->debug == 1) {
+      mvprintw(15, 0, "Applying match part id: '%s' -> '%s' location: %i -> %i goalMovment: %i\n",
+             objectName(rt->objects[match->parts[i].objIndex].objId),
+             objectName(match->parts[i].goalId),
+             rt->objects[match->parts[i].objIndex].loc,
+             match->parts[i].goalLocation,
+             match->parts[i].goalDirection);
+    }
 
     if (legend(match->parts[i].goalId).objectCount > 1) {
       // This must be a match based on a legend that includes this object.
       // Stay the same
 
     } else {
-      rt->objects[match->parts[i].objIndex].objId = match->parts[i].goalId;
+      rt->objects[match->parts[i].objIndex].objId =  match->parts[i].goalId;
     }
-
 
     rt->objects[match->parts[i].objIndex].loc = match->parts[i].goalLocation;
     addToMove(rt, match->appliedDirection, match->parts[i].objIndex,  match->parts[i].goalDirection);
@@ -389,6 +375,7 @@ void moveObjects(Runtime * rt) {
     for (int i = 0; i < rt->toMoveCount; i++) {
       int movingToLoc = rt->objects[rt->toMove[i].objIndex].loc + locDeltaFor(rt, rt->toMove[i].direction, rt->toMove[i].direction);
       int layerIndex = objectLayer(rt->objects[rt->toMove[i].objIndex].objId);
+
       if (moveApplied[i] == 0 && isMovable(rt, movingToLoc, layerIndex)) {
         rt->objects[rt->toMove[i].objIndex].loc += locDeltaFor(rt, rt->toMove[i].direction, rt->toMove[i].direction);
         // TODO: fix this locDeltaFor too ^
@@ -464,6 +451,10 @@ void addHistory(Runtime * rt, Direction dir) {
 }
 
 void update(Runtime * rt, Direction dir) {
+  for (int i = 0; i < rt->objectCount; i++) {
+    /* printf("<OBJ index: %i id: %i '%s' loc: %i>\n", i, rt->objects[i].objId, objectName(rt->objects[i].objId), rt->objects[i].loc); */
+  }
+
   addHistory(rt, dir);
   if (rt->levelType == SQUARES) {
     addToMove(rt, NONE, objectIndex(rt, legendId("Player"), playerLocation(rt)), dir);

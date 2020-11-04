@@ -262,6 +262,7 @@ extern char * levelMessage(int levelIndex);
 // layers
 int layerIncludes(int layerId, int objId);
 
+int objectId(char * name);
 //rules
 extern int ruleCount();
 extern Rule * rule(int index);

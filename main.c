@@ -20,12 +20,9 @@ int main(int argc, char ** argv) {
   startGame(&rt, file);
   rt.toMoveCount = 0;
   initRenderer();
-
-  int input;
   while (1) {
     render(&rt);
-    input = getch();
-    update(&rt, handleInput(&rt, input));
+    update(&rt, handleInput(&rt, input()));
     if (rt.gameWon == 1) {
       break;
     }

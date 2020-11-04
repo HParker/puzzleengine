@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include <curses.h>
 #include "puzzleData.h"
 
 char charForLoc(Runtime * rt, int loc) {
@@ -12,7 +11,7 @@ char charForLoc(Runtime * rt, int loc) {
 
     if (rt->objects[i].loc == loc && currentHeight > maxHeight) {
       maxHeight = currentHeight;
-      id = rt->objects[i].objId; // this is legendId
+      id = rt->objects[i].objId;
     }
   }
   if (id == -1) {
@@ -23,7 +22,6 @@ char charForLoc(Runtime * rt, int loc) {
 
 void renderLevel(Runtime * rt) {
   // build
-  clear();
   int row = 0;
   int col = 0;
   int count = levelCellCount(rt->levelIndex);
@@ -35,32 +33,21 @@ void renderLevel(Runtime * rt) {
 
   // draw
   for (int i = 0; i < count; i++) {
-    mvaddch(row, col, map[i]);
+    printf("%c", map[i]);
     col++;
     if ((i + 1) % (rt->width) == 0) {
       col = 0;
       row++;
+      printf("\n");
     }
   }
-  refresh();
 }
 
 void renderMessage(Runtime * rt) {
-  clear();
   char * message = levelMessage(rt->levelIndex);
   int messageLength = strlen(message);
-  for (int i = 0; i < messageLength + 4; i++) {
-    mvaddch(0, i, '*');
-  }
 
-  mvaddch(1, 0, '*');
-  mvaddch(1, messageLength + 1, '*');
-
-  mvaddstr(1, 2, message);
-
-  for (int i = 0; i < messageLength + 4; i++) {
-    mvaddch(2, i, '*');
-  }
+  printf("%s\n", message);
 }
 
 void render(Runtime * rt) {
@@ -75,16 +62,13 @@ void render(Runtime * rt) {
 }
 
 void initRenderer() {
-  initscr();
-  cbreak();
-  noecho();
-  clear();
 }
 
 void closeRenderer() {
-  endwin();
 }
 
 char input() {
-  return getch();
+  char rawInput[100];
+  gets(rawInput);
+  return rawInput[0];
 }

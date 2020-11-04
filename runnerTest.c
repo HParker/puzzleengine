@@ -9,7 +9,6 @@ void test_solution(Runtime * rt, int moveCount, int moves[]) {
   }
   if (rt->gameWon == 0) {
     printf("Game incomplete %i/%i\n", rt->levelIndex, rt->pd->levelCount);
-    render(rt);
   }
   ck_assert_int_eq(1, rt->gameWon);
 }

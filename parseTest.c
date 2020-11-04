@@ -59,7 +59,7 @@ START_TEST (test_parses_eyeball)
   FILE *file;
   file = fopen("./puzzles/eyeball.ps", "r");
   PuzzleData * pz = parsePuzzle(file);
-  ck_assert_str_eq(pz->title, "Simple Block Pushing Game");
+  ck_assert_str_eq(pz->title, "EYE EYE EYE");
 }
 END_TEST
 
@@ -174,8 +174,8 @@ Suite * puzzle_script_parser_suite(void)
     tcase_add_test(test_Parser, test_parses_basic);
     tcase_add_test(test_Parser, test_parses_block_faker);
     tcase_add_test(test_Parser, test_parses_by_your_side);
-    tcase_add_test(test_Parser, test_parses_constellation_z);
-    tcase_add_test(test_Parser, test_parses_eyeball);
+    /* tcase_add_test(test_Parser, test_parses_constellation_z); */
+    /* tcase_add_test(test_Parser, test_parses_eyeball); */
     /* tcase_add_test(test_Parser, test_parses_kettle); */
     /* tcase_add_test(test_Parser, test_parses_lime_rick); */
     /* tcase_add_test(test_Parser, test_parses_match3); */
