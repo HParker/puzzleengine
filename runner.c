@@ -71,17 +71,11 @@ int matchesDirection(Direction ruleDir, Direction applicationDirection, Directio
 }
 
 void addToMove(Runtime * rt, Direction applicationDirection, int objIndex, Direction direction) {
-  for (int i = 0; i < rt->toMoveCount; i++) {
-    if (rt->toMove[i].objIndex == objIndex) {
-      // skip if you already have this object index
-      return;
-    }
+  if (rt->toMoveCount + 1 == rt->toMoveCapacity) {
+    rt->toMoveCapacity += 50;
+    printf("tomove realloc\n");
+    rt->toMove = realloc(rt->toMove, sizeof(ToMove) * rt->toMoveCapacity);
   }
-  /* if (rt->toMoveCount + 1 == rt->toMoveCapacity) { */
-  /*   rt->toMoveCapacity += 50; */
-  /*   printf("tomove realloc\n"); */
-  /*   rt->toMove = realloc(rt->toMove, sizeof(ToMove) * rt->toMoveCapacity); */
-  /* } */
 
   rt->toMove[rt->toMoveCount].objIndex = objIndex;
   // TODO: having this absolute dir here seems wrong, we should already convert it before trying to do the move.
@@ -218,7 +212,7 @@ int locDeltaFor(Runtime * rt, Direction applicationDirection, Direction dir) {
   case RIGHT:
     return 1;
   case NONE:
-    printf("IN THE NONE locdeltafor\n");
+    /* printf("IN THE NONE locdeltafor\n"); */
     return 0;
   default:
     return 0;
@@ -238,11 +232,11 @@ void applyMatch(Runtime * rt, Match * match) {
              match->parts[i].goalDirection);
     }
 
-    if (aliasLegendObjectCount(match->parts[i].goalId) > 1) {
-      // This must be a match based on a legend that includes this object.
-      // Stay the same
-    } else {
+    if (aliasLegendObjectCount(match->parts[i].goalId) == 1 && strcmp(objectName(match->parts[i].goalId), "Spread") != 0) {
       rt->objects[match->parts[i].objIndex].objId =  match->parts[i].goalId;
+    } else {
+      // This must be a match based on a legend that includes this object.
+      // Stay the same... this is probably a little wrong somehow
     }
 
     rt->objects[match->parts[i].objIndex].loc = match->parts[i].goalLocation;
@@ -250,37 +244,86 @@ void applyMatch(Runtime * rt, Match * match) {
   }
 }
 
+// TODO: rename next two functions
+int locationMatchDistance(Runtime * rt, int distance, Direction dir, int loc, int targetLoc) {
+  int distanceDelta = 0;
+  int adjustedLoc = loc + ((distance + distanceDelta) * locDeltaFor(rt, dir, dir));
+
+  // TODO: 5 is a hack, how far should we check?
+  // make sure we don't roll over the edge of a row && go far enough.
+  while (distanceDelta < 5) {
+    adjustedLoc = loc + ((distance + distanceDelta) * locDeltaFor(rt, dir, dir));
+    if (targetLoc == adjustedLoc) {
+      return 1;
+    }
+    distanceDelta++;
+  }
+  return 0;
+}
+
+int locationMatchDistanceLoc(Runtime * rt, int distance, Direction dir, int loc, int targetLoc) {
+  int distanceDelta = 0;
+  int adjustedLoc = loc + ((distance + distanceDelta) * locDeltaFor(rt, dir, dir));
+
+  // TODO: 5 is a hack, how far should we check?
+  // make sure we don't roll over the edge of a row && go far enough.
+  while (distanceDelta < 5) {
+    adjustedLoc = loc + ((distance + distanceDelta) * locDeltaFor(rt, dir, dir));
+    if (targetLoc == adjustedLoc) {
+      return adjustedLoc;
+    }
+    distanceDelta++;
+  }
+  return 0;
+}
+
+
 int ruleStateMatchDir(Runtime * rt, Match * match, int ruleIndex, int matchStateIndex, int loc, Direction dir) {
+  int anyDistance = 0;
+  int distance = 0;
   match->appliedDirection = dir;
 
   int success = 1;
   int count = rule(ruleIndex)->matchStates[matchStateIndex].partCount;
   // Technically we can start at one since we know we are on a good spot to start
   for (int i = 0; i < count; i++) {
-    int adjustedLoc = loc + (i * locDeltaFor(rt, dir, dir));
+    success = 0;
+
     int legendId = rule(ruleIndex)->matchStates[matchStateIndex].parts[i].legendId;
     Direction ruleDir = rule(ruleIndex)->matchStates[matchStateIndex].parts[i].direction;
-
-    success = 0;
-    for (int j = 0; j < rt->objectCount; j++) {
-      if (aliasLegendContains(legendId, rt->objects[j].objId) == 1 &&
-          rt->objects[j].loc == adjustedLoc &&
-          matchesDirection(ruleDir, dir, directionMoving(rt, j))
-          ) {
-        match->parts[match->partCount].objIndex = j;
-        match->parts[match->partCount].actualLegendId = rt->objects[j].objId;
-        match->parts[match->partCount].actualLocation = adjustedLoc;
-        match->parts[match->partCount].actualDirection = directionMoving(rt, j);
-
-        match->parts[match->partCount].goalDirection = absoluteDirection(dir, rule(ruleIndex)->resultStates[matchStateIndex].parts[i].direction); // TODO: this might be wrong.
-
-        match->parts[match->partCount].ruleLegendId = legendId;
-
-
-        match->parts[match->partCount].goalId = rule(ruleIndex)->resultStates[matchStateIndex].parts[i].legendId;
-        // TODO: does this ever change?
-        match->parts[match->partCount].goalLocation = adjustedLoc;
+    int adjustedLoc = loc + (distance * locDeltaFor(rt, dir, dir));
+    if (strcmp(aliasLegendKey(legendId), "...") == 0) {
+        distance--;
+        anyDistance = 1;
         success = 1;
+    } else {
+      for (int j = 0; j < rt->objectCount; j++) {
+        if (aliasLegendContains(legendId, rt->objects[j].objId) == 1 &&
+            (rt->objects[j].loc == adjustedLoc || (anyDistance == 1 && locationMatchDistance(rt, distance, dir, loc, rt->objects[j].loc))) &&
+            matchesDirection(ruleDir, dir, directionMoving(rt, j))
+            ) {
+          match->parts[match->partCount].objIndex = j;
+          match->parts[match->partCount].actualLegendId = rt->objects[j].objId;
+
+          match->parts[match->partCount].actualLocation = adjustedLoc;
+
+          match->parts[match->partCount].actualDirection = directionMoving(rt, j);
+
+          match->parts[match->partCount].goalDirection = absoluteDirection(dir, rule(ruleIndex)->resultStates[matchStateIndex].parts[i].direction); // TODO: this might be wrong.
+
+          match->parts[match->partCount].ruleLegendId = legendId;
+
+
+          match->parts[match->partCount].goalId = rule(ruleIndex)->resultStates[matchStateIndex].parts[i].legendId;
+
+          if (anyDistance == 1) {
+            match->parts[match->partCount].goalLocation = locationMatchDistanceLoc(rt, distance, dir, loc, rt->objects[j].loc);
+          } else {
+            match->parts[match->partCount].goalLocation = adjustedLoc;
+          }
+          success = 1;
+          anyDistance = 0;
+        }
       }
     }
     if (success == 1) {
@@ -291,6 +334,7 @@ int ruleStateMatchDir(Runtime * rt, Match * match, int ruleIndex, int matchState
       match->partCount = 0;
       return 0;
     }
+    distance++;
   }
   return 1;
 }
@@ -302,8 +346,8 @@ int ruleStateMatched(Runtime * rt, Match * match, int ruleIndex, int matchStateI
       int legendIdentity = rule(ruleIndex)->matchStates[matchStateIndex].parts[0].legendId;
       int objId = rt->objects[i].objId;
       if (aliasLegendContains(legendIdentity, objId) == 1) {
-        // start of rue state matched, we can continue the rest of the rule state
-        // try directions
+        // start of rule -- or at least the object of the rule -- matched,
+        // we can continue the rest of the rule state, then check for try directions
         if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].loc, RIGHT) == 1) {
           return 1;
         } else if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].loc, UP) == 1) {
@@ -348,7 +392,7 @@ int applyRules(Runtime * rt, ExecutionTime execTime) {
     while (applied == 1) {
       applied = 0;
       match.partCount = 0;
-      if (ruleApplies(rt, ruleIndex, execTime)) {
+      if (ruleApplies(rt, ruleIndex, execTime) == 1) {
         applied = ruleMatched(rt, &match, ruleIndex);
         if (applied == 1) {
           applyMatch(rt, &match);
@@ -453,11 +497,11 @@ void update(Runtime * rt, Direction dir) {
 
   addHistory(rt, dir);
   if (rt->levelType == SQUARES) {
+    applyRules(rt, NORMAL);
     addToMove(rt, NONE, objectIndex(rt, objectId("Player"), playerLocation(rt)), dir);
 
     // apply rules
     applyRules(rt, NORMAL);
-
 
     // apply marked for move
     moveObjects(rt);

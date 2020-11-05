@@ -106,14 +106,33 @@ START_TEST (test_runs_basic)
 }
 END_TEST
 
-START_TEST (test_runs_block_faker)
+START_TEST (test_runs_eyeball_walk)
 {
   FILE *file;
-  file = fopen("./puzzles/block_faker.ps", "r");
+  file = fopen("./puzzles/eyeball_walk.puzz", "r");
   Runtime rt;
   startGame(&rt, file);
 
   int moves[] = {
+                 UP,
+                 LEFT,
+                 DOWN,
+                 DOWN,
+                 RIGHT,
+                 RIGHT,
+                 RIGHT,
+                 RIGHT,
+                 RIGHT,
+                 UP,
+                 UP,
+                 DOWN,
+                 DOWN,
+                 DOWN,
+                 LEFT,
+                 LEFT,
+                 RIGHT,
+                 LEFT,
+                 LEFT
   };
   test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
 }
@@ -130,6 +149,7 @@ Suite * puzzle_script_parser_suite(void)
     test_Parser = tcase_create("Runner");
     tcase_add_test(test_Parser, test_runs_stumper);
     tcase_add_test(test_Parser, test_runs_basic);
+    tcase_add_test(test_Parser, test_runs_eyeball_walk);
     /* tcase_add_test(test_Parser, test_runs_block_faker); */
     /* tcase_add_test(test_Parser, test_parses_constellation_z); */
     /* tcase_add_test(test_Parser, test_parses_eyeball); */

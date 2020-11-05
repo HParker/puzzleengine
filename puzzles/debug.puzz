@@ -22,6 +22,12 @@ brown
 Wall
 Black
 
+Swapper
+Red
+
+Temp
+transparent
+
 =======
 LEGEND
 =======
@@ -30,6 +36,7 @@ P = Player
 T = Tree
 O = Stump
 # = Wall
+S = Swapper
 Treestump = Tree or Stump
 @ = Tree and Stump
 Movable = Player or Tree
@@ -44,13 +51,16 @@ COLLISIONLAYERS
 
 Background
 Stump
-player, Tree, Wall
+player, Tree, Wall, Swapper
 
 ======
 RULES
 ======
 
-[ > Movable | Movable ] -> [ > Movable | > Movable ]
+([ > Movable | Movable ] -> [ > Movable | > Movable ])
+late [ Player | ... | Swapper ] -> [ Temp | ... | Player ]
+late [ Temp ] -> [ Swapper ]
+
 
 ==============
 WINCONDITIONS
@@ -61,6 +71,13 @@ All Tree on Stump
 =======
 LEVELS
 =======
+
+#########
+#...P...#
+#.......#
+#....S..#
+#T......#
+#########
 
 #########
 #...P...#
