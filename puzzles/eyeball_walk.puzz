@@ -1,7 +1,6 @@
-title Match 3 Block Push
+title EYE EYE EYE
 author Stephen Lavelle
 homepage www.puzzlescript.net
-debug
 
 ========
 OBJECTS
@@ -16,7 +15,7 @@ LIGHTGREEN GREEN
 10111
 
 
-Target
+Lens
 DarkBlue
 .....
 .000.
@@ -40,14 +39,13 @@ Black Orange White Blue
 .333.
 .3.3.
 
-Crate
-Orange Yellow
-00000
-0...0
-0...0
-0...0
-00000
-
+EyeBall
+White Blue Red
+.000.
+00100
+01110
+20102
+.202.
 
 =======
 LEGEND
@@ -56,38 +54,35 @@ LEGEND
 . = Background
 # = Wall
 P = Player
-* = Crate
-@ = Crate and Target
-O = Target
+O = EyeBall
+L = Lens
 
 
 =======
 SOUNDS
 =======
 
-Crate MOVE 36772507
+SFX0 67117309
 
 ================
 COLLISIONLAYERS
 ================
 
 Background
-Target
-Player, Wall, Crate
+Lens
+Player, Wall, EyeBall
 
 ======
 RULES
 ======
 
-[ >  Player | Crate ] -> [  >  Player | > Crate  ]
-
-late [ Crate | Crate | Crate ] -> [ | |]
+[ Eyeball | ... | Player ] -> [ > Eyeball | ... | Player ] SFX0
 
 ==============
 WINCONDITIONS
 ==============
 
-All Crate on Target
+All Eyeball on Lens
 
 =======
 LEVELS
@@ -95,17 +90,8 @@ LEVELS
 
 #########
 #.......#
-#.*.*.@.#
-#.P...O.#
-#...*.*.#
-#.......#
-#########
-
-.#######.
-.#.....#.
-.#O##..##
-##.##.*.#
-#.*..**.#
-#.OOO.#.#
+#....O..#
 #.P.....#
+#.......#
+#...L...#
 #########

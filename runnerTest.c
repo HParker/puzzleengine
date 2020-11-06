@@ -138,6 +138,38 @@ START_TEST (test_runs_eyeball_walk)
 }
 END_TEST
 
+START_TEST (test_runs_match3)
+{
+  FILE *file;
+  file = fopen("./puzzles/match3.ps", "r");
+  Runtime rt;
+  startGame(&rt, file);
+
+  int moves[] = {
+                 UP,
+                 LEFT,
+                 DOWN,
+                 DOWN,
+                 RIGHT,
+                 RIGHT,
+                 RIGHT,
+                 RIGHT,
+                 RIGHT,
+                 UP,
+                 UP,
+                 DOWN,
+                 DOWN,
+                 DOWN,
+                 LEFT,
+                 LEFT,
+                 RIGHT,
+                 LEFT,
+                 LEFT
+  };
+  test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
+}
+END_TEST
+
 
 Suite * puzzle_script_parser_suite(void)
 {
@@ -150,6 +182,7 @@ Suite * puzzle_script_parser_suite(void)
     tcase_add_test(test_Parser, test_runs_stumper);
     tcase_add_test(test_Parser, test_runs_basic);
     tcase_add_test(test_Parser, test_runs_eyeball_walk);
+    /* tcase_add_test(test_Parser, test_runs_match3); */
     /* tcase_add_test(test_Parser, test_runs_block_faker); */
     /* tcase_add_test(test_Parser, test_parses_constellation_z); */
     /* tcase_add_test(test_Parser, test_parses_eyeball); */

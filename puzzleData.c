@@ -73,7 +73,14 @@ void initStarterObjects() {
   pd.aliasLegend[pd.aliasLegendCount].key = "...";
   pd.aliasLegend[pd.aliasLegendCount].objectCount = 1;
   pd.aliasLegend[pd.aliasLegendCount].objects[0].id = pd.objectCount;
-  pd.objects[pd.objectCount].name = "Spread";
+  pd.objects[pd.objectCount].name = "_Spread_";
+  incObject();
+  incAliasLegend();
+
+  pd.aliasLegend[pd.aliasLegendCount].key = "_EMPTY_";
+  pd.aliasLegend[pd.aliasLegendCount].objectCount = 1;
+  pd.aliasLegend[pd.aliasLegendCount].objects[0].id = pd.objectCount;
+  pd.objects[pd.objectCount].name = "_Empty_";
   incObject();
   incAliasLegend();
 }
@@ -128,7 +135,7 @@ char * objectName(int id) {
 
 char objectGlyph(int objId) {
   for (int i = 0; i < pd.glyphLegendCount; i++) {
-    if (glyphLegendContains(i, objId) == 1) {
+    if (glyphLegendObjectCount(i) == 1 && glyphLegendContains(i, objId) == 1) {
       return pd.glyphLegend[i].key;
     }
   }

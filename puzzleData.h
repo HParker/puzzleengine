@@ -117,11 +117,13 @@ typedef struct MatchData {
   // which isn't the legend id of the thing to actually place when applying the result state
   int actualLegendId;
   int ruleLegendId;
-  int actualLocation;
+  int actualX;
+  int actualY;
   int actualDirection;
   // goal
   int goalId;
-  int goalLocation;
+  int goalX;
+  int goalY;
   int goalDirection;
 } MatchData;
 
@@ -129,7 +131,6 @@ typedef struct Match {
   // legend id in rules could be things like `movable = Block or Player`
   // which isn't the legend id of the thing to actually place when applying the result state
   int partCount;
-  int startLoc; // TODO: hopefully not needed
   Direction appliedDirection;
   MatchData parts[100];
 } Match;
@@ -227,7 +228,9 @@ typedef struct ToMove {
 } ToMove;
 
 typedef struct Obj {
-  int loc;
+  int x;
+  int y;
+  int deleted;
   int objId;
 } Obj;
 

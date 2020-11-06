@@ -57,9 +57,9 @@ player, Tree, Wall, Swapper
 RULES
 ======
 
-([ > Movable | Movable ] -> [ > Movable | > Movable ])
-late [ Player | ... | Swapper ] -> [ Temp | ... | Player ]
-late [ Temp ] -> [ Swapper ]
+[ > Player | Tree ] -> [ > Player | > Tree ]
+(late [ Player | ... | Swapper ] -> [ Temp | ... | Player ])
+(late [ Temp ] -> [ Swapper ])
 
 
 ==============
@@ -74,14 +74,14 @@ LEVELS
 
 #########
 #...P...#
-#.......#
-#....S..#
-#T......#
+#.T...O.#
 #########
 
 #########
 #...P...#
-#.T...O.#
+#.......#
+#....S..#
+#T......#
 #########
 
 message hi there

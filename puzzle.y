@@ -309,9 +309,9 @@ any_eor:        some_eor |
         ;
 
 rule: rule_prefix rule_infix rule_postfix { incRule(); }
-          | rule_prefix rule_infix { incRule(); }
-|             rule_infix rule_postfix { incRule(); }
-| state_definitions arrow state_definitions { incRule(); }
+    | rule_prefix rule_infix { incRule(); }
+    |             rule_infix rule_postfix { incRule(); }
+    | state_definitions arrow state_definitions { incRule(); }
 
 rule_infix: state_definitions arrow state_definitions
 
@@ -348,7 +348,25 @@ state_internals: state_part VIRTICAL_PIPE state_internals
 
 state_part: state_part_with_direction
           | state_part_without_direction
-          |
+          | {
+    if (pd.rules[pd.ruleCount].matchStateDone == 0) {
+      Rule * r = &pd.rules[pd.ruleCount];
+      RuleState * rs = &r->matchStates[r->matchStateCount];
+      RuleStatePart * rsp = &rs->parts[rs->partCount];
+      rsp->direction = NONE;
+
+      rsp->legendId = aliasLegendId("_EMPTY_");
+      rs->partCount++;
+    } else {
+      Rule * r = &pd.rules[pd.ruleCount];
+      RuleState * rs = &r->resultStates[r->resultStateCount];
+      RuleStatePart * rsp = &rs->parts[rs->partCount];
+      rsp->direction = NONE;
+
+      rsp->legendId = aliasLegendId("_EMPTY_");
+      rs->partCount++;
+    }
+}
 
 state_part_with_direction: DIRECTION objects_on_same_square {
   if (pd.rules[pd.ruleCount].matchStateDone == 0) {

@@ -1,5 +1,4 @@
 TODO:
-- fix calls to locDeltaFor
 - validate object names used in rules exist or are `...`
 - validate has background
 - make sure all objects are in a layer

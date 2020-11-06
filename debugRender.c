@@ -8,8 +8,8 @@ char charForLoc(Runtime * rt, int loc) {
   int currentHeight;
   for (int i = 0; i < rt->objectCount; i++) {
     currentHeight = objectLayer(rt->objects[i].objId);
-
-    if (rt->objects[i].loc == loc && currentHeight > maxHeight) {
+    int objectLoc = (rt->objects[i].y * rt->width) + rt->objects[i].x;
+    if (rt->objects[i].deleted == 0 && objectLoc == loc && currentHeight > maxHeight) {
       maxHeight = currentHeight;
       id = rt->objects[i].objId;
     }

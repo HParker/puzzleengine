@@ -4,13 +4,13 @@
 #include <curses.h>
 #include "puzzleData.h"
 
-int objectIndex(Runtime * rt, int id, int loc) {
+int objId(Runtime * rt, int id, int x, int y) {
   for (int i = 0; i < rt->objectCount; i++) {
-    if (id == rt->objects[i].objId && loc == rt->objects[i].loc) {
+    if (rt->objects[i].objId == id && rt->objects[i].x == x && rt->objects[i].y == y) {
       return i;
     }
   }
-  printf("err: object with id '%i' at %i was not found\n", id, loc);
+  printf("err: object with id '%i' at (%i,%i) was not found\n", id, x, y);
   return -1;
 }
 
@@ -79,12 +79,12 @@ void addToMove(Runtime * rt, Direction applicationDirection, int objIndex, Direc
 
   rt->toMove[rt->toMoveCount].objIndex = objIndex;
   // TODO: having this absolute dir here seems wrong, we should already convert it before trying to do the move.
-  Direction absoluteDir = absoluteDirection(applicationDirection, direction);
-  rt->toMove[rt->toMoveCount].direction = absoluteDir;
+  /* Direction absoluteDir = absoluteDirection(applicationDirection, direction); */
+  rt->toMove[rt->toMoveCount].direction = direction;
   rt->toMoveCount++;
 }
 
-void addObj(Runtime * rt, int objId, int loc) {
+void addObj(Runtime * rt, int objId, int x, int y) {
   if (rt->objectCount + 1 == rt->objectCapacity) {
     printf("object realloc\n");
     rt->objectCapacity += 50;
@@ -92,7 +92,9 @@ void addObj(Runtime * rt, int objId, int loc) {
   }
 
   rt->objects[rt->objectCount].objId = objId;
-  rt->objects[rt->objectCount].loc = loc;
+  rt->objects[rt->objectCount].x = x;
+  rt->objects[rt->objectCount].y = y;
+  rt->objects[rt->objectCount].deleted = 0;
   rt->objectCount++;
 }
 
@@ -100,18 +102,20 @@ void fillBackground(Runtime * rt) {
   int backgroundId = objectId("Background");
 
   for (int i = 0; i < rt->height * rt->width; i++) {
-    addObj(rt, backgroundId, i);
+    int x = i % rt->width;
+    int y = i / rt->width;
+    addObj(rt, backgroundId, x, y);
   }
 }
 
-void loadCell(Runtime * rt, char cell, int loc) {
+void loadCell(Runtime * rt, char cell, int x, int y) {
   int id = legendIdForGlyph(cell);
   int count = glyphLegendObjectCount(id);
   int backgroundId = objectId("Background");
   for (int i = 0; i < count; i++) {
     int objId = glyphLegendObjectId(id, i);
     if (backgroundId != objId) {
-      addObj(rt, objId, loc);
+      addObj(rt, objId, x, y);
     }
   }
 }
@@ -128,7 +132,9 @@ void loadLevel(Runtime * rt) {
 
     int count = levelCellCount(rt->levelIndex);
     for (int i = 0; i < count; i++) {
-      loadCell(rt, levelCell(rt->levelIndex, i), i);
+      int x = i % rt->width;
+      int y = i / rt->width;
+      loadCell(rt, levelCell(rt->levelIndex, i), x, y);
     }
   } else {
     // Message style level
@@ -167,20 +173,10 @@ void startGame(Runtime * rt, FILE * file) {
   loadLevel(rt);
 }
 
-int playerLocation(Runtime * rt) {
-  for (int i = 0; i < rt->objectCount; i++) {
-    if (rt->objects[i].objId == objectId("Player")) {
-      return rt->objects[i].loc;
-    }
-  }
-  printf("Player not found\n");
-  return -1;
-}
-
-int isMovable(Runtime * rt, int loc, int layerIndex) {
+int isMovable(Runtime * rt, int x, int y, int layerIndex) {
   int hasCollidable = 0;
   for (int i = 0; i < rt->objectCount; i++) {
-    if (rt->objects[i].loc == loc && layerIncludes(layerIndex, rt->objects[i].objId)) {
+    if (rt->objects[i].deleted == 0 && rt->objects[i].x == x && rt->objects[i].y == y && layerIncludes(layerIndex, rt->objects[i].objId)) {
       hasCollidable = 1;
     }
   }
@@ -200,21 +196,40 @@ int ruleApplies(Runtime * rt, int ruleIndex, ExecutionTime execTime) {
   return 1;
 }
 
-int locDeltaFor(Runtime * rt, Direction applicationDirection, Direction dir) {
-  Direction absoluteDir = absoluteDirection(applicationDirection, dir);
-  switch (absoluteDir) {
+int deltaX(Direction dir) {
+  switch (dir) {
   case UP:
-    return (rt->width * -1);
   case DOWN:
-    return rt->width;
+    return 0;
   case LEFT:
     return -1;
   case RIGHT:
     return 1;
+  case USE:
+    return 0;
   case NONE:
-    /* printf("IN THE NONE locdeltafor\n"); */
     return 0;
   default:
+    printf("Err: deltaX bad direction %i\n", dir);
+    return 0;
+  }
+}
+
+int deltaY(Direction dir) {
+  switch (dir) {
+  case UP:
+    return -1;
+  case DOWN:
+    return 1;
+  case LEFT:
+  case RIGHT:
+    return 0;
+  case USE:
+    return 0;
+  case NONE:
+    return 0;
+  default:
+    printf("Err: deltaY bad direction %i\n", dir);
     return 0;
   }
 }
@@ -222,63 +237,68 @@ int locDeltaFor(Runtime * rt, Direction applicationDirection, Direction dir) {
 void applyMatch(Runtime * rt, Match * match) {
   for (int i = 0; i < match->partCount; i++) {
     if (rt->pd->debug == 1) {
-      printf("Applying match part id: '%s' (%i) -> '%s' (%i) location: %i -> %i goalMovment: %i\n",
+      printf("Applying match part id: '%s' (%i) -> '%s' (%i) location: (%i,%i) -> (%i,%i) goalMovment: %i\n",
              objectName(rt->objects[match->parts[i].objIndex].objId),
              rt->objects[match->parts[i].objIndex].objId,
              objectName(match->parts[i].goalId),
              match->parts[i].goalId,
-             rt->objects[match->parts[i].objIndex].loc,
-             match->parts[i].goalLocation,
+             rt->objects[match->parts[i].objIndex].x,
+             rt->objects[match->parts[i].objIndex].y,
+             match->parts[i].goalX,
+             match->parts[i].goalY,
              match->parts[i].goalDirection);
     }
 
-    if (aliasLegendObjectCount(match->parts[i].goalId) == 1 && strcmp(objectName(match->parts[i].goalId), "Spread") != 0) {
+    if (aliasLegendObjectCount(match->parts[i].goalId) == 1 && strcmp(objectName(match->parts[i].goalId), "_Spread_") != 0 && match->parts[i].goalId != aliasLegendId("_Empty_")) {
       rt->objects[match->parts[i].objIndex].objId =  match->parts[i].goalId;
-    } else {
-      // This must be a match based on a legend that includes this object.
-      // Stay the same... this is probably a little wrong somehow
+    } else if (match->parts[i].goalId == aliasLegendId("_Empty_")){
+      // TODO: we can handle deletes by just assigning `aliasLegendId("_Empty_")`
+      //       then removing them or marking them deleted later.
+      printf("DELETED '%s'\n", objectName(rt->objects[match->parts[i].objIndex].objId));
+      rt->objects[match->parts[i].objIndex].deleted = 1;
     }
 
-    rt->objects[match->parts[i].objIndex].loc = match->parts[i].goalLocation;
+    rt->objects[match->parts[i].objIndex].x = match->parts[i].goalX;
+    rt->objects[match->parts[i].objIndex].y = match->parts[i].goalY;
+
     addToMove(rt, match->appliedDirection, match->parts[i].objIndex,  match->parts[i].goalDirection);
+
   }
 }
 
-// TODO: rename next two functions
-int locationMatchDistance(Runtime * rt, int distance, Direction dir, int loc, int targetLoc) {
-  int distanceDelta = 0;
-  int adjustedLoc = loc + ((distance + distanceDelta) * locDeltaFor(rt, dir, dir));
-
-  // TODO: 5 is a hack, how far should we check?
-  // make sure we don't roll over the edge of a row && go far enough.
-  while (distanceDelta < 5) {
-    adjustedLoc = loc + ((distance + distanceDelta) * locDeltaFor(rt, dir, dir));
-    if (targetLoc == adjustedLoc) {
+int matchAtDistance(Direction dir, int x, int y, int targetX, int targetY) {
+  switch (dir) {
+  case UP:
+    if (x == targetX && targetY < y) {
       return 1;
+    } else {
+      return 0;
     }
-    distanceDelta++;
+  case DOWN:
+    if (x == targetX && targetY > y) {
+      return 1;
+    } else {
+      return 0;
+    }
+  case LEFT:
+    if (y == targetY && targetX < x) {
+      return 1;
+    } else {
+      return 0;
+    }
+  case RIGHT:
+    if (y == targetY && targetX > x) {
+      return 1;
+    } else {
+      return 0;
+    }
+  default:
+    printf("err: (matchAtDistance) unsupported dir %i", dir);
+    return 0;
   }
-  return 0;
 }
 
-int locationMatchDistanceLoc(Runtime * rt, int distance, Direction dir, int loc, int targetLoc) {
-  int distanceDelta = 0;
-  int adjustedLoc = loc + ((distance + distanceDelta) * locDeltaFor(rt, dir, dir));
-
-  // TODO: 5 is a hack, how far should we check?
-  // make sure we don't roll over the edge of a row && go far enough.
-  while (distanceDelta < 5) {
-    adjustedLoc = loc + ((distance + distanceDelta) * locDeltaFor(rt, dir, dir));
-    if (targetLoc == adjustedLoc) {
-      return adjustedLoc;
-    }
-    distanceDelta++;
-  }
-  return 0;
-}
-
-
-int ruleStateMatchDir(Runtime * rt, Match * match, int ruleIndex, int matchStateIndex, int loc, Direction dir) {
+int ruleStateMatchDir(Runtime * rt, Match * match, int ruleIndex, int matchStateIndex, int x, int y, Direction dir) {
   int anyDistance = 0;
   int distance = 0;
   match->appliedDirection = dir;
@@ -291,36 +311,54 @@ int ruleStateMatchDir(Runtime * rt, Match * match, int ruleIndex, int matchState
 
     int legendId = rule(ruleIndex)->matchStates[matchStateIndex].parts[i].legendId;
     Direction ruleDir = rule(ruleIndex)->matchStates[matchStateIndex].parts[i].direction;
-    int adjustedLoc = loc + (distance * locDeltaFor(rt, dir, dir));
+
+    int currentX = x + (distance * deltaX(dir));
+    int currentY = y + (distance * deltaY(dir));
+
     if (strcmp(aliasLegendKey(legendId), "...") == 0) {
-        distance--;
-        anyDistance = 1;
-        success = 1;
+      distance--;
+      anyDistance = 1;
+      success = 1;
     } else {
       for (int j = 0; j < rt->objectCount; j++) {
-        if (aliasLegendContains(legendId, rt->objects[j].objId) == 1 &&
-            (rt->objects[j].loc == adjustedLoc || (anyDistance == 1 && locationMatchDistance(rt, distance, dir, loc, rt->objects[j].loc))) &&
-            matchesDirection(ruleDir, dir, directionMoving(rt, j))
+        int objectX = rt->objects[j].x;
+        int objectY = rt->objects[j].y;
+
+        if (0 && debug() && aliasLegendContains(legendId, rt->objects[j].objId) == 1) {
+          printf("RULE MATCH STATUS ('%s')\ncontains: %i\nlocation %i\ndirection: %i\n------\n",
+                 objectName(rt->objects[j].objId),
+                 aliasLegendContains(legendId, rt->objects[j].objId),
+                 ((objectX == currentX && objectY == currentY) ||
+                  (anyDistance == 1 && matchAtDistance(dir, currentX, currentY, objectX, objectY))),
+                 matchesDirection(ruleDir, dir, directionMoving(rt, j))
+                 );
+        }
+
+        if (rt->objects[j].deleted == 0 &&
+            aliasLegendContains(legendId, rt->objects[j].objId) == 1 &&
+            ((objectX == currentX && objectY == currentY) ||
+             (anyDistance == 1 && matchAtDistance(dir, x, y, objectX, objectY) == 1)) &&
+            matchesDirection(ruleDir, dir, directionMoving(rt, j)) == 1
             ) {
           match->parts[match->partCount].objIndex = j;
+
+          // TODO: this is not a legend id
           match->parts[match->partCount].actualLegendId = rt->objects[j].objId;
 
-          match->parts[match->partCount].actualLocation = adjustedLoc;
+          match->parts[match->partCount].actualX = currentX;
+          match->parts[match->partCount].actualY = currentY;
 
           match->parts[match->partCount].actualDirection = directionMoving(rt, j);
 
-          match->parts[match->partCount].goalDirection = absoluteDirection(dir, rule(ruleIndex)->resultStates[matchStateIndex].parts[i].direction); // TODO: this might be wrong.
+          // TODO: this might be wrong.
+          match->parts[match->partCount].goalDirection = absoluteDirection(dir, rule(ruleIndex)->resultStates[matchStateIndex].parts[i].direction);
 
           match->parts[match->partCount].ruleLegendId = legendId;
 
-
           match->parts[match->partCount].goalId = rule(ruleIndex)->resultStates[matchStateIndex].parts[i].legendId;
 
-          if (anyDistance == 1) {
-            match->parts[match->partCount].goalLocation = locationMatchDistanceLoc(rt, distance, dir, loc, rt->objects[j].loc);
-          } else {
-            match->parts[match->partCount].goalLocation = adjustedLoc;
-          }
+          match->parts[match->partCount].goalX = objectX;
+          match->parts[match->partCount].goalY = objectY;
           success = 1;
           anyDistance = 0;
         }
@@ -328,7 +366,9 @@ int ruleStateMatchDir(Runtime * rt, Match * match, int ruleIndex, int matchState
     }
     if (success == 1) {
       // found a matching object continue
-      match->partCount++;
+      if (anyDistance == 0) {
+        match->partCount++;
+      }
     } else {
       // failed to find an object that matches the next part, fail
       match->partCount = 0;
@@ -348,13 +388,13 @@ int ruleStateMatched(Runtime * rt, Match * match, int ruleIndex, int matchStateI
       if (aliasLegendContains(legendIdentity, objId) == 1) {
         // start of rule -- or at least the object of the rule -- matched,
         // we can continue the rest of the rule state, then check for try directions
-        if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].loc, RIGHT) == 1) {
+        if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].x, rt->objects[i].y, RIGHT) == 1) {
           return 1;
-        } else if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].loc, UP) == 1) {
+        } else if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].x, rt->objects[i].y, UP) == 1) {
           return 1;
-        } else if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].loc, LEFT) == 1) {
+        } else if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].x, rt->objects[i].y, LEFT) == 1) {
           return 1;
-        } else if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].loc, DOWN) == 1) {
+        } else if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].x, rt->objects[i].y, DOWN) == 1) {
           return 1;
         }
       } else {
@@ -413,12 +453,16 @@ void moveObjects(Runtime * rt) {
   while (somethingApplied == 1) {
     somethingApplied = 0;
     for (int i = 0; i < rt->toMoveCount; i++) {
-      int movingToLoc = rt->objects[rt->toMove[i].objIndex].loc + locDeltaFor(rt, rt->toMove[i].direction, rt->toMove[i].direction);
-      int layerIndex = objectLayer(rt->objects[rt->toMove[i].objIndex].objId);
+      int x = rt->objects[rt->toMove[i].objIndex].x;
+      int y = rt->objects[rt->toMove[i].objIndex].y;
 
-      if (moveApplied[i] == 0 && isMovable(rt, movingToLoc, layerIndex)) {
-        rt->objects[rt->toMove[i].objIndex].loc += locDeltaFor(rt, rt->toMove[i].direction, rt->toMove[i].direction);
-        // TODO: fix this locDeltaFor too ^
+      int layerIndex = objectLayer(rt->objects[rt->toMove[i].objIndex].objId);
+      int movingToX = x + deltaX(rt->toMove[i].direction);
+      int movingToY = y + deltaY(rt->toMove[i].direction);
+
+      if (moveApplied[i] == 0 && isMovable(rt, movingToX, movingToY, layerIndex) == 1) {
+        rt->objects[rt->toMove[i].objIndex].x += deltaX(rt->toMove[i].direction);
+        rt->objects[rt->toMove[i].objIndex].y += deltaY(rt->toMove[i].direction);
         moveApplied[i] = 1;
         somethingApplied = 1;
       }
@@ -480,6 +524,15 @@ void setLevel(Runtime * rt) {
   }
 }
 
+void markPlayerAsMoving(Runtime * rt, Direction dir) {
+  int playerId = objectId("Player");
+  for (int i = 0; i < rt->objectCount; i++) {
+    if (rt->objects[i].objId == playerId) {
+      addToMove(rt, NONE, i, dir);
+    }
+  }
+}
+
 void addHistory(Runtime * rt, Direction dir) {
   if (rt->historyCount + 1 == rt->historyCapacity) {
     printf("history realloc\n");
@@ -491,14 +544,15 @@ void addHistory(Runtime * rt, Direction dir) {
 }
 
 void update(Runtime * rt, Direction dir) {
-  for (int i = 0; i < rt->objectCount; i++) {
-    /* printf("<OBJ index: %i id: %i '%s' loc: %i>\n", i, rt->objects[i].objId, objectName(rt->objects[i].objId), rt->objects[i].loc); */
-  }
-
   addHistory(rt, dir);
+  // TODO: remove deleted objects?
   if (rt->levelType == SQUARES) {
+    // Eyeball seems to prove that rules run before and after marking the player as moving
+    // this however doesn't seem to be documented. I assume it is correct.
     applyRules(rt, NORMAL);
-    addToMove(rt, NONE, objectIndex(rt, objectId("Player"), playerLocation(rt)), dir);
+
+    // mark player as moving
+    markPlayerAsMoving(rt, dir);
 
     // apply rules
     applyRules(rt, NORMAL);
@@ -519,9 +573,9 @@ void update(Runtime * rt, Direction dir) {
 
 int verifyOne(Runtime * rt, int thing, int container) {
   for (int i = 0; i < rt->objectCount; i++) {
-    if (rt->objects[i].objId == thing) {
+    if (rt->objects[i].deleted == 0 && rt->objects[i].objId == thing) {
       for (int j = 0; j < rt->objectCount; j++) {
-        if (rt->objects[j].objId == container && rt->objects[i].loc == rt->objects[j].loc) {
+        if (rt->objects[j].objId == container && rt->objects[i].x == rt->objects[j].x && rt->objects[i].y == rt->objects[j].y) {
           return 1;
         }
       }
@@ -533,10 +587,10 @@ int verifyOne(Runtime * rt, int thing, int container) {
 int verifyAll(Runtime * rt, int thing, int container) {
   int satisfied = 1;
   for (int i = 0; i < rt->objectCount; i++) {
-    if (rt->objects[i].objId == thing) {
+    if (rt->objects[i].deleted == 0 && rt->objects[i].objId == thing) {
       satisfied = 0;
       for (int j = 0; j < rt->objectCount; j++) {
-        if (rt->objects[j].objId == container && rt->objects[i].loc == rt->objects[j].loc) {
+        if (rt->objects[j].objId == container && rt->objects[i].x == rt->objects[j].x && rt->objects[i].y == rt->objects[j].y) {
           satisfied = 1;
         }
       }
