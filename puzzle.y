@@ -62,7 +62,6 @@ int objectId(char * name) {
     return -1;
 }
 
-
 int spriteIndex = 0;
 int legendIsAlias = 0;
 %}
@@ -353,17 +352,19 @@ state_part: state_part_with_direction
       Rule * r = &pd.rules[pd.ruleCount];
       RuleState * rs = &r->matchStates[r->matchStateCount];
       RuleStatePart * rsp = &rs->parts[rs->partCount];
-      rsp->direction = NONE;
 
-      rsp->legendId = aliasLegendId("_EMPTY_");
+      rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId("_EMPTY_");
+      rsp->ruleIdentityCount++;
+
       rs->partCount++;
     } else {
       Rule * r = &pd.rules[pd.ruleCount];
       RuleState * rs = &r->resultStates[r->resultStateCount];
       RuleStatePart * rsp = &rs->parts[rs->partCount];
-      rsp->direction = NONE;
 
-      rsp->legendId = aliasLegendId("_EMPTY_");
+      rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId("_EMPTY_");
+      rsp->ruleIdentityCount++;
+
       rs->partCount++;
     }
 }
@@ -389,12 +390,14 @@ state_part_without_direction: objects_on_same_square {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->matchStates[r->matchStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
+
     rsp->direction = NONE;
     rs->partCount++;
   } else {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->resultStates[r->resultStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
+
     rsp->direction = NONE;
     rs->partCount++;
   }
@@ -407,14 +410,16 @@ object: OBJID {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->matchStates[r->matchStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
-    rsp->direction = NONE;
-    rsp->legendId = aliasLegendId($1);
+
+    rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId($1);
+    rsp->ruleIdentityCount++;
   } else {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->resultStates[r->resultStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
-    rsp->direction = NONE;
-    rsp->legendId = aliasLegendId($1);
+
+    rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId($1);
+    rsp->ruleIdentityCount++;
   }
 }
 

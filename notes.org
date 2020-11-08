@@ -10,7 +10,7 @@ TODO:
 - When applying directions, the last rule that applies the direction always wins. This can be confusing and could give a warning. It might be hard to warn about because it has to be proved that the match is identical
 
 - PS doesn't do this, but [ > One Two ] makes no sense and should probably error. Or apply only to the first object
-
+- the direction handling in rules should move down a level. I think we can parse direction and legendId together and it will be cleaner/make more sense
 
 
 3d api:
@@ -27,3 +27,15 @@ TODO:
 # O #
 #   #
 #####
+
+
+good rule debug:
+        if (0 && debug() && aliasLegendContains(legendId, rt->objects[j].objId) == 1) {
+          printf("RULE MATCH STATUS ('%s')\ncontains: %i\nlocation %i\ndirection: %i\n------\n",
+                 objectName(rt->objects[j].objId),
+                 aliasLegendContains(legendId, rt->objects[j].objId),
+                 ((objectX == currentX && objectY == currentY) ||
+                  (anyDistance == 1 && matchAtDistance(dir, currentX, currentY, objectX, objectY))),
+                 matchesDirection(ruleDir, dir, directionMoving(rt, j))
+                 );
+        }

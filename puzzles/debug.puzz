@@ -58,8 +58,9 @@ player, Tree, Wall, Swapper
 RULES
 ======
 
-[ Tree Stump ] -> [ Wall ]
-([ > Playah | Tree ] -> [ > Playah | > Tree ])
+
+[ > Player | Tree ] -> [ > Player | > Tree ]
+late [ Tree Stump ] -> [ Wall ]
 ([ > Movable | Movable ] -> [ > Movable | > Movable ])
 (late [ Player | ... | Swapper ] -> [ Temp | ... | Player ])
 (late [ Temp ] -> [ Swapper ])

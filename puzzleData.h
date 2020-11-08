@@ -91,10 +91,20 @@ typedef enum ExecutionTime
    LATE = 1
   } ExecutionTime;
 
+
+typedef struct RuleIdentity {
+  // TODO: direction can work here especially for things like [ Player no Ground ]
+  //       to contain modifiers as well, but I am not ready to make that change in the parser
+  /* Direction direction; */
+  int legendId;
+} RuleIdentity;
+
 // parts are split by `|`
 typedef struct RuleStatePart {
+  int ruleIdentityCount;
+  RuleIdentity ruleIdentity[100];
   Direction direction;
-  int legendId;
+  /* int legendId; */
 } RuleStatePart;
 
 typedef struct RuleState {
@@ -114,9 +124,6 @@ typedef struct Rule {
 
 typedef struct MatchData {
   int objIndex;
-  // legend id in rules could be things like `movable = Block or Player`
-  // which isn't the legend id of the thing to actually place when applying the result state
-  int actualLegendId;
   int ruleLegendId;
   int actualX;
   int actualY;

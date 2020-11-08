@@ -306,6 +306,65 @@ int matchAtDistance(Direction dir, int x, int y, int targetX, int targetY) {
   }
 }
 
+int matchPartIdentity(Runtime * rt, RuleStatePart * matchPart, RuleStatePart * resultPart, Match * match, int anyDistance, Direction ruleDir, Direction dir, int x, int y) {
+  int matchCount = 0;
+  int matchObjectIndexes[100];
+  int matched = 0;
+
+  for (int i = 0; i < matchPart->ruleIdentityCount; i++) {
+    matched = 0;
+    int legendId = matchPart->ruleIdentity[i].legendId;
+
+    for (int j = 0; j < rt->objectCount; j++) {
+      if (rt->objects[j].x == x &&
+          rt->objects[j].y == y &&
+          rt->objects[j].objId != objectId("Background")) {
+        printf("checking match identity '%s'\n------------\n", objectName(rt->objects[j].objId));
+        printf("<OBJ live: %i (%i,%i) id: %i dir: %i>\n",
+               rt->objects[j].deleted == 0,
+               rt->objects[j].x,
+               rt->objects[j].y,
+               aliasLegendContains(legendId, rt->objects[j].objId),
+               matchesDirection(ruleDir, dir, directionMoving(rt, j)) == 1);
+      }
+
+
+
+      if (rt->objects[j].deleted == 0 &&
+          ((rt->objects[j].x == x &&
+           rt->objects[j].y == y) ||
+           (anyDistance == 1 && matchAtDistance(dir, x, y, x, y))) &&
+          aliasLegendContains(legendId, rt->objects[j].objId) &&
+          matchesDirection(ruleDir, dir, directionMoving(rt, j))) {
+        matched = 1;
+        matchObjectIndexes[matchCount] = j;
+        matchCount++;
+      }
+    }
+
+    if (matched == 1) {
+      printf("matched a part!!!\n");
+      // continue so far we haven't failed
+    } else {
+      return 0;
+    }
+  }
+
+  for (int i = 0; i < matchCount; i++) {
+    printf("matched index: %i at (%i,%i) resultDir: %i, goalDir: %i\n", matchObjectIndexes[i], x, y, resultPart->direction, absoluteDirection(dir, resultPart->direction));
+    match->parts[match->partCount].objIndex = matchObjectIndexes[i];
+    match->parts[match->partCount].actualX = x;
+    match->parts[match->partCount].actualY = y;
+    match->parts[match->partCount].goalX = x;
+    match->parts[match->partCount].goalY = y;
+
+    match->parts[match->partCount].goalDirection = absoluteDirection(dir, resultPart->direction);
+    match->parts[match->partCount].goalId = resultPart->ruleIdentity[i].legendId;
+    match->partCount++;
+  }
+  return 1;
+}
+
 int ruleStateMatchDir(Runtime * rt, Match * match, int ruleIndex, int matchStateIndex, int x, int y, Direction dir) {
   int anyDistance = 0;
   int distance = 0;
@@ -313,69 +372,76 @@ int ruleStateMatchDir(Runtime * rt, Match * match, int ruleIndex, int matchState
 
   int success = 1;
   int count = rule(ruleIndex)->matchStates[matchStateIndex].partCount;
-  // Technically we can start at one since we know we are on a good spot to start
   for (int i = 0; i < count; i++) {
     success = 0;
 
-    int legendId = rule(ruleIndex)->matchStates[matchStateIndex].parts[i].legendId;
+    RuleStatePart * matchPart = &rule(ruleIndex)->matchStates[matchStateIndex].parts[i];
+    RuleStatePart * resultPart = &rule(ruleIndex)->resultStates[matchStateIndex].parts[i];
     Direction ruleDir = rule(ruleIndex)->matchStates[matchStateIndex].parts[i].direction;
-
     int currentX = x + (distance * deltaX(dir));
     int currentY = y + (distance * deltaY(dir));
 
-    if (strcmp(aliasLegendKey(legendId), "...") == 0) {
+    // Little bit of a hack, but ... has to be alone in a cell, so we can try checking this way.
+    int firstLegendId = rule(ruleIndex)->matchStates[matchStateIndex].parts[0].ruleIdentity[0].legendId;
+    if (strcmp(aliasLegendKey(firstLegendId), "...") == 0) {
       distance--;
       anyDistance = 1;
       success = 1;
-    } else {
-      for (int j = 0; j < rt->objectCount; j++) {
-        int objectX = rt->objects[j].x;
-        int objectY = rt->objects[j].y;
-
-        if (0 && debug() && aliasLegendContains(legendId, rt->objects[j].objId) == 1) {
-          printf("RULE MATCH STATUS ('%s')\ncontains: %i\nlocation %i\ndirection: %i\n------\n",
-                 objectName(rt->objects[j].objId),
-                 aliasLegendContains(legendId, rt->objects[j].objId),
-                 ((objectX == currentX && objectY == currentY) ||
-                  (anyDistance == 1 && matchAtDistance(dir, currentX, currentY, objectX, objectY))),
-                 matchesDirection(ruleDir, dir, directionMoving(rt, j))
-                 );
-        }
-
-        if (rt->objects[j].deleted == 0 &&
-            aliasLegendContains(legendId, rt->objects[j].objId) == 1 &&
-            ((objectX == currentX && objectY == currentY) ||
-             (anyDistance == 1 && matchAtDistance(dir, x, y, objectX, objectY) == 1)) &&
-            matchesDirection(ruleDir, dir, directionMoving(rt, j)) == 1
-            ) {
-          match->parts[match->partCount].objIndex = j;
-
-          // TODO: this is not a legend id
-          match->parts[match->partCount].actualLegendId = rt->objects[j].objId;
-
-          match->parts[match->partCount].actualX = currentX;
-          match->parts[match->partCount].actualY = currentY;
-
-          match->parts[match->partCount].actualDirection = directionMoving(rt, j);
-
-          // TODO: this might be wrong.
-          match->parts[match->partCount].goalDirection = absoluteDirection(dir, rule(ruleIndex)->resultStates[matchStateIndex].parts[i].direction);
-
-          match->parts[match->partCount].ruleLegendId = legendId;
-
-          match->parts[match->partCount].goalId = rule(ruleIndex)->resultStates[matchStateIndex].parts[i].legendId;
-
-          match->parts[match->partCount].goalX = objectX;
-          match->parts[match->partCount].goalY = objectY;
-          success = 1;
-          anyDistance = 0;
-        }
-      }
     }
+
+    if (matchPartIdentity(rt, matchPart, resultPart, match, anyDistance, ruleDir, dir, currentX, currentY)) {
+      printf("GOT OUT\n");
+      success = 1;
+      anyDistance = 0;
+    }
+
+
+
+    /* if (strcmp(aliasLegendKey(legendId), "...") == 0) { */
+    /*   distance--; */
+    /*   anyDistance = 1; */
+    /*   success = 1; */
+    /* } else { */
+    /*   for (int j = 0; j < rt->objectCount; j++) { */
+    /*     int objectX = rt->objects[j].x; */
+    /*     int objectY = rt->objects[j].y; */
+
+    /*     if (rt->objects[j].deleted == 0 && */
+    /*         aliasLegendContains(legendId, rt->objects[j].objId) == 1 && */
+    /*         ((objectX == currentX && objectY == currentY) || */
+    /*          (anyDistance == 1 && matchAtDistance(dir, x, y, objectX, objectY) == 1)) && */
+    /*         matchesDirection(ruleDir, dir, directionMoving(rt, j)) == 1 */
+    /*         ) { */
+    /*       match->parts[match->partCount].objIndex = j; */
+
+    /*       // TODO: this is not a legend id */
+    /*       match->parts[match->partCount].actualLegendId = rt->objects[j].objId; */
+
+    /*       match->parts[match->partCount].actualX = currentX; */
+    /*       match->parts[match->partCount].actualY = currentY; */
+
+    /*       match->parts[match->partCount].actualDirection = directionMoving(rt, j); */
+
+    /*       // TODO: this might be wrong. */
+    /*       match->parts[match->partCount].goalDirection = absoluteDirection(dir, rule(ruleIndex)->resultStates[matchStateIndex].parts[i].direction); */
+
+    /*       match->parts[match->partCount].ruleLegendId = legendId; */
+
+    /*       match->parts[match->partCount].goalId = rule(ruleIndex)->resultStates[matchStateIndex].parts[i].ruleIdentity[0].legendId; */
+
+    /*       match->parts[match->partCount].goalX = objectX; */
+    /*       match->parts[match->partCount].goalY = objectY; */
+    /*       success = 1; */
+    /*       anyDistance = 0; */
+    /*     } */
+    /*   } */
+    /* } */
+
     if (success == 1) {
       // found a matching object continue
       if (anyDistance == 0) {
-        match->partCount++;
+        /* printf("\n\nCONTINUING MATCH\n\n"); */
+        /* match->partCount++; */
       }
     } else {
       // failed to find an object that matches the next part, fail
@@ -391,19 +457,19 @@ int ruleStateMatched(Runtime * rt, Match * match, int ruleIndex, int matchStateI
   int matchedOne = 0;
   if (rule(ruleIndex)->matchStates[matchStateIndex].partCount > 0) {
     for (int i = 0; i < rt->objectCount; i++) {
-      int legendIdentity = rule(ruleIndex)->matchStates[matchStateIndex].parts[0].legendId;
+      int firstLegendId = rule(ruleIndex)->matchStates[matchStateIndex].parts[0].ruleIdentity[0].legendId;
       int objId = rt->objects[i].objId;
-      if (aliasLegendContains(legendIdentity, objId) == 1) {
+      if (aliasLegendContains(firstLegendId, objId) == 1) {
         // start of rule -- or at least the object of the rule -- matched,
         // we can continue the rest of the rule state, then check for try directions
         if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].x, rt->objects[i].y, RIGHT) == 1) {
           return 1;
-        } else if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].x, rt->objects[i].y, UP) == 1) {
-          return 1;
-        } else if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].x, rt->objects[i].y, LEFT) == 1) {
-          return 1;
-        } else if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].x, rt->objects[i].y, DOWN) == 1) {
-          return 1;
+        /* } else if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].x, rt->objects[i].y, UP) == 1) { */
+        /*   return 1; */
+        /* } else if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].x, rt->objects[i].y, LEFT) == 1) { */
+        /*   return 1; */
+        /* } else if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].x, rt->objects[i].y, DOWN) == 1) { */
+        /*   return 1; */
         }
       } else {
         // Nothing to do unless you matched it.
