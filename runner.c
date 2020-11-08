@@ -77,6 +77,13 @@ void addToMove(Runtime * rt, Direction applicationDirection, int objIndex, Direc
     rt->toMove = realloc(rt->toMove, sizeof(ToMove) * rt->toMoveCapacity);
   }
 
+  for (int i = 0; i < rt->toMoveCount; i++) {
+    if (rt->toMove[i].objIndex == objIndex) {
+      rt->toMove[i].direction = direction;
+      return;
+    }
+  }
+
   rt->toMove[rt->toMoveCount].objIndex = objIndex;
   // TODO: having this absolute dir here seems wrong, we should already convert it before trying to do the move.
   /* Direction absoluteDir = absoluteDirection(applicationDirection, direction); */
@@ -237,7 +244,8 @@ int deltaY(Direction dir) {
 void applyMatch(Runtime * rt, Match * match) {
   for (int i = 0; i < match->partCount; i++) {
     if (rt->pd->debug == 1) {
-      printf("Applying match part id: '%s' (%i) -> '%s' (%i) location: (%i,%i) -> (%i,%i) goalMovment: %i\n",
+      printf("Applying (%i) id: '%s' (%i) -> '%s' (%i) location: (%i,%i) -> (%i,%i) goalMovment: %i\n",
+             i,
              objectName(rt->objects[match->parts[i].objIndex].objId),
              rt->objects[match->parts[i].objIndex].objId,
              objectName(match->parts[i].goalId),
@@ -248,13 +256,13 @@ void applyMatch(Runtime * rt, Match * match) {
              match->parts[i].goalY,
              match->parts[i].goalDirection);
     }
-
-    if (aliasLegendObjectCount(match->parts[i].goalId) == 1 && strcmp(objectName(match->parts[i].goalId), "_Spread_") != 0 && match->parts[i].goalId != aliasLegendId("_Empty_")) {
-      rt->objects[match->parts[i].objIndex].objId =  match->parts[i].goalId;
-    } else if (match->parts[i].goalId == aliasLegendId("_Empty_")){
+    // TODO: does this work if I use a alias with only one value?
+    if (aliasLegendObjectCount(match->parts[i].goalId) == 1 && match->parts[i].goalId != aliasLegendId("...") && match->parts[i].goalId != aliasLegendId("_Empty_")) {
+      rt->objects[match->parts[i].objIndex].objId = aliasLegendObjectId(match->parts[i].goalId, 0);
+    } else if (match->parts[i].goalId == aliasLegendId("_Empty_")) {
       // TODO: we can handle deletes by just assigning `aliasLegendId("_Empty_")`
       //       then removing them or marking them deleted later.
-      printf("DELETED '%s'\n", objectName(rt->objects[match->parts[i].objIndex].objId));
+      //       I haven't done it yet because it might make undo easier
       rt->objects[match->parts[i].objIndex].deleted = 1;
     }
 
@@ -510,11 +518,10 @@ Direction handleInput(Runtime * rt, int input) {
 }
 
 void setLevel(Runtime * rt) {
-  if (rt->levelType == SQUARES && checkWinConditions(rt) == 1) {
+  if (checkWinConditions(rt) == 1) {
     if (rt->levelIndex < levelCount() - 1) {
       nextLevel(rt);
     } else {
-
       if (debug() == 1) {
         printf("you won!!!\n");
         printHistory(rt);
@@ -566,7 +573,7 @@ void update(Runtime * rt, Direction dir) {
     setLevel(rt);
   } else {
     if (dir == USE) {
-      nextLevel(rt);
+      setLevel(rt);
     }
   }
 }

@@ -9,6 +9,10 @@ TODO:
 - There are some helpful errors we can add like direction in `late` rules will never match right?
 - When applying directions, the last rule that applies the direction always wins. This can be confusing and could give a warning. It might be hard to warn about because it has to be proved that the match is identical
 
+- PS doesn't do this, but [ > One Two ] makes no sense and should probably error. Or apply only to the first object
+
+
+
 3d api:
 - transfer levels with `lift` and `lower`
 - maybe specify 3d levels with,

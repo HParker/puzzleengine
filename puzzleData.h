@@ -91,6 +91,7 @@ typedef enum ExecutionTime
    LATE = 1
   } ExecutionTime;
 
+// parts are split by `|`
 typedef struct RuleStatePart {
   Direction direction;
   int legendId;

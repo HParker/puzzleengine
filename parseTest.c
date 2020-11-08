@@ -6,7 +6,7 @@
 START_TEST (test_parses_basic)
 {
   FILE *file;
-  file = fopen("./puzzles/basic.ps", "r");
+  file = fopen("./puzzles/basic.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
   ck_assert_str_eq(pz->title, "Simple Block Pushing Game");
   /* ck_assert_int_eq(pz->objectCount, 5); */
@@ -20,7 +20,7 @@ END_TEST
 START_TEST (test_parses_block_faker)
 {
   FILE *file;
-  file = fopen("./puzzles/block_faker.ps", "r");
+  file = fopen("./puzzles/block_faker.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
   ck_assert_str_eq(pz->title, "Block Faker");
   /* ck_assert_int_eq(pz->objectCount, 11); */
@@ -34,7 +34,7 @@ END_TEST
 START_TEST (test_parses_by_your_side)
 {
   FILE *file;
-  file = fopen("./puzzles/by_your_side.ps", "r");
+  file = fopen("./puzzles/by_your_side.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
   ck_assert_str_eq(pz->title, "By Your Side");
   /* ck_assert_int_eq(pz->objectCount, 23); */
@@ -48,7 +48,7 @@ END_TEST
 START_TEST (test_parses_constellation_z)
 {
   FILE *file;
-  file = fopen("./puzzles/constellation_z.ps", "r");
+  file = fopen("./puzzles/constellation_z.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
   ck_assert_str_eq(pz->title, "constellation z");
 }
@@ -57,7 +57,7 @@ END_TEST
 START_TEST (test_parses_eyeball)
 {
   FILE *file;
-  file = fopen("./puzzles/eyeball.ps", "r");
+  file = fopen("./puzzles/eyeball.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
   ck_assert_str_eq(pz->title, "EYE EYE EYE");
 }
@@ -66,7 +66,7 @@ END_TEST
 START_TEST (test_parses_kettle)
 {
   FILE *file;
-  file = fopen("./puzzles/kettle.ps", "r");
+  file = fopen("./puzzles/kettle.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
   ck_assert_str_eq(pz->title, "Simple Block Pushing Game");
 }
@@ -75,7 +75,7 @@ END_TEST
 START_TEST (test_parses_lime_rick)
 {
   FILE *file;
-  file = fopen("./puzzles/lime_rick.ps", "r");
+  file = fopen("./puzzles/lime_rick.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
   ck_assert_str_eq(pz->title, "Simple Block Pushing Game");
 }
@@ -84,7 +84,7 @@ END_TEST
 START_TEST (test_parses_match3)
 {
   FILE *file;
-  file = fopen("./puzzles/match3.ps", "r");
+  file = fopen("./puzzles/match3.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
   ck_assert_str_eq(pz->title, "Simple Block Pushing Game");
 }
@@ -93,7 +93,7 @@ END_TEST
 START_TEST (test_parses_micro_ban)
 {
   FILE *file;
-  file = fopen("./puzzles/micro_ban.ps", "r");
+  file = fopen("./puzzles/micro_ban.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
   ck_assert_str_eq(pz->title, "Simple Block Pushing Game");
 }
@@ -111,7 +111,7 @@ END_TEST
 START_TEST (test_parses_neko_puzzle)
 {
   FILE *file;
-  file = fopen("./puzzles/neko_puzzle.ps", "r");
+  file = fopen("./puzzles/neko_puzzle.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
   ck_assert_str_eq(pz->title, "Simple Block Pushing Game");
 }
@@ -120,7 +120,7 @@ END_TEST
 START_TEST (test_parses_not_snake)
 {
   FILE *file;
-  file = fopen("./puzzles/not_snake.ps", "r");
+  file = fopen("./puzzles/not_snake.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
   ck_assert_str_eq(pz->title, "Simple Block Pushing Game");
 }
@@ -129,7 +129,7 @@ END_TEST
 START_TEST (test_parses_octat)
 {
   FILE *file;
-  file = fopen("./puzzles/octat.ps", "r");
+  file = fopen("./puzzles/octat.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
   ck_assert_str_eq(pz->title, "Simple Block Pushing Game");
 }
@@ -138,7 +138,7 @@ END_TEST
 START_TEST (test_parses_random_robots)
 {
   FILE *file;
-  file = fopen("./puzzles/random_robots.ps", "r");
+  file = fopen("./puzzles/random_robots.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
   ck_assert_str_eq(pz->title, "Simple Block Pushing Game");
 }
@@ -148,7 +148,7 @@ END_TEST
 START_TEST (test_parses_random_robots_spawner)
 {
   FILE *file;
-  file = fopen("./puzzles/random_robots_spawner.ps", "r");
+  file = fopen("./puzzles/random_robots_spawner.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
   ck_assert_str_eq(pz->title, "EYE EYE EYE");
 }
@@ -157,7 +157,7 @@ END_TEST
 START_TEST (test_parses_zen_puzzle_garden)
 {
   FILE *file;
-  file = fopen("./puzzles/zen_puzzle_garden.ps", "r");
+  file = fopen("./puzzles/zen_puzzle_garden.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
   ck_assert_str_eq(pz->title, "EYE EYE EYE");
 }
