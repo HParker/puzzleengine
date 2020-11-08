@@ -71,7 +71,7 @@ int matchesDirection(Direction ruleDir, Direction applicationDirection, Directio
 }
 
 void addToMove(Runtime * rt, Direction applicationDirection, int objIndex, Direction direction) {
-  if (rt->toMoveCount + 1 == rt->toMoveCapacity) {
+  if (rt->toMoveCount == rt->toMoveCapacity) {
     rt->toMoveCapacity += 50;
     printf("tomove realloc\n");
     rt->toMove = realloc(rt->toMove, sizeof(ToMove) * rt->toMoveCapacity);
@@ -92,7 +92,7 @@ void addToMove(Runtime * rt, Direction applicationDirection, int objIndex, Direc
 }
 
 void addObj(Runtime * rt, int objId, int x, int y) {
-  if (rt->objectCount + 1 == rt->objectCapacity) {
+  if (rt->objectCount == rt->objectCapacity) {
     printf("object realloc\n");
     rt->objectCapacity += 50;
     rt->objects = realloc(rt->objects, sizeof(Direction) * rt->objectCapacity);
@@ -541,7 +541,7 @@ void markPlayerAsMoving(Runtime * rt, Direction dir) {
 }
 
 void addHistory(Runtime * rt, Direction dir) {
-  if (rt->historyCount + 1 == rt->historyCapacity) {
+  if (rt->historyCount == rt->historyCapacity) {
     printf("history realloc\n");
     rt->historyCapacity += 50;
     rt->history = realloc(rt->history, sizeof(Direction) * rt->historyCapacity);
