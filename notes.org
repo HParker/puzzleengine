@@ -39,3 +39,11 @@ good rule debug:
                  matchesDirection(ruleDir, dir, directionMoving(rt, j))
                  );
         }
+print object:
+        printf("checking match identity '%s'\n------------\n", objectName(rt->objects[j].objId));
+        printf("<OBJ live: %i (%i,%i) id: %i dir: %i>\n",
+               rt->objects[j].deleted == 0,
+               rt->objects[j].x,
+               rt->objects[j].y,
+               aliasLegendContains(legendId, rt->objects[j].objId),
+               matchesDirection(ruleDir, dir, directionMoving(rt, j)) == 1);
