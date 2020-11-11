@@ -107,16 +107,6 @@ void addObj(Runtime * rt, int objId, int x, int y) {
   rt->objectCount++;
 }
 
-void fillBackground(Runtime * rt) {
-  int backgroundId = aliasLegendObjectId(aliasLegendId("Background"), 0);
-
-  for (int i = 0; i < rt->height * rt->width; i++) {
-    int x = i % rt->width;
-    int y = i / rt->width;
-    addObj(rt, backgroundId, x, y);
-  }
-}
-
 void loadCell(Runtime * rt, char cell, int x, int y) {
   int id = legendIdForGlyph(cell);
   int count = glyphLegendObjectCount(id);
@@ -136,8 +126,6 @@ void loadLevel(Runtime * rt) {
     rt->width = levelWidth(rt->levelIndex);
     rt->toMoveCount = 0;
     rt->objectCount = 0;
-
-    fillBackground(rt);
 
     int count = levelCellCount(rt->levelIndex);
     for (int i = 0; i < count; i++) {
@@ -312,8 +300,6 @@ int matchAtDistance(Direction dir, int x, int y, int targetX, int targetY) {
 
 
 int matchPartIdentity(Runtime * rt, RuleStatePart * matchPart, RuleStatePart * resultPart, Match * match, int ruleIndex, int anyDistance, Direction dir, int x, int y) {
-  int backgroundId = aliasLegendObjectId(aliasLegendId("Background"), 0);
-
   int matchCount = 0;
   int matchObjectIndexes[100];
   int directionObjectIndexes[100];
@@ -328,7 +314,6 @@ int matchPartIdentity(Runtime * rt, RuleStatePart * matchPart, RuleStatePart * r
       int legendContains = aliasLegendContains(legendId, rt->objects[j].objId);
 
       if (rt->objects[j].deleted == 0 &&
-          rt->objects[j].objId != backgroundId &&
           ((rt->objects[j].x == x &&
            rt->objects[j].y == y) ||
            (anyDistance == 1 && matchAtDistance(dir, x, y, rt->objects[j].x, rt->objects[j].y))) &&

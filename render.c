@@ -4,6 +4,10 @@
 #include "puzzleData.h"
 
 char charForLoc(Runtime * rt, int loc) {
+  int backgroundId = aliasLegendObjectId(aliasLegendId("Background"), 0);
+  printf("alias background id: %i\n", aliasLegendId("Background"));
+  printf("backgroundid: %i\n", backgroundId);
+
   int maxHeight = -1;
   int id = -1;
   int currentHeight;
@@ -20,20 +24,19 @@ char charForLoc(Runtime * rt, int loc) {
     }
   }
   if (id == -1) {
-    printf("(charForLoc) id not found at loc: %i\n", loc);
+    return objectGlyph(backgroundId);
   }
   return objectGlyph(id);
 }
 
 void renderLevel(Runtime * rt) {
-  // build
+
   clear();
   int row = 0;
   int col = 0;
   int count = levelCellCount(rt->levelIndex);
   char map[count];
   for (int i = 0; i < count; i++) {
-    map[i] = '.';
     map[i] = charForLoc(rt, i);
   }
 
