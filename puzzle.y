@@ -1,6 +1,7 @@
 %{
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 #include "puzzleData.h"
 #include "parser.h"
 
@@ -19,7 +20,7 @@ int aliasLegendId(char * name) {
 
 int glyphLegendId(char glyph) {
     for (int i = 0; i < pd.glyphLegendCount; i++) {
-        if (pd.glyphLegend[i].key == glyph) {
+        if (toupper(pd.glyphLegend[i].key) == toupper(glyph)) {
             return i;
         }
     }
@@ -88,7 +89,7 @@ int legendIsAlias = 0;
 %token OPEN_SQUARE CLOSE_SQUARE VIRTICAL_PIPE ARROW
 %token LEVEL_EOL
 %token <cell> LEVEL_CELL SPRITE_CELL LEGEND_GLYPH
-%token <enumValue> LOGIC_WORD DIRECTION EXECUTION_TIME
+%token <enumValue> LOGIC_WORD LOGIC_ON DIRECTION EXECUTION_TIME
 
 %%
 puzzlescript:
@@ -369,56 +370,78 @@ state_part: state_part_with_direction
     }
 }
 
-state_part_with_direction: DIRECTION objects_on_same_square {
+state_part_with_direction: objects_on_same_square {
   if (pd.rules[pd.ruleCount].matchStateDone == 0) {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->matchStates[r->matchStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
-    rsp->direction = $1;
     rs->partCount++;
   } else {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->resultStates[r->resultStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
-    rsp->direction = $1;
     rs->partCount++;
   }
 }
 
 state_part_without_direction: objects_on_same_square {
   if (pd.rules[pd.ruleCount].matchStateDone == 0) {
+      printf("IN MATCH\n");
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->matchStates[r->matchStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
 
-    rsp->direction = NONE;
     rs->partCount++;
   } else {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->resultStates[r->resultStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
 
-    rsp->direction = NONE;
     rs->partCount++;
   }
 }
 
-objects_on_same_square: object objects_on_same_square | object
+objects_on_same_square: object_part objects_on_same_square | object_part
 
-object: OBJID {
+object_part: OBJID {
   if (pd.rules[pd.ruleCount].matchStateDone == 0) {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->matchStates[r->matchStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
+    RuleIdentity * rid = &rsp->ruleIdentity[rsp->ruleIdentityCount];
 
-    rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId($1);
+    rid->direction = NONE;
+    rid->legendId = aliasLegendId($1);
     rsp->ruleIdentityCount++;
   } else {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->resultStates[r->resultStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
+    RuleIdentity * rid = &rsp->ruleIdentity[rsp->ruleIdentityCount];
 
-    rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId($1);
+    rid->direction = NONE;
+    rid->legendId = aliasLegendId($1);
+    rsp->ruleIdentityCount++;
+  }
+}
+           | DIRECTION OBJID {
+  if (pd.rules[pd.ruleCount].matchStateDone == 0) {
+    Rule * r = &pd.rules[pd.ruleCount];
+    RuleState * rs = &r->matchStates[r->matchStateCount];
+    RuleStatePart * rsp = &rs->parts[rs->partCount];
+    RuleIdentity * rid = &rsp->ruleIdentity[rsp->ruleIdentityCount];
+
+    rid->direction = $1;
+    rid->legendId = aliasLegendId($2);
+    rsp->ruleIdentityCount++;
+  } else {
+    Rule * r = &pd.rules[pd.ruleCount];
+    RuleState * rs = &r->resultStates[r->resultStateCount];
+    RuleStatePart * rsp = &rs->parts[rs->partCount];
+    RuleIdentity * rid = &rsp->ruleIdentity[rsp->ruleIdentityCount];
+
+    rid->direction = $1;
+    rid->legendId = aliasLegendId($2);
     rsp->ruleIdentityCount++;
   }
 }
@@ -431,7 +454,7 @@ winconditions: wincondition winconditions
 wincondition: wincondition_unconditional
             | wincondition_conditional
 
-wincondition_conditional: LOGIC_WORD OBJID LOGIC_WORD OBJID {
+wincondition_conditional: LOGIC_WORD OBJID LOGIC_ON OBJID {
   pd.winConditions[pd.winConditionCount].hasOnQualifier = 1;
   pd.winConditions[pd.winConditionCount].winQualifier = $1;
   pd.winConditions[pd.winConditionCount].winIdentifier = aliasLegendId($2);

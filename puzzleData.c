@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include "puzzleData.h"
 #include "parser.h"
 
@@ -145,7 +146,7 @@ char objectGlyph(int objId) {
 
 int legendIdForGlyph(char glyph) {
   for (int i = 0; i < pd.glyphLegendCount; i++) {
-    if (pd.glyphLegend[i].key == glyph) {
+    if (toupper(pd.glyphLegend[i].key) == toupper(glyph)) {
       return i;
     }
   }
@@ -191,7 +192,7 @@ int glyphLegendContains(int legendId, int objId) {
 
 int idForGlyph(char glyph) {
   for (int i = 0; i < pd.glyphLegendCount; i++) {
-    if (pd.glyphLegend[i].key == glyph) {
+    if (toupper(pd.glyphLegend[i].key) == toupper(glyph)) {
       if (pd.glyphLegend[i].objectCount > 1) {
         printf("err: multi object key '%c'\n", glyph);
       } else {

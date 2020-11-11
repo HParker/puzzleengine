@@ -1,7 +1,6 @@
 title Block Faker
 author Droqen
 homepage www.droqen.com
-debug
 
 require_player_movement
 key_repeat_interval 0.12

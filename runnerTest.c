@@ -420,7 +420,7 @@ Suite * puzzle_script_parser_suite(void)
   tcase_add_test(test_Parser, test_runs_basic);
   tcase_add_test(test_Parser, test_runs_eyeball_walk);
   tcase_add_test(test_Parser, test_runs_match3);
-  /* tcase_add_test(test_Parser, test_runs_block_faker); */
+  tcase_add_test(test_Parser, test_runs_block_faker);
   /* tcase_add_test(test_Parser, test_parses_constellation_z); */
   /* tcase_add_test(test_Parser, test_parses_eyeball); */
   /* tcase_add_test(test_Parser, test_parses_kettle); */

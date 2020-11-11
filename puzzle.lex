@@ -237,9 +237,7 @@ color (color|colour)
   return END_OF_RULE;
 }
 
-<WINCONDITIONS>(all|no|on|some) {
-  // the enum is not available here
-  // so we use the integer value directly.
+<WINCONDITIONS>(all|no|some) {
   if (strcasecmp(yytext, "all") == 0) {
     yylval.enumValue = ALL;
   } else if (strcasecmp(yytext, "any") == 0) {
@@ -253,6 +251,15 @@ color (color|colour)
   }
   return LOGIC_WORD;
 }
+
+<WINCONDITIONS>on {
+  if (strcasecmp(yytext, "on") == 0) {
+    yylval.enumValue = ON;
+  }
+  return LOGIC_ON;
+}
+
+
 
 <WINCONDITIONS>[a-zA-Z.]+ {
   yylval.identifier = strdup(yytext);

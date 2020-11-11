@@ -55,6 +55,8 @@ Direction absoluteDirection(Direction applicationDirection, Direction ruleDir) {
     return NONE;
   case USE:
     return NONE;
+  case COND_NO:
+    return NONE;
   default:
     printf("err: (absoluteDirection) unsupported direction (ad: %i rd: %i)\n", applicationDirection, ruleDir);
     return NONE;
@@ -170,7 +172,7 @@ void initGame(Runtime * rt) {
   rt->toMove = malloc(sizeof(ToMove) * rt->objectCapacity);
 
   rt->historyCount = 0;
-  rt->historyCapacity = 100;
+  rt->historyCapacity = 1000;
   rt->history = malloc(sizeof(Direction) * rt->historyCapacity);
 }
 
@@ -244,7 +246,8 @@ int deltaY(Direction dir) {
 void applyMatch(Runtime * rt, Match * match) {
   for (int i = 0; i < match->partCount; i++) {
     if (rt->pd->debug == 1) {
-      printf("Applying (%i) id: '%s' (%i) -> '%s' (%i) location: (%i,%i) -> (%i,%i) goalMovment: %i\n",
+      printf("Applying rule: %i, (%i) id: '%s' (%i) -> '%s' (%i) location: (%i,%i) -> (%i,%i) goalMovment: %i\n",
+             match->ruleIndex,
              i,
              objectName(rt->objects[match->parts[i].objIndex].objId),
              rt->objects[match->parts[i].objIndex].objId,
@@ -306,27 +309,34 @@ int matchAtDistance(Direction dir, int x, int y, int targetX, int targetY) {
   }
 }
 
-int matchPartIdentity(Runtime * rt, RuleStatePart * matchPart, RuleStatePart * resultPart, Match * match, int anyDistance, Direction ruleDir, Direction dir, int x, int y) {
+
+
+int matchPartIdentity(Runtime * rt, RuleStatePart * matchPart, RuleStatePart * resultPart, Match * match, int ruleIndex, int anyDistance, Direction dir, int x, int y) {
+  int backgroundId = aliasLegendObjectId(aliasLegendId("Background"), 0);
+
   int matchCount = 0;
   int matchObjectIndexes[100];
+  int directionObjectIndexes[100];
   int matched = 0;
 
   for (int i = 0; i < matchPart->ruleIdentityCount; i++) {
     matched = 0;
     int legendId = matchPart->ruleIdentity[i].legendId;
+    int matchDir = matchPart->ruleIdentity[i].direction;
 
     for (int j = 0; j < rt->objectCount; j++) {
-      // TODO: we can skip background here
-      int backgroundId = aliasLegendObjectId(aliasLegendId("Background"), 0);
+      int legendContains = aliasLegendContains(legendId, rt->objects[j].objId);
+
       if (rt->objects[j].deleted == 0 &&
           rt->objects[j].objId != backgroundId &&
           ((rt->objects[j].x == x &&
            rt->objects[j].y == y) ||
            (anyDistance == 1 && matchAtDistance(dir, x, y, rt->objects[j].x, rt->objects[j].y))) &&
-          aliasLegendContains(legendId, rt->objects[j].objId) &&
-          matchesDirection(ruleDir, dir, directionMoving(rt, j))) {
+          ((matchDir == COND_NO && legendContains == 0) || legendContains == 1) &&
+          matchesDirection(matchDir, dir, directionMoving(rt, j))) {
         matched = 1;
         matchObjectIndexes[matchCount] = j;
+        directionObjectIndexes[matchCount] = resultPart->ruleIdentity[i].direction;
         matchCount++;
       }
     }
@@ -339,13 +349,14 @@ int matchPartIdentity(Runtime * rt, RuleStatePart * matchPart, RuleStatePart * r
   }
 
   for (int i = 0; i < matchCount; i++) {
+    match->ruleIndex = ruleIndex;
     match->parts[match->partCount].objIndex = matchObjectIndexes[i];
     match->parts[match->partCount].actualX = x;
     match->parts[match->partCount].actualY = y;
     match->parts[match->partCount].goalX = rt->objects[matchObjectIndexes[i]].x;
     match->parts[match->partCount].goalY = rt->objects[matchObjectIndexes[i]].y;
 
-    match->parts[match->partCount].goalDirection = absoluteDirection(dir, resultPart->direction);
+    match->parts[match->partCount].goalDirection = absoluteDirection(dir, directionObjectIndexes[i]);
     match->parts[match->partCount].goalId = resultPart->ruleIdentity[i].legendId;
     match->partCount++;
   }
@@ -364,7 +375,6 @@ int ruleStateMatchDir(Runtime * rt, Match * match, int ruleIndex, int matchState
 
     RuleStatePart * matchPart = &rule(ruleIndex)->matchStates[matchStateIndex].parts[i];
     RuleStatePart * resultPart = &rule(ruleIndex)->resultStates[matchStateIndex].parts[i];
-    Direction ruleDir = rule(ruleIndex)->matchStates[matchStateIndex].parts[i].direction;
     int currentX = x + (distance * deltaX(dir));
     int currentY = y + (distance * deltaY(dir));
 
@@ -376,7 +386,7 @@ int ruleStateMatchDir(Runtime * rt, Match * match, int ruleIndex, int matchState
       success = 1;
     }
 
-    if (matchPartIdentity(rt, matchPart, resultPart, match, anyDistance, ruleDir, dir, currentX, currentY)) {
+    if (matchPartIdentity(rt, matchPart, resultPart, match, ruleIndex, anyDistance, dir, currentX, currentY)) {
       success = 1;
       anyDistance = 0;
     }
@@ -409,8 +419,6 @@ int ruleStateMatched(Runtime * rt, Match * match, int ruleIndex, int matchStateI
         } else if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].x, rt->objects[i].y, DOWN) == 1) {
           return 1;
         }
-      } else {
-        // Nothing to do unless you matched it.
       }
     }
   } else {

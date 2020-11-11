@@ -1,6 +1,7 @@
 title constellation z
 author stephen lavelle
 homepage www.increpare.com
+debug
 
 (a port of the first few levels of my game, the full version of which is
 http://ded.increpare.com/~locus/constellationz/
@@ -70,8 +71,8 @@ RULES
 ======
 
 late [ player Teleport ] -> [ altplayer Teleport ] sfx1
-
 late [ altplayer Teleport ] [ Teleport no altplayer ] -> [altplayer teleport] [Teleport player ]
+
 late [altplayer ] -> []
 
 late [ player bordertile ] -> cancel
