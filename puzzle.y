@@ -346,8 +346,22 @@ state_definition: OPEN_SQUARE state_internals CLOSE_SQUARE {
 state_internals: state_part VIRTICAL_PIPE state_internals
                | state_part
 
-state_part: state_part_with_direction
-          | state_part_without_direction
+state_part: objects_on_same_square {
+  if (pd.rules[pd.ruleCount].matchStateDone == 0) {
+
+    Rule * r = &pd.rules[pd.ruleCount];
+    RuleState * rs = &r->matchStates[r->matchStateCount];
+    RuleStatePart * rsp = &rs->parts[rs->partCount];
+
+    rs->partCount++;
+  } else {
+    Rule * r = &pd.rules[pd.ruleCount];
+    RuleState * rs = &r->resultStates[r->resultStateCount];
+    RuleStatePart * rsp = &rs->parts[rs->partCount];
+
+    rs->partCount++;
+  }
+}
           | {
     if (pd.rules[pd.ruleCount].matchStateDone == 0) {
       Rule * r = &pd.rules[pd.ruleCount];
@@ -368,37 +382,6 @@ state_part: state_part_with_direction
 
       rs->partCount++;
     }
-}
-
-state_part_with_direction: objects_on_same_square {
-  if (pd.rules[pd.ruleCount].matchStateDone == 0) {
-    Rule * r = &pd.rules[pd.ruleCount];
-    RuleState * rs = &r->matchStates[r->matchStateCount];
-    RuleStatePart * rsp = &rs->parts[rs->partCount];
-    rs->partCount++;
-  } else {
-    Rule * r = &pd.rules[pd.ruleCount];
-    RuleState * rs = &r->resultStates[r->resultStateCount];
-    RuleStatePart * rsp = &rs->parts[rs->partCount];
-    rs->partCount++;
-  }
-}
-
-state_part_without_direction: objects_on_same_square {
-  if (pd.rules[pd.ruleCount].matchStateDone == 0) {
-      printf("IN MATCH\n");
-    Rule * r = &pd.rules[pd.ruleCount];
-    RuleState * rs = &r->matchStates[r->matchStateCount];
-    RuleStatePart * rsp = &rs->parts[rs->partCount];
-
-    rs->partCount++;
-  } else {
-    Rule * r = &pd.rules[pd.ruleCount];
-    RuleState * rs = &r->resultStates[r->resultStateCount];
-    RuleStatePart * rsp = &rs->parts[rs->partCount];
-
-    rs->partCount++;
-  }
 }
 
 objects_on_same_square: object_part objects_on_same_square | object_part

@@ -4,8 +4,6 @@
 
 char charForLoc(Runtime * rt, int loc) {
   int backgroundId = aliasLegendObjectId(aliasLegendId("Background"), 0);
-  printf("alias background id: %i\n", aliasLegendId("Background"));
-  printf("backgroundid: %i\n", backgroundId);
   int maxHeight = -1;
   int id = -1;
   int currentHeight;

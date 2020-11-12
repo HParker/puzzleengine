@@ -234,8 +234,9 @@ int deltaY(Direction dir) {
 void applyMatch(Runtime * rt, Match * match) {
   for (int i = 0; i < match->partCount; i++) {
     if (rt->pd->debug == 1) {
-      printf("Applying rule: %i, (%i) id: '%s' (%i) -> '%s' (%i) location: (%i,%i) -> (%i,%i) goalMovment: %i\n",
+      printf("Applying rule: %i new: %i, (%i) id: '%s' (%i) -> '%s' (%i) location: (%i,%i) -> (%i,%i) goalMovment: %i\n",
              match->ruleIndex,
+             match->parts[i].newObject,
              i,
              objectName(rt->objects[match->parts[i].objIndex].objId),
              rt->objects[match->parts[i].objIndex].objId,
@@ -247,21 +248,25 @@ void applyMatch(Runtime * rt, Match * match) {
              match->parts[i].goalY,
              match->parts[i].goalDirection);
     }
-    // TODO: does this work if I use a alias with only one value?
-    if (aliasLegendObjectCount(match->parts[i].goalId) == 1 && match->parts[i].goalId != aliasLegendId("...") && match->parts[i].goalId != aliasLegendId("_Empty_")) {
-      rt->objects[match->parts[i].objIndex].objId = aliasLegendObjectId(match->parts[i].goalId, 0);
-    } else if (match->parts[i].goalId == aliasLegendId("_Empty_")) {
-      // TODO: we can handle deletes by just assigning `aliasLegendId("_Empty_")`
-      //       then removing them or marking them deleted later.
-      //       I haven't done it yet because it might make undo easier
-      rt->objects[match->parts[i].objIndex].deleted = 1;
+
+    if (match->parts[i].newObject == 1) {
+      addObj(rt, match->parts[i].goalId, match->parts[i].goalX, match->parts[i].goalY);
+    } else {
+      // TODO: does this work if I use a alias with only one value?
+      if (aliasLegendObjectCount(match->parts[i].goalId) == 1 && match->parts[i].goalId != aliasLegendId("...") && match->parts[i].goalId != aliasLegendId("_Empty_")) {
+        rt->objects[match->parts[i].objIndex].objId = aliasLegendObjectId(match->parts[i].goalId, 0);
+      } else if (match->parts[i].goalId == aliasLegendId("_Empty_")) {
+        // TODO: we can handle deletes by just assigning `aliasLegendId("_Empty_")`
+        //       then removing them or marking them deleted later.
+        //       I haven't done it yet because it might make undo easier
+        rt->objects[match->parts[i].objIndex].deleted = 1;
+      }
+
+      rt->objects[match->parts[i].objIndex].x = match->parts[i].goalX;
+      rt->objects[match->parts[i].objIndex].y = match->parts[i].goalY;
+
+      addToMove(rt, match->appliedDirection, match->parts[i].objIndex,  match->parts[i].goalDirection);
     }
-
-    rt->objects[match->parts[i].objIndex].x = match->parts[i].goalX;
-    rt->objects[match->parts[i].objIndex].y = match->parts[i].goalY;
-
-    addToMove(rt, match->appliedDirection, match->parts[i].objIndex,  match->parts[i].goalDirection);
-
   }
 }
 
@@ -297,12 +302,51 @@ int matchAtDistance(Direction dir, int x, int y, int targetX, int targetY) {
   }
 }
 
+// TODO: match at distance
+int objNotAt(Runtime * rt, int legendId, int x, int y) {
 
+  for (int j = 0; j < rt->objectCount; j++) {
+    int legendContains = aliasLegendContains(legendId, rt->objects[j].objId);
+    if (legendContains && rt->objects[j].x == x && rt->objects[j].y == y) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+// TODO: try simplifying with
+// int matchesPart(Runtime * rt, RuleStatepart * rp) {}
+
+int alreadyResult(Runtime * rt, RuleStatePart * part, int anyDistance, Direction dir, int x, int y) {
+  int matched = 0;
+  if (part->ruleIdentityCount <= 0) {
+    return 0;
+  }
+  for (int i = 0; i < part->ruleIdentityCount; i++) {
+    matched = 0;
+    int legendId = part->ruleIdentity[i].legendId;
+    int ruleDir = part->ruleIdentity[i].direction;
+    for (int j = 0; j < rt->objectCount; j++) {
+      int legendContains = aliasLegendContains(legendId, rt->objects[j].objId);
+      if (rt->objects[j].deleted == 0 &&
+          ((rt->objects[j].x == x &&
+            rt->objects[j].y == y) ||
+           (anyDistance == 1 && matchAtDistance(dir, x, y, rt->objects[j].x, rt->objects[j].y))) &&
+          ((ruleDir == COND_NO && objNotAt(rt, legendId, x, y)) || (ruleDir != COND_NO && legendContains == 1)) &&
+          matchesDirection(ruleDir, dir, directionMoving(rt, j))) {
+
+        matched = 1;
+      }
+    }
+    if (matched == 0) {
+      return 0;
+    }
+  }
+  return 1;
+}
 
 int matchPartIdentity(Runtime * rt, RuleStatePart * matchPart, RuleStatePart * resultPart, Match * match, int ruleIndex, int anyDistance, Direction dir, int x, int y) {
-  int matchCount = 0;
-  int matchObjectIndexes[100];
-  int directionObjectIndexes[100];
+  int prevPartCount = match->partCount;
   int matched = 0;
 
   for (int i = 0; i < matchPart->ruleIdentityCount; i++) {
@@ -315,40 +359,47 @@ int matchPartIdentity(Runtime * rt, RuleStatePart * matchPart, RuleStatePart * r
 
       if (rt->objects[j].deleted == 0 &&
           ((rt->objects[j].x == x &&
-           rt->objects[j].y == y) ||
+            rt->objects[j].y == y) ||
            (anyDistance == 1 && matchAtDistance(dir, x, y, rt->objects[j].x, rt->objects[j].y))) &&
-          ((matchDir == COND_NO && legendContains == 0) || legendContains == 1) &&
-          matchesDirection(matchDir, dir, directionMoving(rt, j))) {
+          ((matchDir == COND_NO && objNotAt(rt, legendId, x, y)) || (matchDir != COND_NO && legendContains == 1)) &&
+          matchesDirection(matchDir, dir, directionMoving(rt, j))
+          ) {
+
         matched = 1;
-        matchObjectIndexes[matchCount] = j;
-        directionObjectIndexes[matchCount] = resultPart->ruleIdentity[i].direction;
-        matchCount++;
+        if (alreadyResult(rt, resultPart, anyDistance, dir, x, y) == 0) {
+          match->ruleIndex = ruleIndex;
+          if (matchDir == COND_NO) {
+            match->parts[match->partCount].newObject = 1;
+            match->parts[match->partCount].objIndex = -1;
+          } else {
+            match->parts[match->partCount].newObject = 0;
+            match->parts[match->partCount].objIndex = j;
+          }
+
+          match->parts[match->partCount].actualX = x;
+          match->parts[match->partCount].actualY = y;
+          match->parts[match->partCount].goalX = rt->objects[j].x;
+          match->parts[match->partCount].goalY = rt->objects[j].y;
+
+          match->parts[match->partCount].goalDirection = absoluteDirection(dir, resultPart->ruleIdentity[i].direction);
+          match->parts[match->partCount].goalId = resultPart->ruleIdentity[i].legendId;
+          match->partCount++;
+
+        }
       }
     }
 
-    if (matched == 1) {
-      // continue so far we haven't failed
-    } else {
+    if (matched == 0) {
+      match->partCount = prevPartCount;
       return 0;
     }
   }
 
-  for (int i = 0; i < matchCount; i++) {
-    match->ruleIndex = ruleIndex;
-    match->parts[match->partCount].objIndex = matchObjectIndexes[i];
-    match->parts[match->partCount].actualX = x;
-    match->parts[match->partCount].actualY = y;
-    match->parts[match->partCount].goalX = rt->objects[matchObjectIndexes[i]].x;
-    match->parts[match->partCount].goalY = rt->objects[matchObjectIndexes[i]].y;
-
-    match->parts[match->partCount].goalDirection = absoluteDirection(dir, directionObjectIndexes[i]);
-    match->parts[match->partCount].goalId = resultPart->ruleIdentity[i].legendId;
-    match->partCount++;
-  }
   return 1;
 }
 
 int ruleStateMatchDir(Runtime * rt, Match * match, int ruleIndex, int matchStateIndex, int x, int y, Direction dir) {
+  int prevPartCount = match->partCount;
   int anyDistance = 0;
   int distance = 0;
   match->appliedDirection = dir;
@@ -378,7 +429,7 @@ int ruleStateMatchDir(Runtime * rt, Match * match, int ruleIndex, int matchState
 
     if (success != 1) {
       // failed to find an object that matches the next part, fail
-      match->partCount = 0;
+      match->partCount = prevPartCount;
       return 0;
     }
     distance++;
@@ -396,13 +447,13 @@ int ruleStateMatched(Runtime * rt, Match * match, int ruleIndex, int matchStateI
         // start of rule -- or at least the object of the rule -- matched,
         // we can continue the rest of the rule state, then check for try directions
         if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].x, rt->objects[i].y, RIGHT) == 1) {
-          return 1;
+          matchedOne = 1;
         } else if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].x, rt->objects[i].y, UP) == 1) {
-          return 1;
+          matchedOne = 1;
         } else if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].x, rt->objects[i].y, LEFT) == 1) {
-          return 1;
+          matchedOne = 1;
         } else if (ruleStateMatchDir(rt, match, ruleIndex, matchStateIndex, rt->objects[i].x, rt->objects[i].y, DOWN) == 1) {
-          return 1;
+          matchedOne = 1;
         }
       }
     }
@@ -429,20 +480,28 @@ int ruleMatched(Runtime * rt, Match * match, int ruleIndex) {
 
 int applyRules(Runtime * rt, ExecutionTime execTime) {
   int applied = 1;
+  int maxAttempts = 10;
+  int attempts = 0;
   Match match;
   match.partCount = 0;
   int count = ruleCount();
   for (int ruleIndex = 0; ruleIndex < count; ruleIndex++) {
     applied = 1;
-    while (applied == 1) {
+    while (applied == 1 && attempts < maxAttempts) {
       applied = 0;
       match.partCount = 0;
       if (ruleApplies(rt, ruleIndex, execTime) == 1) {
         applied = ruleMatched(rt, &match, ruleIndex);
-        if (applied == 1) {
+        if (applied == 1 && match.partCount > 0) {
           applyMatch(rt, &match);
+        } else {
+          applied = 0;
         }
       }
+      attempts++;
+    }
+    if (attempts >= maxAttempts) {
+      printf("warn: max attempts reached\n");
     }
   }
   return applied;

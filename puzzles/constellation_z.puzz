@@ -1,7 +1,6 @@
 title constellation z
 author stephen lavelle
 homepage www.increpare.com
-debug
 
 (a port of the first few levels of my game, the full version of which is
 http://ded.increpare.com/~locus/constellationz/
@@ -48,7 +47,6 @@ LEGEND
 P = Player
 O = Teleport
 t = target
-
 
 =========
 SOUNDS

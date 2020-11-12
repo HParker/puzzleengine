@@ -11,6 +11,11 @@ TODO:
 - PS doesn't do this, but [ > One Two ] makes no sense and should probably error. Or apply only to the first object
 - the direction handling in rules should move down a level. I think we can parse direction and legendId together and it will be cleaner/make more sense
 
+- It is possible in PS to write late [ altplayer Teleport ] [ Teleport no altplayer ] -> [altplayer teleport] [Teleport player ]
+  for some reason this does not apply forever. Replacing the second `[]` should match forever since adding `player` there does not prevent the match.
+  in my PS you have to specify [ no playerType ] where `playerType = Player or AltPlayer`
+  I think I am ok with this for now, but maybe I will find out why it works later.
+
 3d api:
 - transfer levels with `lift` and `lower`
 - maybe specify 3d levels with,

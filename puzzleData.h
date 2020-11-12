@@ -123,6 +123,7 @@ typedef struct Rule {
 } Rule;
 
 typedef struct MatchData {
+  int newObject;
   int objIndex;
   int ruleLegendId;
   int actualX;
@@ -141,7 +142,7 @@ typedef struct Match {
   int ruleIndex;
   int partCount;
   Direction appliedDirection;
-  MatchData parts[100];
+  MatchData parts[1000];
 } Match;
 
 typedef enum LevelType
