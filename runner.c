@@ -480,7 +480,7 @@ int ruleMatched(Runtime * rt, Match * match, int ruleIndex) {
 
 int applyRules(Runtime * rt, ExecutionTime execTime) {
   int applied = 1;
-  int maxAttempts = 10;
+  int maxAttempts = 100;
   int attempts = 0;
   Match match;
   match.partCount = 0;
@@ -588,10 +588,14 @@ void setLevel(Runtime * rt) {
 }
 
 void markPlayerAsMoving(Runtime * rt, Direction dir) {
-  int playerId = objectId("Player");
-  for (int i = 0; i < rt->objectCount; i++) {
-    if (rt->objects[i].objId == playerId) {
-      addToMove(rt, NONE, i, dir);
+  int legendId = aliasLegendId("Player");
+
+  int count = aliasLegendObjectCount(legendId);
+  for (int i = 0; i < count; i++) {
+    for (int j = 0; j < rt->objectCount; j++) {
+      if (rt->objects[j].objId == aliasLegendObjectId(legendId, i)) {
+        addToMove(rt, NONE, j, dir);
+      }
     }
   }
 }
@@ -614,7 +618,7 @@ void update(Runtime * rt, Direction dir) {
     // this however doesn't seem to be documented. I assume it is correct.
     applyRules(rt, NORMAL);
 
-    // mark player as moving
+    // mark player for moving
     markPlayerAsMoving(rt, dir);
 
     // apply rules
