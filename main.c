@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <string.h>
-#include <curses.h>
 #include "puzzleData.h"
 #include "render.h"
 
@@ -22,12 +21,18 @@ int main(int argc, char ** argv) {
   initRenderer();
   while (1) {
     render(&rt);
-    update(&rt, handleInput(&rt, input()));
+    Direction dir = handleInput(&rt, input());
+    if (dir == QUIT) {
+      break;
+    }
+
+    update(&rt, dir);
     if (rt.gameWon == 1) {
       break;
     }
   }
-  endwin();
+
+  closeRenderer();
   printHistory(&rt);
   return 0;
 }

@@ -27,7 +27,6 @@ char charForLoc(Runtime * rt, int loc) {
 }
 
 void renderLevel(Runtime * rt) {
-
   clear();
   int row = 0;
   int col = 0;

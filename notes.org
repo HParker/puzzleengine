@@ -1,4 +1,6 @@
 TODO:
+- should `ObjectGlyph` be ncurses renderer specific?
+  seems unlikely we would need to show the character in any other context.
 - validate object names used in rules exist or are `...`
 - validate has background
 - make sure all objects are in a layer

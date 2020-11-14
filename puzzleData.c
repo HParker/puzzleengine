@@ -134,6 +134,20 @@ char * objectName(int id) {
   return pd.objects[id].name;
 }
 
+int objectSpriteCell(int id, int i) {
+  return pd.objects[id].sprite[i];
+}
+
+char * objectColor(int id, int index) {
+  if (index < pd.objects[id].colorCount) {
+    return pd.objects[id].colors[index];
+  } else {
+    printf("Color out of bounds\n");
+    return "!";
+  }
+
+}
+
 char objectGlyph(int objId) {
   for (int i = 0; i < pd.glyphLegendCount; i++) {
     if (glyphLegendObjectCount(i) == 1 && glyphLegendContains(i, objId) == 1) {

@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <curses.h>
 #include "puzzleData.h"
 
 int objId(Runtime * rt, int id, int x, int y) {
@@ -558,16 +557,20 @@ void printHistory(Runtime * rt) {
 
 Direction handleInput(Runtime * rt, int input) {
   // TODO: doesn't need rt
-  if (input == 'w' || input == KEY_UP) {
+  if (input == 'w') {
     return UP;
-  } else if (input == 's' || input == KEY_DOWN) {
+  } else if (input == 's') {
     return DOWN;
-  } else if (input == 'a' || input == KEY_LEFT) {
+  } else if (input == 'a') {
     return LEFT;
-  } else if (input == 'd' || input == KEY_RIGHT) {
+  } else if (input == 'd') {
     return RIGHT;
-  } else if (input == 'x' || input == 'X') {
+  } else if (input == 'x') {
     return USE;
+  } else if (input == 'q') {
+    return QUIT;
+  } else if (input == 'r') {
+    return RESTART;
   } else {
     return NONE;
   }
@@ -612,6 +615,10 @@ void addHistory(Runtime * rt, Direction dir) {
 
 void update(Runtime * rt, Direction dir) {
   addHistory(rt, dir);
+  if (dir == RESTART) {
+    loadLevel(rt);
+  }
+
   // TODO: remove deleted objects?
   if (rt->levelType == SQUARES) {
     // Eyeball seems to prove that rules run before and after marking the player as moving
@@ -633,7 +640,7 @@ void update(Runtime * rt, Direction dir) {
     setLevel(rt);
   } else {
     if (dir == USE) {
-      setLevel(rt);
+      nextLevel(rt);
     }
   }
 }

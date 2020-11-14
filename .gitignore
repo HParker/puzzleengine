@@ -2,9 +2,10 @@
 puzzle.tab.c
 puzzle.tab.h
 lex.yy.c
-puzzlescript
+ncpuzzlescript
 parseTest
 parseTest.dSYM/
 runnerTest
 runnerTest.dSYM/
 debugpuzzlescript
+sdlpuzzlescript

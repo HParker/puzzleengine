@@ -7,9 +7,9 @@ typedef struct Object {
   char legendKey;
   int height;
   int width;
-  char sprite[25];
+  int sprite[25];
   int colorCount;
-  char * colors[9];
+  char * colors[10];
 } Object;
 
 typedef enum LegendRelation
@@ -82,7 +82,9 @@ typedef enum Direction
    REL_RIGHT  = 9,
    USE        = 10,
    NONE       = 11,
-   COND_NO    = 12
+   COND_NO    = 12,
+   QUIT       = 13,
+   RESTART    = 14
   } Direction;
 
 typedef enum ExecutionTime
@@ -268,6 +270,8 @@ typedef struct Runtime {
 extern PuzzleData * parsePuzzle(FILE * file);
 extern char objectGlyph(int objId);
 extern char * objectName(int id);
+extern int objectSpriteCell(int id, int index);
+extern char * objectColor(int id, int colorIndex);
 extern int debug();
 extern int objectCount();
 

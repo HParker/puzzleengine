@@ -186,7 +186,12 @@ object_definitions: object_definition object_definitions
                   | object_definition
 
 object_definition: object_name colors sprite { incObject(); }
-                       | object_name color { incObject(); }
+                       | object_name color {
+                           for (int i = 0; i < 25; i++) {
+                               pd.objects[pd.objectCount].sprite[i] = '0';
+                           }
+                           incObject();
+}
 
 object_name: OBJID SPRITE_CELL {
                  pd.objects[pd.objectCount].name = strdup($1);
