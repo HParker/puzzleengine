@@ -292,6 +292,8 @@ char input() {
         return 'q';
       case SDLK_r:
         return 'r';
+      case SDLK_z:
+        return 'z';
       case SDLK_w:
       case SDLK_UP:
         return 'w';

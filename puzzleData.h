@@ -84,7 +84,8 @@ typedef enum Direction
    NONE       = 11,
    COND_NO    = 12,
    QUIT       = 13,
-   RESTART    = 14
+   RESTART    = 14,
+   UNDO       = 15
   } Direction;
 
 typedef enum ExecutionTime
@@ -246,6 +247,13 @@ typedef struct Obj {
   int objId;
 } Obj;
 
+typedef struct State {
+  int levelIndex;
+  int objectCount;
+  int objectCapacity;
+  Obj * objects;
+} State;
+
 typedef struct Runtime {
   PuzzleData * pd;
   int gameWon;
@@ -263,7 +271,9 @@ typedef struct Runtime {
   int historyCount;
   int historyCapacity;
   Direction * history;
-  // move history?
+  int statesCount;
+  int statesCapacity;
+  State * states;
 } Runtime;
 
 // PuzzleData

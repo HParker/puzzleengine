@@ -161,6 +161,10 @@ void initGame(Runtime * rt) {
   rt->historyCount = 0;
   rt->historyCapacity = 1000;
   rt->history = malloc(sizeof(Direction) * rt->historyCapacity);
+
+  rt->statesCount = 0;
+  rt->statesCapacity = 500;
+  rt->states = malloc(sizeof(State) * rt->statesCapacity);
 }
 
 void startGame(Runtime * rt, FILE * file) {
@@ -547,7 +551,11 @@ void printHistory(Runtime * rt) {
                              "REL_LEFT",
                              "REL_RIGHT",
                              "USE",
-                             "NONE"
+                             "NONE",
+                             "COND_NO",
+                             "QUIT",
+                             "RESTART",
+                             "UNDO",
   };
 
   for (int i = 0; i < rt->historyCount; i++) {
@@ -571,6 +579,8 @@ Direction handleInput(Runtime * rt, int input) {
     return QUIT;
   } else if (input == 'r') {
     return RESTART;
+  } else if (input == 'z') {
+    return UNDO;
   } else {
     return NONE;
   }
@@ -613,8 +623,29 @@ void addHistory(Runtime * rt, Direction dir) {
   rt->historyCount++;
 }
 
+void addState(Runtime * rt) {
+  // This seems weird, but I think we only have to copy objects at the time.
+  // Since history can continue where it was if you undo and `toMove`
+  // should always be empty.
+  if (rt->statesCount == rt->statesCapacity) {
+    printf("states realloc\n");
+    rt->statesCapacity += 50;
+    rt->states = realloc(rt->states, sizeof(State) * rt->statesCapacity);
+  }
+  rt->states[rt->statesCount].levelIndex = rt->levelIndex;
+  rt->states[rt->statesCount].objectCount = rt->objectCount;
+  rt->states[rt->statesCount].objectCapacity = rt->objectCount;
+  rt->states[rt->statesCount].objects = malloc(sizeof(Obj) * rt->objectCount);
+  memcpy(rt->states[rt->statesCount].objects, rt->objects, sizeof(Obj) * rt->objectCount);
+
+  rt->statesCount++;
+}
+
+
 void update(Runtime * rt, Direction dir) {
   addHistory(rt, dir);
+  addState(rt);
+
   if (dir == RESTART) {
     loadLevel(rt);
   }
