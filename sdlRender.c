@@ -174,7 +174,15 @@ void drawObj(Runtime * rt, int objIndex) {
   if (rt->objects[objIndex].deleted == 1) {
     return;
   }
-  int pixelSize = 10;
+
+  int pixelSize;
+  if (rt->width > rt->height) {
+    pixelSize = WINDOW_SIZE / (rt->width * 5);
+  } else {
+    pixelSize = WINDOW_SIZE / (rt->height * 5);
+  }
+
+
   int width = 5;
   int height = 5;
   SDL_Rect sdlRect;
@@ -216,7 +224,13 @@ void initRenderer() {
   }
 }
 void renderBackground(Runtime * rt) {
-  int pixelSize = 10;
+  int pixelSize;
+  if (rt->width > rt->height) {
+    pixelSize = WINDOW_SIZE / (rt->width * 5);
+  } else {
+    pixelSize = WINDOW_SIZE / (rt->height * 5);
+  }
+
   int width = 5;
   int height = 5;
   int backgroundId = aliasLegendObjectId(aliasLegendId("Background"), 0);

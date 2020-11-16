@@ -1,6 +1,7 @@
 title By Your Side
 author Alan Hazelden
 homepage www.draknek.org
+debug
 
 require_player_movement
 key_repeat_interval 0.12
