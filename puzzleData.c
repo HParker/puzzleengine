@@ -130,6 +130,10 @@ int debug() {
   return pd.debug;
 }
 
+int requirePlayerMovement() {
+  return pd.requirePlayerMovement;
+}
+
 char * objectName(int id) {
   return pd.objects[id].name;
 }

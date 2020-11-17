@@ -33,9 +33,6 @@ int main(int argc, char ** argv) {
       update(&rt, dir);
     }
 
-
-
-
     if (rt.gameWon == 1) {
       break;
     }

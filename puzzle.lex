@@ -229,9 +229,6 @@ color (color|colour)
 }
 
 <RULES>[a-zA-Z0-9_\.]+$ {
-  if (strcasecmp("cancel", yytext) == 0) {
-    return RULE_CANCEL;
-  }
   yylval.identifier = strdup(yytext);
   return RULE_POSTFIX;
 }
@@ -278,13 +275,12 @@ color (color|colour)
   return LEVEL_EOL;
 }
 
-<LEVELS>message[ ]+ {
+message[ ]+ {
   BEGIN MESSAGE_CONTENTS;
   return MESSAGE;
 }
-
 <MESSAGE_CONTENTS>[a-zA-Z.0-9:\! ]+/[\n] {
-  BEGIN LEVELS;
+  BEGIN modeToEnter;
   yylval.identifier = strdup(yytext);
   return ID;
 }

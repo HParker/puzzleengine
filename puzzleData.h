@@ -281,6 +281,7 @@ extern char * objectName(int id);
 extern int objectSpriteCell(int id, int index);
 extern char * objectColor(int id, int colorIndex);
 extern int debug();
+extern int requirePlayerMovement();
 extern int objectCount();
 
 // legend
