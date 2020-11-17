@@ -3,8 +3,10 @@
 #include <unistd.h>
 #include <SDL2/SDL.h>
 #include "puzzleData.h"
+#include "alphabet.c"
 
 #define WINDOW_SIZE 840
+
 
 typedef struct Color {
   Uint8 r;
@@ -107,6 +109,8 @@ const Color colors[] =
    TRANSPARENT
   };
 
+const int colorCount = 25;
+
 int shouldQuit = 0;
 int delta = 0;
 SDL_Window * window;
@@ -114,7 +118,7 @@ SDL_Renderer * renderer;
 SDL_Event e;
 
 Color colorFromName(char * name) {
-  for (int i = 0; i < 25; i++) {
+  for (int i = 0; i < colorCount; i++) {
     if (strcasecmp(colorNames[i], name) == 0) {
       return colors[i];
     }
@@ -167,6 +171,26 @@ Color colorFromSprite(Runtime * rt, int objId, int cellIndex) {
   }
   printf("\n");
   return PINK;
+
+}
+
+void drawChar(int x, int y, int pixelSize, char * sprite) {
+  int width = 5;
+  int height = 5;
+  SDL_Rect sdlRect;
+  Color textColor = WHITE;
+
+  for (int i = 0; i < 25; i++) {
+    if (sprite[i] == '0') {
+      sdlRect.x = (x * pixelSize * width) + ((i % 5) * pixelSize);
+      sdlRect.y = (y * pixelSize * height) + ((i / 5) * pixelSize);
+      sdlRect.w = pixelSize;
+      sdlRect.h = pixelSize;
+      SDL_SetRenderDrawColor(renderer, textColor.r, textColor.g, textColor.b, textColor.a);
+      SDL_RenderFillRect(renderer, &sdlRect);
+    }
+
+  }
 
 }
 
@@ -266,17 +290,14 @@ void renderLevel(Runtime * rt) {
       }
     }
   }
-
-  SDL_RenderPresent(renderer);
 }
 
 void renderMessage(Runtime * rt) {
-  SDL_SetRenderDrawColor(renderer, GREEN.r, GREEN.g, GREEN.b, GREEN.a);
-  SDL_Rect sdlRect = { 10, 10, 10, 10 };
-  SDL_RenderFillRect(renderer, &sdlRect);
-
-  SDL_SetRenderDrawColor(renderer, BLACK.r, BLACK.g, BLACK.b, BLACK.a);
-  SDL_RenderPresent(renderer);
+  char * message = levelMessage(rt->levelIndex);
+  int messageLength = strlen(message);
+  for (int i = 0; i < messageLength; i++) {
+    drawChar(i, 0, 10, charSprite(message[i]));
+  }
 }
 
 void render(Runtime * rt) {
@@ -291,6 +312,8 @@ void render(Runtime * rt) {
     renderMessage(rt);
     break;
   }
+
+  SDL_RenderPresent(renderer);
 }
 
 char input() {
