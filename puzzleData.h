@@ -96,8 +96,6 @@ typedef enum ExecutionTime
 
 
 typedef struct RuleIdentity {
-  // TODO: direction can work here especially for things like [ Player no Ground ]
-  //       to contain modifiers as well, but I am not ready to make that change in the parser
   Direction direction;
   int legendId;
 } RuleIdentity;
@@ -106,8 +104,6 @@ typedef struct RuleIdentity {
 typedef struct RuleStatePart {
   int ruleIdentityCount;
   RuleIdentity ruleIdentity[100];
-  /* Direction direction; */
-  /* int legendId; */
 } RuleStatePart;
 
 typedef struct RuleState {
@@ -116,6 +112,7 @@ typedef struct RuleState {
 } RuleState;
 
 typedef struct Rule {
+  int cancel;
   int matchStateCount;
   int resultStateCount;
   int matchStateDone; // TODO: this is only needed when parsing. maybe manage it there?
@@ -128,6 +125,8 @@ typedef struct Rule {
 typedef struct MatchData {
   int newObject;
   int objIndex;
+  // legend id in rules could be things like `movable = Block or Player`
+  // which isn't the legend id of the thing to actually place when applying the result state
   int ruleLegendId;
   int actualX;
   int actualY;
@@ -140,8 +139,7 @@ typedef struct MatchData {
 } MatchData;
 
 typedef struct Match {
-  // legend id in rules could be things like `movable = Block or Player`
-  // which isn't the legend id of the thing to actually place when applying the result state
+  int cancel;
   int ruleIndex;
   int partCount;
   Direction appliedDirection;
@@ -333,6 +331,7 @@ extern Rule * rule(int index);
 // Levels
 extern void startGame(Runtime * rt, FILE * file);
 extern void nextLevel(Runtime * rt);
+extern void undo(Runtime * rt);
 extern int levelCount();
 
 // Winning

@@ -28,21 +28,7 @@ int main(int argc, char ** argv) {
       break;
     }
     if (dir == UNDO && rt.statesCount > 0) {
-      rt.statesCount--;
-      rt.levelIndex = rt.states[rt.statesCount].levelIndex;
-      rt.levelType = levelType(rt.levelIndex);
-      rt.height = levelHeight(rt.levelIndex);
-      rt.width = levelWidth(rt.levelIndex);
-      rt.toMoveCount = 0;
-
-
-      rt.objectCount = rt.states[rt.statesCount].objectCount;
-      if (rt.objectCapacity < rt.states[rt.statesCount].objectCapacity) {
-        printf("states rewind realloc\n");
-        rt.statesCapacity = rt.states[rt.statesCount].objectCapacity;
-        rt.states = realloc(rt.states, sizeof(State) * rt.statesCapacity);
-      }
-      memcpy(rt.objects, rt.states[rt.statesCount].objects, sizeof(State) * rt.statesCapacity);
+      undo(&rt);
     } else {
       update(&rt, dir);
     }

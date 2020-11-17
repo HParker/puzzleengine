@@ -228,7 +228,10 @@ color (color|colour)
   return OBJID;
 }
 
-<RULES>[a-zA-Z0-9_\. ]+$ {
+<RULES>[a-zA-Z0-9_\.]+$ {
+  if (strcasecmp("cancel", yytext) == 0) {
+    return RULE_CANCEL;
+  }
   yylval.identifier = strdup(yytext);
   return RULE_POSTFIX;
 }

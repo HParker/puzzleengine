@@ -173,6 +173,23 @@ void startGame(Runtime * rt, FILE * file) {
   loadLevel(rt);
 }
 
+void undo(Runtime * rt) {
+  rt->statesCount--;
+  rt->levelIndex = rt->states[rt->statesCount].levelIndex;
+  rt->levelType = levelType(rt->levelIndex);
+  rt->height = levelHeight(rt->levelIndex);
+  rt->width = levelWidth(rt->levelIndex);
+  rt->toMoveCount = 0;
+
+  rt->objectCount = rt->states[rt->statesCount].objectCount;
+  if (rt->objectCapacity < rt->states[rt->statesCount].objectCapacity) {
+    printf("states rewind realloc\n");
+    rt->statesCapacity = rt->states[rt->statesCount].objectCapacity;
+    rt->states = realloc(rt->states, sizeof(State) * rt->statesCapacity);
+  }
+  memcpy(rt->objects, rt->states[rt->statesCount].objects, sizeof(State) * rt->statesCapacity);
+}
+
 int isMovable(Runtime * rt, int x, int y, int layerIndex) {
   int hasCollidable = 0;
   for (int i = 0; i < rt->objectCount; i++) {
@@ -235,10 +252,16 @@ int deltaY(Direction dir) {
 }
 
 void applyMatch(Runtime * rt, Match * match) {
+  if (match->cancel == 1) {
+    undo(rt);
+    return;
+  }
+
   for (int i = 0; i < match->partCount; i++) {
     if (rt->pd->debug == 1) {
-      printf("Applying rule: %i new: %i, (%i) id: '%s' (%i) -> '%s' (%i) location: (%i,%i) -> (%i,%i) goalMovment: %i\n",
+      printf("Applying rule: %i cancel: %i new: %i, (%i) id: '%s' (%i) -> '%s' (%i) location: (%i,%i) -> (%i,%i) goalMovment: %i\n",
              match->ruleIndex,
+             match->cancel,
              match->parts[i].newObject,
              i,
              objectName(rt->objects[match->parts[i].objIndex].objId),
@@ -348,7 +371,9 @@ int alreadyResult(Runtime * rt, RuleStatePart * part, int anyDistance, Direction
   return 1;
 }
 
-int matchPartIdentity(Runtime * rt, RuleStatePart * matchPart, RuleStatePart * resultPart, Match * match, int ruleIndex, int anyDistance, Direction dir, int x, int y) {
+int matchPartIdentity(Runtime * rt, int ruleIndex, int matchStateIndex, int partId, Match * match, int anyDistance, Direction dir, int x, int y) {
+  RuleStatePart * matchPart = &rule(ruleIndex)->matchStates[matchStateIndex].parts[partId];
+  RuleStatePart * resultPart = &rule(ruleIndex)->resultStates[matchStateIndex].parts[partId];
   int prevPartCount = match->partCount;
   int matched = 0;
 
@@ -384,9 +409,18 @@ int matchPartIdentity(Runtime * rt, RuleStatePart * matchPart, RuleStatePart * r
           match->parts[match->partCount].goalX = rt->objects[j].x;
           match->parts[match->partCount].goalY = rt->objects[j].y;
 
-          match->parts[match->partCount].goalDirection = absoluteDirection(dir, resultPart->ruleIdentity[i].direction);
-          match->parts[match->partCount].goalId = resultPart->ruleIdentity[i].legendId;
-          match->partCount++;
+          if (rule(ruleIndex)->cancel == 1) {
+            // undo the whole turn...
+            match->parts[match->partCount].goalDirection = -1;
+
+            match->parts[match->partCount].goalId = -1;
+            match->cancel = 1;
+          } else {
+            match->parts[match->partCount].goalDirection = absoluteDirection(dir, resultPart->ruleIdentity[i].direction);
+
+            match->parts[match->partCount].goalId = resultPart->ruleIdentity[i].legendId;
+            match->partCount++;
+          }
 
         }
       }
@@ -425,7 +459,7 @@ int ruleStateMatchDir(Runtime * rt, Match * match, int ruleIndex, int matchState
       success = 1;
     }
 
-    if (matchPartIdentity(rt, matchPart, resultPart, match, ruleIndex, anyDistance, dir, currentX, currentY)) {
+    if (matchPartIdentity(rt, ruleIndex, matchStateIndex, i, match, anyDistance, dir, currentX, currentY)) {
       success = 1;
       anyDistance = 0;
     }
@@ -487,6 +521,7 @@ int applyRules(Runtime * rt, ExecutionTime execTime) {
   int attempts = 0;
   Match match;
   match.partCount = 0;
+  match.cancel = 0;
   int count = ruleCount();
   for (int ruleIndex = 0; ruleIndex < count; ruleIndex++) {
     applied = 1;
@@ -495,7 +530,7 @@ int applyRules(Runtime * rt, ExecutionTime execTime) {
       match.partCount = 0;
       if (ruleApplies(rt, ruleIndex, execTime) == 1) {
         applied = ruleMatched(rt, &match, ruleIndex);
-        if (applied == 1 && match.partCount > 0) {
+        if (applied == 1 && (match.partCount > 0 || match.cancel)) {
           applyMatch(rt, &match);
         } else {
           applied = 0;

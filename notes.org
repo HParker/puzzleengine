@@ -1,4 +1,5 @@
 TODO:
+- you can undo forever. stop it before it runs out of things to undo!
 - should `ObjectGlyph` be ncurses renderer specific?
   seems unlikely we would need to show the character in any other context.
 - validate object names used in rules exist or are `...`
