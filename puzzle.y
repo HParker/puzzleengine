@@ -78,17 +78,17 @@ int legendIsAlias = 0;
 %token FLICKSCREEN KEY_REPEAT_INTERVAL NOACTION NOREPEAT_ACTION NOUNDO NORESTART
 %token REALTIME_INTERVAL REQUIRE_PLAYER_MOVEMENT RUN_RULES_ON_LEVEL_START
 %token SCANLINE TEXT_COLOR THROTTLE_MOVEMENT ZOOMSCREEN
-%token DEBUG VERBOSE_LOGGING
+%token DEBUG VERBOSE_LOGGING END_OF_FILE
 
-%token MODEHEADER EQUALS END_LAYER END_OF_RULE MESSAGE END_LEGEND_LINE LEGEND_AND LEGEND_OR
-%token  <identifier> ID OBJID COLOR LEGEND_VALUE LAYER_NAME LEGEND_ID RULE_POSTFIX
+%token MODE_HEADER EQUALS END_LAYER END_OF_RULE MESSAGE LEGEND_AND LEGEND_OR
+%token  <identifier> ID OBJID COLOR LEGEND_ID LEGEND_VALUE END_LEGEND_LINE LAYER_NAME RULE_POSTFIX
 %token  <decimal> DECIMAL
 
 // Rules tokens (ALSO USES OBJID)
 %token MOVE_RIGHT MOVE_UP MOVE_LEFT MOVE_DOWN
 %token OPEN_SQUARE CLOSE_SQUARE VIRTICAL_PIPE ARROW
 %token LEVEL_EOL
-%token <cell> LEVEL_CELL SPRITE_CELL LEGEND_GLYPH
+%token <cell> GLYPH LEGEND_GLYPH
 %token <enumValue> LOGIC_WORD LOGIC_ON DIRECTION EXECUTION_TIME
 
 %%
@@ -180,7 +180,7 @@ verbose_logging: VERBOSE_LOGGING { pd.verboseLogging = 1; }
 
         ;
 
-modechange: MODEHEADER ID MODEHEADER
+modechange: MODE_HEADER
 
 object_definitions: object_definition object_definitions
                   | object_definition
@@ -193,7 +193,7 @@ object_definition: object_name colors sprite { incObject(); }
                            incObject();
 }
 
-object_name: OBJID SPRITE_CELL {
+object_name: OBJID GLYPH {
                  pd.objects[pd.objectCount].name = strdup($1);
 
                  pd.aliasLegend[pd.aliasLegendCount].key = strdup($1);
@@ -229,7 +229,7 @@ sprite: sprite_row sprite_row sprite_row sprite_row sprite_row {
 
 sprite_row: sprite_cell sprite_cell sprite_cell sprite_cell sprite_cell
 
-sprite_cell: SPRITE_CELL {
+sprite_cell: GLYPH {
     pd.objects[pd.objectCount].sprite[spriteIndex] = $1;
     spriteIndex++;
 }
@@ -333,7 +333,13 @@ rule_prefix: EXECUTION_TIME {
   pd.rules[pd.ruleCount].directionConstraint = $1;
 }
 
-rule_postfix: RULE_POSTFIX { printf("commands don't all work yet '%s'\n", $1); }
+rule_postfix: RULE_POSTFIX {
+                  if (strcasecmp("cancel", $1) == 0) {
+                      pd.rules[pd.ruleCount].cancel = 1;
+                  } else {
+                      /* printf("commands don't all work yet '%s'\n", $1); */
+                  }
+}
             | MESSAGE ID {
   // TODO: this can be more then soundeffects
   // also rename to COMMANDS
@@ -438,10 +444,7 @@ object_part: OBJID {
   }
 }
 
-
-winconditions: wincondition winconditions
-             | wincondition
-             | // PLEASE DON'T GET MAD BISON, SOMETIMTES YOU CAN'T WIN
+winconditions: wincondition | wincondition winconditions |
 
 wincondition: wincondition_unconditional
             | wincondition_conditional
@@ -462,13 +465,17 @@ wincondition_unconditional: LOGIC_WORD OBJID {
 
 
 
-levels: level levels
-      | level
+levels:         level levels
+        |       level
 
-level: message_level any_level_newlines { incLevel(); }
-           | rows any_level_newlines { incLevel(); }
+level:          a_level some_level_newlines { incLevel(); }
+        |       a_level { incLevel(); }
 
-message_level: MESSAGE ID {
+a_level:        message_level
+        |       rows
+
+
+message_level:  MESSAGE ID {
   pd.levels[pd.levelCount].levelType = MESSAGE_TEXT;
   pd.levels[pd.levelCount].message = strdup($2);
 }
@@ -482,10 +489,14 @@ row: cells LEVEL_EOL {
 }
 
 cells: cell cells | cell
-cell: LEVEL_CELL {
+
+cell: GLYPH {
   pd.levels[pd.levelCount].cells[pd.levels[pd.levelCount].cellIndex] = $1;
   pd.levels[pd.levelCount].cellIndex++;
-
 }
-any_level_newlines: LEVEL_EOL any_level_newlines | LEVEL_EOL |
+
+some_level_newlines: LEVEL_EOL some_level_newlines | LEVEL_EOL
+
+
+
 %%

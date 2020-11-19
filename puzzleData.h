@@ -76,16 +76,19 @@ typedef enum Direction
    DOWN       = 3,
    HORIZONTAL = 4,
    VIRTICAL   = 5,
-   REL_UP     = 6,
-   REL_DOWN   = 7,
-   REL_LEFT   = 8,
-   REL_RIGHT  = 9,
-   USE        = 10,
-   NONE       = 11,
-   COND_NO    = 12,
-   QUIT       = 13,
-   RESTART    = 14,
-   UNDO       = 15
+   STATIONARY = 6,
+   RANDOMDIR  = 7,
+   RANDOM     = 8,
+   REL_UP     = 9,
+   REL_DOWN   = 10,
+   REL_LEFT   = 11,
+   REL_RIGHT  = 12,
+   USE        = 13,
+   NONE       = 14,
+   COND_NO    = 15,
+   QUIT       = 16,
+   RESTART    = 17,
+   UNDO       = 18
   } Direction;
 
 typedef enum ExecutionTime

@@ -7,19 +7,41 @@ OBJECTS
 ========
 
 Background
-Brown
+Brown DarkBrown
+00000
+01000
+00000
+00010
+00000
 
 Player
-Blue
+Black Orange White Blue
+.000.
+.111.
+22222
+.333.
+.3.3.
 
 Tree
-green
+green LightGreen
+.010.
+01110
+11111
+01110
+.010.
+
 
 Stump
-brown
+Brown LightBrown
+.000.
+01110
+01110
+01110
+.000.
+
 
 Wall
-Black
+Grey
 
 =======
 LEGEND
@@ -44,7 +66,7 @@ COLLISIONLAYERS
 
 Background
 Stump
-player, Tree
+player, Tree, Wall
 
 ======
 RULES

@@ -368,6 +368,9 @@ char * charSprite(char c) {
   case 'M':
   case 'm':
     return LM;
+  case 'N':
+  case 'n':
+    return LN;
   case 'O':
   case 'o':
     return LO;
@@ -408,6 +411,6 @@ char * charSprite(char c) {
     return L_SPACE;
   }
 
-  printf("Error unsupported character\n");
+  printf("Error unsupported character '%c'\n", c);
   return L_SPACE;
 }

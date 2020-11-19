@@ -68,7 +68,7 @@ START_TEST (test_parses_kettle)
   FILE *file;
   file = fopen("./puzzles/kettle.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
-  ck_assert_str_eq(pz->title, "Simple Block Pushing Game");
+  ck_assert_str_eq(pz->title, "Kettle");
 }
 END_TEST
 
@@ -77,7 +77,7 @@ START_TEST (test_parses_lime_rick)
   FILE *file;
   file = fopen("./puzzles/lime_rick.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
-  ck_assert_str_eq(pz->title, "Simple Block Pushing Game");
+  ck_assert_str_eq(pz->title, "Lime Rick");
 }
 END_TEST
 
@@ -86,7 +86,7 @@ START_TEST (test_parses_match3)
   FILE *file;
   file = fopen("./puzzles/match3.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
-  ck_assert_str_eq(pz->title, "Simple Block Pushing Game");
+  ck_assert_str_eq(pz->title, "Match 3 Block Push");
 }
 END_TEST
 
@@ -95,7 +95,7 @@ START_TEST (test_parses_micro_ban)
   FILE *file;
   file = fopen("./puzzles/micro_ban.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
-  ck_assert_str_eq(pz->title, "Simple Block Pushing Game");
+  ck_assert_str_eq(pz->title, "Microban");
 }
 END_TEST
 
@@ -113,7 +113,7 @@ START_TEST (test_parses_neko_puzzle)
   FILE *file;
   file = fopen("./puzzles/neko_puzzle.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
-  ck_assert_str_eq(pz->title, "Simple Block Pushing Game");
+  ck_assert_str_eq(pz->title, "neko puzzle");
 }
 END_TEST
 
@@ -122,7 +122,7 @@ START_TEST (test_parses_not_snake)
   FILE *file;
   file = fopen("./puzzles/not_snake.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
-  ck_assert_str_eq(pz->title, "Simple Block Pushing Game");
+  ck_assert_str_eq(pz->title, "Notsnake");
 }
 END_TEST
 
@@ -131,7 +131,7 @@ START_TEST (test_parses_octat)
   FILE *file;
   file = fopen("./puzzles/octat.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
-  ck_assert_str_eq(pz->title, "Simple Block Pushing Game");
+  ck_assert_str_eq(pz->title, "Octat");
 }
 END_TEST
 
@@ -140,7 +140,7 @@ START_TEST (test_parses_random_robots)
   FILE *file;
   file = fopen("./puzzles/random_robots.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
-  ck_assert_str_eq(pz->title, "Simple Block Pushing Game");
+  ck_assert_str_eq(pz->title, "Random Robots");
 }
 END_TEST
 
@@ -150,7 +150,7 @@ START_TEST (test_parses_random_robots_spawner)
   FILE *file;
   file = fopen("./puzzles/random_robots_spawner.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
-  ck_assert_str_eq(pz->title, "EYE EYE EYE");
+  ck_assert_str_eq(pz->title, "Robot Spawner");
 }
 END_TEST
 
@@ -159,7 +159,7 @@ START_TEST (test_parses_zen_puzzle_garden)
   FILE *file;
   file = fopen("./puzzles/zen_puzzle_garden.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
-  ck_assert_str_eq(pz->title, "EYE EYE EYE");
+  ck_assert_str_eq(pz->title, "Zen Puzzle Garden");
 }
 END_TEST
 
@@ -174,13 +174,13 @@ Suite * puzzle_script_parser_suite(void)
     tcase_add_test(test_Parser, test_parses_basic);
     tcase_add_test(test_Parser, test_parses_block_faker);
     tcase_add_test(test_Parser, test_parses_by_your_side);
-    /* tcase_add_test(test_Parser, test_parses_constellation_z); */
-    /* tcase_add_test(test_Parser, test_parses_eyeball); */
-    /* tcase_add_test(test_Parser, test_parses_kettle); */
-    /* tcase_add_test(test_Parser, test_parses_lime_rick); */
-    /* tcase_add_test(test_Parser, test_parses_match3); */
-    /* tcase_add_test(test_Parser, test_parses_micro_ban); */
-    /* tcase_add_test(test_Parser, test_parses_minimum); */
+    tcase_add_test(test_Parser, test_parses_constellation_z);
+    tcase_add_test(test_Parser, test_parses_eyeball);
+    tcase_add_test(test_Parser, test_parses_kettle);
+    tcase_add_test(test_Parser, test_parses_lime_rick);
+    tcase_add_test(test_Parser, test_parses_match3);
+    tcase_add_test(test_Parser, test_parses_micro_ban);
+    tcase_add_test(test_Parser, test_parses_minimum);
     /* tcase_add_test(test_Parser, test_parses_neko_puzzle); */
     /* tcase_add_test(test_Parser, test_parses_not_snake); */
     /* tcase_add_test(test_Parser, test_parses_octat); */

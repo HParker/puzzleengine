@@ -296,7 +296,7 @@ void renderMessage(Runtime * rt) {
   char * message = levelMessage(rt->levelIndex);
   int messageLength = strlen(message);
   for (int i = 0; i < messageLength; i++) {
-    drawChar(i, 0, 10, charSprite(message[i]));
+    drawChar((i % 25) + 1, ((i / 25) * 2) + 5, 5, charSprite(message[i]));
   }
 }
 

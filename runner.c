@@ -763,9 +763,12 @@ void update(Runtime * rt, Direction dir) {
   }
 }
 
-int verifyOne(Runtime * rt, int thing, int container) {
+int verifyOne(Runtime * rt, int thing, int container, int hasOnQualifier) {
   for (int i = 0; i < rt->objectCount; i++) {
     if (rt->objects[i].deleted == 0 && rt->objects[i].objId == thing) {
+      if (hasOnQualifier == 0) {
+        return 1;
+      }
       for (int j = 0; j < rt->objectCount; j++) {
         if (rt->objects[j].objId == container && rt->objects[i].x == rt->objects[j].x && rt->objects[i].y == rt->objects[j].y) {
           return 1;
@@ -776,13 +779,15 @@ int verifyOne(Runtime * rt, int thing, int container) {
   return 0;
 }
 
-int verifyAll(Runtime * rt, int thingId, int containerId) {
+int verifyAll(Runtime * rt, int thingId, int containerId, int hasOnQualifier) {
   int satisfied = 1;
   for (int i = 0; i < rt->objectCount; i++) {
     if (rt->objects[i].deleted == 0 && aliasLegendContains(thingId, rt->objects[i].objId) == 1) {
       satisfied = 0;
       for (int j = 0; j < rt->objectCount; j++) {
-        if (aliasLegendContains(containerId, rt->objects[j].objId) && rt->objects[i].x == rt->objects[j].x && rt->objects[i].y == rt->objects[j].y) {
+        if (aliasLegendContains(containerId, rt->objects[j].objId) &&
+            rt->objects[i].x == rt->objects[j].x &&
+            rt->objects[i].y == rt->objects[j].y) {
           satisfied = 1;
         }
       }
@@ -791,15 +796,16 @@ int verifyAll(Runtime * rt, int thingId, int containerId) {
       return 0;
     }
   }
+
   return satisfied;
 }
 
 int checkWinCondition(Runtime * rt, int winConditionIndex) {
   switch (winCondition(winConditionIndex)->winQualifier) {
   case ALL:
-    return verifyAll(rt, winCondition(winConditionIndex)->winIdentifier, winCondition(winConditionIndex)->onIndentifier);
+    return verifyAll(rt, winCondition(winConditionIndex)->winIdentifier, winCondition(winConditionIndex)->onIndentifier, winCondition(winConditionIndex)->hasOnQualifier);
   case SOME:
-    return verifyOne(rt, winCondition(winConditionIndex)->winIdentifier, winCondition(winConditionIndex)->onIndentifier);
+    return verifyOne(rt, winCondition(winConditionIndex)->winIdentifier, winCondition(winConditionIndex)->onIndentifier, winCondition(winConditionIndex)->hasOnQualifier);
   default:
     printf("err: unsupported win condition '%i'\n", winCondition(winConditionIndex)->winQualifier);
     return 0;

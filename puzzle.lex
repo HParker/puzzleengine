@@ -3,27 +3,26 @@
 #include <string.h>
 #include "puzzle.tab.h"
 #include "puzzleData.h"
-int modeToEnter;
+int modeToEnter = -1;
 int commentNestingLevel = 0;
+int inMode = 0;
 %}
 
 %option noyywrap caseless
 
-%x MODE
-
+%s MODE
 %s IDENTIFIER
 %s FLOAT
 %s COMMENT
-%s OBJECT
+%s OBJECTS
 %s LEGEND
 %s SOUNDS
 %s COLLISIONLAYERS
 %s RULES
 %s WINCONDITIONS
 %s LEVELS
-%s MESSAGE_CONTENTS
 
-gliph [\.0-9a-zA-Z\*#,@`'~]
+glyph [\.0-9a-zA-Z\*#,@`'~]
 
 direction (action|up|down|left|right|\^|v|\<|\>|moving|stationary|parallel|perpendicular|horizontal|orthogonal|vertical|no|randomdir|random)
 
@@ -52,8 +51,12 @@ color (color|colour)
 ^debug { return DEBUG; }
 ^verbose_logging[ ]+ { BEGIN IDENTIFIER; return VERBOSE_LOGGING; }
 
-<IDENTIFIER>[a-zA-Z0-9\./ ]+/[\n] {
-  BEGIN INITIAL;
+<IDENTIFIER>[a-zA-Z0-9\./:\!',\/ ]+ {
+  if (modeToEnter == -1) {
+      BEGIN INITIAL;
+  } else {
+      BEGIN modeToEnter;
+  }
   yylval.identifier = strdup(yytext);
   return ID;
 }
@@ -65,52 +68,58 @@ color (color|colour)
 }
 
 ={2,}[\n]+ {
-  BEGIN MODE;
-  return MODEHEADER;
-}
-
-<MODE>[a-zA-Z\.]+ {
-  yylval.identifier = strdup(yytext);
-  if (strcasecmp(yytext, "OBJECTS") == 0) {
-    modeToEnter = OBJECT;
-  } else if (strcasecmp(yytext, "LEGEND") == 0) {
-    modeToEnter = LEGEND;
-  } else if (strcasecmp(yytext, "SOUNDS") == 0) {
-    modeToEnter = SOUNDS;
-  } else if (strcasecmp(yytext, "COLLISIONLAYERS") == 0) {
-    modeToEnter = COLLISIONLAYERS;
-  } else if (strcasecmp(yytext, "RULES") == 0) {
-    modeToEnter = RULES;
-  } else if (strcasecmp(yytext, "WINCONDITIONS") == 0) {
-    modeToEnter = WINCONDITIONS;
-  } else if (strcasecmp(yytext, "LEVELS") == 0) {
-    modeToEnter = LEVELS;
+  if (inMode) {
+    inMode = 0;
+    BEGIN modeToEnter;
   } else {
-    printf("Err: '%s' didn't match a mode\n", yytext);
+    inMode = 1;
+    BEGIN MODE;
   }
-
-  return ID;
- }
-<MODE>[\n]+
-<MODE>={2,}[\n]+ {
-  BEGIN modeToEnter;
-  return MODEHEADER;
 }
 
-<OBJECT>{colors} {
+<MODE>^OBJECTS[\n]* {
+  modeToEnter = OBJECTS;
+  return MODE_HEADER;
+}
+
+<MODE>^LEGEND[\n]* {
+  modeToEnter = LEGEND;
+  return MODE_HEADER;
+}
+
+<MODE>^SOUNDS[\n]* {
+  modeToEnter = SOUNDS;
+  return MODE_HEADER;
+}
+
+<MODE>^COLLISIONLAYERS[\n]* {
+  modeToEnter = COLLISIONLAYERS;
+  return MODE_HEADER;
+}
+
+<MODE>^RULES[\n]* {
+  modeToEnter = RULES;
+  return MODE_HEADER;
+}
+
+<MODE>^WINCONDITIONS[\n]* {
+  modeToEnter = WINCONDITIONS;
+  return MODE_HEADER;
+}
+
+<MODE>^LEVELS[\n]* {
+  modeToEnter = LEVELS;
+  return MODE_HEADER;
+}
+
+<OBJECTS>{colors} {
   yylval.identifier = strdup(yytext);
   return COLOR;
 }
 
-<OBJECT>[a-zA-Z][a-zA-Z_0-9]+ {
+<OBJECTS>[a-zA-Z][a-zA-Z_0-9]+ {
   yylval.identifier = strdup(yytext);
   return OBJID;
-}
-
-
-<OBJECT>{gliph} {
-  yylval.cell = yytext[0];
-  return SPRITE_CELL;
 }
 
 <LEGEND>^[a-zA-Z0-9_\.#\*@]{2,} {
@@ -118,22 +127,20 @@ color (color|colour)
   return LEGEND_ID;
 }
 
-<LEGEND>^[a-zA-Z0-9_\.#\*@] {
+<LEGEND>^{glyph} {
   yylval.cell = yytext[0];
   return LEGEND_GLYPH;
 }
 
-
 <LEGEND>[ ]=[ ] { return EQUALS; }
 
-<LEGEND>and { return LEGEND_AND; }
+<LEGEND>[ ]and[ ] { return LEGEND_AND; }
 
-<LEGEND>or { return LEGEND_OR; }
+<LEGEND>[ ]or[ ] { return LEGEND_OR; }
 
 <LEGEND>[\n] { return END_LEGEND_LINE; }
 
 <LEGEND>[a-zA-Z0-9_]+ {
-  // TODO: we can legend right here
   yylval.identifier = strdup(yytext);
   return LEGEND_VALUE;
 }
@@ -190,6 +197,22 @@ color (color|colour)
   return DIRECTION;
 }
 
+<RULES>stationary {
+  yylval.enumValue = STATIONARY;
+  return DIRECTION;
+}
+
+<RULES>randomDir {
+  yylval.enumValue = RANDOMDIR;
+  return DIRECTION;
+}
+
+<RULES>random {
+  yylval.enumValue = RANDOM;
+  return DIRECTION;
+}
+
+
 <RULES>\^ {
   yylval.enumValue = REL_UP;
   return DIRECTION;
@@ -223,7 +246,7 @@ color (color|colour)
 <RULES>-> {
   return ARROW;
 }
-<RULES>[a-zA-Z0-9_.]+ {
+<RULES>[a-zA-Z0-9_\.]+ {
   yylval.identifier = strdup(yytext);
   return OBJID;
 }
@@ -261,14 +284,9 @@ color (color|colour)
 
 
 
-<WINCONDITIONS>[a-zA-Z.]+ {
+<WINCONDITIONS>[a-zA-Z\.]+ {
   yylval.identifier = strdup(yytext);
   return OBJID;
-}
-
-<LEVELS>{gliph} {
-  yylval.cell = yytext[0];
-  return LEVEL_CELL;
 }
 
 <LEVELS>\n {
@@ -276,13 +294,13 @@ color (color|colour)
 }
 
 message[ ]+ {
-  BEGIN MESSAGE_CONTENTS;
+  BEGIN IDENTIFIER;
   return MESSAGE;
 }
-<MESSAGE_CONTENTS>[a-zA-Z.0-9:\! ]+/[\n] {
-  BEGIN modeToEnter;
-  yylval.identifier = strdup(yytext);
-  return ID;
+
+{glyph} {
+  yylval.cell = yytext[0];
+  return GLYPH;
 }
 
 [ \n]
@@ -297,7 +315,12 @@ message[ ]+ {
 <COMMENT>\) {
   commentNestingLevel--;
   if (commentNestingLevel == 0) {
-    BEGIN modeToEnter;
+    if (modeToEnter == -1) {
+      BEGIN INITIAL;
+    } else {
+      BEGIN modeToEnter;
+    }
+
   }
 }
 %%
