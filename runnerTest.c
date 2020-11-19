@@ -5,7 +5,6 @@
 void test_solution(Runtime * rt, int moveCount, int moves[]) {
   for (int i = 0; i < moveCount; i++) {
     update(rt, moves[i]);
-    setLevel(rt);
   }
   if (rt->gameWon == 0) {
     printf("Game incomplete %i/%i\n", rt->levelIndex, rt->pd->levelCount);
@@ -408,6 +407,108 @@ START_TEST (test_runs_block_faker)
 }
 END_TEST
 
+START_TEST (test_runs_kettle)
+{
+  FILE *file;
+  file = fopen("./puzzles/kettle.puzz", "r");
+  Runtime rt;
+  startGame(&rt, file);
+
+  int moves[] = {
+                 USE,
+                 USE,
+                 USE,
+                 USE,
+                 UP,
+                 RIGHT,
+                 LEFT,
+                 DOWN,
+                 USE,
+                 USE,
+                 UP,
+                 LEFT,
+                 USE,
+                 USE,
+                 UP,
+                 LEFT,
+                 USE,
+                 USE,
+                 UP,
+                 RIGHT,
+                 LEFT,
+                 DOWN,
+                 USE,
+                 USE,
+                 LEFT,
+                 RIGHT,
+                 LEFT,
+                 UP,
+                 DOWN,
+                 USE,
+                 USE,
+                 RIGHT,
+                 UP,
+                 DOWN,
+                 LEFT,
+                 USE,
+                 USE,
+                 UP,
+                 RIGHT,
+                 LEFT,
+                 LEFT,
+                 UP,
+                 DOWN,
+                 USE,
+                 USE,
+                 RIGHT,
+                 LEFT,
+                 LEFT,
+                 DOWN,
+                 UP,
+                 UP,
+                 USE,
+                 USE,
+                 DOWN,
+                 RIGHT,
+                 DOWN,
+                 RIGHT,
+                 LEFT,
+                 UP,
+                 LEFT,
+                 UP,
+                 USE,
+                 USE,
+                 RIGHT,
+                 LEFT,
+                 DOWN,
+                 RIGHT,
+                 UP,
+                 UP,
+                 LEFT,
+                 LEFT,
+                 UP,
+                 DOWN,
+                 USE,
+                 USE,
+                 LEFT,
+                 DOWN,
+                 DOWN,
+                 RIGHT,
+                 UP,
+                 UP,
+                 UP,
+                 LEFT,
+                 LEFT,
+                 RIGHT,
+                 USE,
+                 USE,
+                 USE
+  };
+
+  test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
+}
+END_TEST
+
 Suite * puzzle_script_parser_suite(void)
 {
   Suite * s;
@@ -422,8 +523,7 @@ Suite * puzzle_script_parser_suite(void)
   tcase_add_test(test_Parser, test_runs_match3);
   tcase_add_test(test_Parser, test_runs_block_faker);
   /* tcase_add_test(test_Parser, test_parses_constellation_z); */
-  /* tcase_add_test(test_Parser, test_parses_eyeball); */
-  /* tcase_add_test(test_Parser, test_parses_kettle); */
+  tcase_add_test(test_Parser, test_runs_kettle);
   /* tcase_add_test(test_Parser, test_parses_lime_rick); */
   /* tcase_add_test(test_Parser, test_parses_match3); */
   /* tcase_add_test(test_Parser, test_parses_micro_ban); */

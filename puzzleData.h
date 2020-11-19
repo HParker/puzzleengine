@@ -275,6 +275,7 @@ typedef struct Runtime {
   int statesCount;
   int statesCapacity;
   State * states;
+  int prevHistoryCount;
 } Runtime;
 
 // PuzzleData
@@ -347,7 +348,6 @@ extern void render(Runtime * rt);
 
 // Update
 extern Direction handleInput(Runtime * rt, int input);
-extern void setLevel(Runtime * rt);
 extern void update(Runtime * rt, Direction dir);
 
 // Debug

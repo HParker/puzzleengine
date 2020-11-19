@@ -38,7 +38,8 @@ int main(int argc, char ** argv) {
     }
   }
 
-  closeRenderer();
   printHistory(&rt);
+  closeRenderer();
+
   return 0;
 }

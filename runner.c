@@ -140,8 +140,15 @@ void loadLevel(Runtime * rt) {
 }
 
 void nextLevel(Runtime * rt) {
-  rt->levelIndex++;
-  loadLevel(rt);
+  if (checkWinConditions(rt) == 1) {
+    if (rt->levelIndex < levelCount() - 1) {
+      rt->prevHistoryCount = rt->historyCount;
+      rt->levelIndex++;
+      loadLevel(rt);
+    } else {
+      rt->gameWon = 1;
+    }
+  }
 }
 
 void initGame(Runtime * rt) {
@@ -149,6 +156,7 @@ void initGame(Runtime * rt) {
   rt->gameWon = 0;
   rt->toMoveCount = 0;
   rt->historyCount = 0;
+  rt->prevHistoryCount = 0;
 
   rt->objectCount = 0;
   rt->objectCapacity = 10000;
@@ -174,6 +182,7 @@ void startGame(Runtime * rt, FILE * file) {
 }
 
 void undo(Runtime * rt) {
+  rt->historyCount--;
   rt->statesCount--;
   rt->levelIndex = rt->states[rt->statesCount].levelIndex;
   rt->levelType = levelType(rt->levelIndex);
@@ -629,6 +638,9 @@ void printHistory(Runtime * rt) {
                              "DOWN",
                              "HORIZONTAL",
                              "VIRTICAL",
+                             "STATIONARY",
+                             "RANDOMDIR",
+                             "RANDOM",
                              "REL_UP",
                              "REL_DOWN",
                              "REL_LEFT",
@@ -666,19 +678,6 @@ Direction handleInput(Runtime * rt, int input) {
     return UNDO;
   } else {
     return NONE;
-  }
-}
-
-void setLevel(Runtime * rt) {
-  if (checkWinConditions(rt) == 1) {
-    if (rt->levelIndex < levelCount() - 1) {
-      nextLevel(rt);
-    } else {
-      if (debug() == 1) {
-        printHistory(rt);
-      }
-      rt->gameWon = 1;
-    }
   }
 }
 
@@ -729,7 +728,9 @@ void update(Runtime * rt, Direction dir) {
   addState(rt);
 
   if (dir == RESTART) {
+    rt->historyCount = rt->prevHistoryCount;
     loadLevel(rt);
+    return;
   }
 
   // TODO: remove deleted objects?
@@ -755,7 +756,7 @@ void update(Runtime * rt, Direction dir) {
 
     // apply late rules
     applyRules(rt, LATE);
-    setLevel(rt);
+    nextLevel(rt);
   } else {
     if (dir == USE) {
       nextLevel(rt);

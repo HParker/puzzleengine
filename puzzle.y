@@ -458,6 +458,7 @@ wincondition_conditional: LOGIC_WORD OBJID LOGIC_ON OBJID {
 }
 
 wincondition_unconditional: LOGIC_WORD OBJID {
+  pd.winConditions[pd.winConditionCount].hasOnQualifier = 0;
   pd.winConditions[pd.winConditionCount].winQualifier = $1;
   pd.winConditions[pd.winConditionCount].winIdentifier = aliasLegendId($2);
   incWinCondition();
