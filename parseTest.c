@@ -181,12 +181,12 @@ Suite * puzzle_script_parser_suite(void)
     tcase_add_test(test_Parser, test_parses_match3);
     tcase_add_test(test_Parser, test_parses_micro_ban);
     tcase_add_test(test_Parser, test_parses_minimum);
-    /* tcase_add_test(test_Parser, test_parses_neko_puzzle); */
-    /* tcase_add_test(test_Parser, test_parses_not_snake); */
-    /* tcase_add_test(test_Parser, test_parses_octat); */
-    /* tcase_add_test(test_Parser, test_parses_random_robots); */
-    /* tcase_add_test(test_Parser, test_parses_random_robots_spawner); */
-    /* tcase_add_test(test_Parser, test_parses_zen_puzzle_garden); */
+    tcase_add_test(test_Parser, test_parses_neko_puzzle);
+    tcase_add_test(test_Parser, test_parses_not_snake);
+    tcase_add_test(test_Parser, test_parses_octat);
+    tcase_add_test(test_Parser, test_parses_random_robots);
+    tcase_add_test(test_Parser, test_parses_random_robots_spawner);
+    tcase_add_test(test_Parser, test_parses_zen_puzzle_garden);
 
     suite_add_tcase(s, test_Parser);
     return s;

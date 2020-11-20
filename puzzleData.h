@@ -75,7 +75,7 @@ typedef enum Direction
    LEFT       = 2,
    DOWN       = 3,
    HORIZONTAL = 4,
-   VIRTICAL   = 5,
+   VERTICAL   = 5,
    STATIONARY = 6,
    RANDOMDIR  = 7,
    RANDOM     = 8,

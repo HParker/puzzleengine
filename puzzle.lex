@@ -6,6 +6,7 @@
 int modeToEnter = -1;
 int commentNestingLevel = 0;
 int inMode = 0;
+#define yyterminate() return END_OF_FILE
 %}
 
 %option noyywrap caseless
@@ -22,9 +23,7 @@ int inMode = 0;
 %s WINCONDITIONS
 %s LEVELS
 
-glyph [\.0-9a-zA-Z\*#,@`'~]
-
-direction (action|up|down|left|right|\^|v|\<|\>|moving|stationary|parallel|perpendicular|horizontal|orthogonal|vertical|no|randomdir|random)
+glyph [;\.0-9a-zA-Z\*#,@`'~]
 
 colors (black|white|lightgray|lightgrey|gray|grey|darkgray|darkgrey|red|darkred|lightred|brown|darkbrown|lightbrown|orange|yellow|green|darkgreen|lightgreen|blue|lightblue|darkblue|purple|pink|transparent)
 
@@ -42,7 +41,7 @@ color (color|colour)
 ^key_repeat_interval[ ]+ { BEGIN FLOAT; return KEY_REPEAT_INTERVAL; }
 ^noaction[ ]+ { BEGIN IDENTIFIER; return NOACTION; }
 ^norepeat_action[ ]+ { BEGIN IDENTIFIER; return NOREPEAT_ACTION; }
-^noundo[ ]+ { BEGIN IDENTIFIER; return NOUNDO; }
+^noundo { BEGIN IDENTIFIER; return NOUNDO; }
 ^norestart[ ]+ { BEGIN IDENTIFIER; return NORESTART; }
 ^scanline[ ]+ { BEGIN IDENTIFIER; return SCANLINE; }
 ^text_color[ ]+ { BEGIN IDENTIFIER; return TEXT_COLOR; }
@@ -51,7 +50,7 @@ color (color|colour)
 ^debug { return DEBUG; }
 ^verbose_logging[ ]+ { BEGIN IDENTIFIER; return VERBOSE_LOGGING; }
 
-<IDENTIFIER>[a-zA-Z0-9\./:\!',\/ ]+ {
+<IDENTIFIER>[a-zA-Z0-9\./:\!',\/~ ]+ {
   if (modeToEnter == -1) {
       BEGIN INITIAL;
   } else {
@@ -77,37 +76,37 @@ color (color|colour)
   }
 }
 
-<MODE>^OBJECTS[\n]* {
+<MODE>^OBJECTS {
   modeToEnter = OBJECTS;
   return MODE_HEADER;
 }
 
-<MODE>^LEGEND[\n]* {
+<MODE>^LEGEND {
   modeToEnter = LEGEND;
   return MODE_HEADER;
 }
 
-<MODE>^SOUNDS[\n]* {
+<MODE>^SOUNDS {
   modeToEnter = SOUNDS;
   return MODE_HEADER;
 }
 
-<MODE>^COLLISIONLAYERS[\n]* {
+<MODE>^COLLISIONLAYERS {
   modeToEnter = COLLISIONLAYERS;
   return MODE_HEADER;
 }
 
-<MODE>^RULES[\n]* {
+<MODE>^RULES {
   modeToEnter = RULES;
   return MODE_HEADER;
 }
 
-<MODE>^WINCONDITIONS[\n]* {
+<MODE>^WINCONDITIONS {
   modeToEnter = WINCONDITIONS;
   return MODE_HEADER;
 }
 
-<MODE>^LEVELS[\n]* {
+<MODE>^LEVELS {
   modeToEnter = LEVELS;
   return MODE_HEADER;
 }
@@ -165,7 +164,7 @@ color (color|colour)
   return CLOSE_SQUARE;
 }
 <RULES>\| {
-  return VIRTICAL_PIPE;
+  return VERTICAL_PIPE;
 }
 <RULES>up {
   yylval.enumValue = UP;
@@ -192,8 +191,8 @@ color (color|colour)
   return DIRECTION;
 }
 
-<RULES>virtical {
-  yylval.enumValue = VIRTICAL;
+<RULES>vertical {
+  yylval.enumValue = VERTICAL;
   return DIRECTION;
 }
 
@@ -312,7 +311,7 @@ message[ ]+ {
 
 <COMMENT>[^\)\(]* {
 }
-<COMMENT>\) {
+<COMMENT>\)[\n]* {
   commentNestingLevel--;
   if (commentNestingLevel == 0) {
     if (modeToEnter == -1) {

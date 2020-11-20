@@ -637,7 +637,7 @@ void printHistory(Runtime * rt) {
                              "LEFT",
                              "DOWN",
                              "HORIZONTAL",
-                             "VIRTICAL",
+                             "VERTICAL",
                              "STATIONARY",
                              "RANDOMDIR",
                              "RANDOM",

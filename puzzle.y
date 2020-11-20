@@ -2,11 +2,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 #include "puzzleData.h"
 #include "parser.h"
 
 PuzzleData pd;
-int yyerror(const char *p) { printf("ERROR: %s\n", p); return 1; }
+int yyerror(const char *p) {
+    printf("ERROR: %s\n", p); exit(1);
+}
 
 int aliasLegendId(char * name) {
     for (int i = 0; i < pd.aliasLegendCount; i++) {
@@ -74,20 +77,22 @@ int legendIsAlias = 0;
   int enumValue;
 };
 
+%define parse.error verbose
+
 %token TITLE AUTHOR HOMEPAGE COLOR_PALETTE AGAIN_INTERVAL BACKGROUND_COLOR
 %token FLICKSCREEN KEY_REPEAT_INTERVAL NOACTION NOREPEAT_ACTION NOUNDO NORESTART
 %token REALTIME_INTERVAL REQUIRE_PLAYER_MOVEMENT RUN_RULES_ON_LEVEL_START
 %token SCANLINE TEXT_COLOR THROTTLE_MOVEMENT ZOOMSCREEN
-%token DEBUG VERBOSE_LOGGING END_OF_FILE
-
+%token DEBUG VERBOSE_LOGGING
+%token END_OF_FILE 0 "end of file"
 %token MODE_HEADER EQUALS END_LAYER END_OF_RULE MESSAGE LEGEND_AND LEGEND_OR
 %token  <identifier> ID OBJID COLOR LEGEND_ID LEGEND_VALUE END_LEGEND_LINE LAYER_NAME RULE_POSTFIX
 %token  <decimal> DECIMAL
 
 // Rules tokens (ALSO USES OBJID)
 %token MOVE_RIGHT MOVE_UP MOVE_LEFT MOVE_DOWN
-%token OPEN_SQUARE CLOSE_SQUARE VIRTICAL_PIPE ARROW
-%token LEVEL_EOL
+%token OPEN_SQUARE CLOSE_SQUARE VERTICAL_PIPE ARROW
+%token LEVEL_EOL LEVEL_EMPTY_LINE
 %token <cell> GLYPH LEGEND_GLYPH
 %token <enumValue> LOGIC_WORD LOGIC_ON DIRECTION EXECUTION_TIME
 
@@ -110,7 +115,7 @@ puzzlescript:
                 levels
         ;
 
-preamble: preamble_option preamble | preamble_option
+preamble: preamble preamble_option | %empty;
 
 preamble_option: title
                | author
@@ -234,8 +239,9 @@ sprite_cell: GLYPH {
     spriteIndex++;
 }
 
-legend_lines: legend_line legend_lines
-            | legend_line
+legend_lines:   legend_lines legend_line
+        |       legend_line
+        |       %empty;
 
 legend_line: legend_id EQUALS legend_values end_legend_line {
   incAliasLegend();
@@ -286,7 +292,7 @@ legend_joiner: LEGEND_AND {
   }
 }
 
-sounds: // Nothing for now
+sounds: %empty; // Nothing for now
 
 collision_lines: collision_line collision_lines
                | collision_line
@@ -304,21 +310,17 @@ rules: rule_line  rules
      | rule_line
 
 
-rule_line: any_eor rule some_eor
+rule_line: rule some_eor { incRule(); }
         ;
 
-some_eor:       END_OF_RULE some_eor | END_OF_RULE
-        ;
+some_eor:       some_eor END_OF_RULE | END_OF_RULE;
 
-any_eor:        some_eor |
-        ;
-
-rule: rule_prefix rule_infix rule_postfix { incRule(); }
-    | rule_prefix rule_infix { incRule(); }
-    |             rule_infix rule_postfix { incRule(); }
-    | state_definitions arrow state_definitions { incRule(); }
-
-rule_infix: state_definitions arrow state_definitions
+rule:           rule_prefix state_definitions arrow state_definitions rule_postfix
+        |       rule_prefix state_definitions arrow state_definitions
+        |       state_definitions arrow state_definitions rule_postfix
+        |       state_definitions arrow state_definitions
+        |       state_definitions arrow rule_postfix
+        |       rule_prefix state_definitions arrow rule_postfix
 
 arrow: ARROW {
   pd.rules[pd.ruleCount].matchStateDone = 1;
@@ -348,7 +350,6 @@ rule_postfix: RULE_POSTFIX {
 
 state_definitions: state_definition state_definitions
                  | state_definition
-                 | rule_postfix
 
 state_definition: OPEN_SQUARE state_internals CLOSE_SQUARE {
   if (pd.rules[pd.ruleCount].matchStateDone == 0) {
@@ -358,7 +359,7 @@ state_definition: OPEN_SQUARE state_internals CLOSE_SQUARE {
   }
 }
 
-state_internals: state_part VIRTICAL_PIPE state_internals
+state_internals: state_part VERTICAL_PIPE state_internals
                | state_part
 
 state_part: objects_on_same_square {
@@ -377,7 +378,7 @@ state_part: objects_on_same_square {
     rs->partCount++;
   }
 }
-          | {
+          | %empty {
     if (pd.rules[pd.ruleCount].matchStateDone == 0) {
       Rule * r = &pd.rules[pd.ruleCount];
       RuleState * rs = &r->matchStates[r->matchStateCount];
@@ -444,7 +445,7 @@ object_part: OBJID {
   }
 }
 
-winconditions: wincondition | wincondition winconditions |
+winconditions: winconditions wincondition | %empty;
 
 wincondition: wincondition_unconditional
             | wincondition_conditional
@@ -466,11 +467,10 @@ wincondition_unconditional: LOGIC_WORD OBJID {
 
 
 
-levels:         level levels
-        |       level
+levels: levels level | level;
 
 level:          a_level some_level_newlines { incLevel(); }
-        |       a_level { incLevel(); }
+        |       a_level  END_OF_FILE { incLevel(); }
 
 a_level:        message_level
         |       rows
@@ -481,7 +481,7 @@ message_level:  MESSAGE ID {
   pd.levels[pd.levelCount].message = strdup($2);
 }
 
-rows: row rows | row { pd.levels[pd.levelCount].levelType = SQUARES; }
+rows: rows row | row { pd.levels[pd.levelCount].levelType = SQUARES; }
 row: cells LEVEL_EOL {
   pd.levels[pd.levelCount].height++;
   if (pd.levels[pd.levelCount].width == 0) {
@@ -489,15 +489,12 @@ row: cells LEVEL_EOL {
   }
 }
 
-cells: cell cells | cell
+cells: cell cells | cell;
 
 cell: GLYPH {
   pd.levels[pd.levelCount].cells[pd.levels[pd.levelCount].cellIndex] = $1;
   pd.levels[pd.levelCount].cellIndex++;
 }
 
-some_level_newlines: LEVEL_EOL some_level_newlines | LEVEL_EOL
-
-
-
+some_level_newlines: some_level_newlines LEVEL_EOL | LEVEL_EOL;
 %%
