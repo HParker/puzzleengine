@@ -11,12 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: install check
-      run: sudo apt-get install check
-    - name: install curses
-      run: sudo apt-get install libncurses5-dev libncursesw5-dev
-    - name: install sdl2
-      run: sudo apt-get install libsdl2-dev
+    - name: update deps
+      run: sudo apt-get update
+    - name: install deps
+      run: sudo apt-get install flex bison check libncurses5-dev libncursesw5-dev libsdl2-dev
     - name: make
       run: make
     - name: make check

@@ -239,9 +239,13 @@ sprite_cell: GLYPH {
     spriteIndex++;
 }
 
-legend_lines:   legend_lines legend_line
-        |       legend_line
+legend_lines:   some_legend_lines
         |       %empty;
+
+some_legend_lines:
+                some_legend_lines legend_line
+        |       legend_line
+        ;
 
 legend_line: legend_id EQUALS legend_values end_legend_line {
   incAliasLegend();

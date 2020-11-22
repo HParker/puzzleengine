@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include<stdio.h>
 #include <unistd.h>
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include "puzzleData.h"
 #include "alphabet.c"
 
