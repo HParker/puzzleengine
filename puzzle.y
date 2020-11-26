@@ -321,20 +321,30 @@ some_eor:       some_eor END_OF_RULE | END_OF_RULE;
 
 rule:           rule_prefix state_definitions arrow state_definitions rule_postfix
         |       rule_prefix state_definitions arrow state_definitions
-        |       state_definitions arrow state_definitions rule_postfix
-        |       state_definitions arrow state_definitions
+        |       state_definitions arrow state_definitions rule_postfix {
+    pd.rules[pd.ruleCount].executionTime = NORMAL;
+    pd.rules[pd.ruleCount].directionConstraint = NONE;
+}
+        |       state_definitions arrow state_definitions {
+    pd.rules[pd.ruleCount].executionTime = NORMAL;
+    pd.rules[pd.ruleCount].directionConstraint = NONE;
+}
         |       state_definitions arrow rule_postfix
+                {
+    pd.rules[pd.ruleCount].executionTime = NORMAL;
+    pd.rules[pd.ruleCount].directionConstraint = NONE;
+}
         |       rule_prefix state_definitions arrow rule_postfix
 
 arrow: ARROW {
   pd.rules[pd.ruleCount].matchStateDone = 1;
 }
 
-rule_prefix: EXECUTION_TIME {
+rule_prefix:    EXECUTION_TIME {
   pd.rules[pd.ruleCount].executionTime = $1;
   pd.rules[pd.ruleCount].directionConstraint = NONE;
 }
-           | DIRECTION {
+        |       DIRECTION {
   pd.rules[pd.ruleCount].executionTime = NORMAL;
   pd.rules[pd.ruleCount].directionConstraint = $1;
 }
@@ -347,8 +357,6 @@ rule_postfix: RULE_POSTFIX {
                   }
 }
             | MESSAGE ID {
-  // TODO: this can be more then soundeffects
-  // also rename to COMMANDS
   printf("this should show a message '%s'\n", $2);
 }
 
@@ -404,7 +412,7 @@ state_part: objects_on_same_square {
     }
 }
 
-objects_on_same_square: object_part objects_on_same_square | object_part
+objects_on_same_square: objects_on_same_square object_part | object_part
 
 object_part: OBJID {
   if (pd.rules[pd.ruleCount].matchStateDone == 0) {

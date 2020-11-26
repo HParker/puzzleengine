@@ -1,4 +1,15 @@
+make BISON=/usr/local/opt/bison/bin/bison FLEX=/usr/local/opt/flex/bin/flex CC=/usr/local/Cellar/gcc/10.2.0/bin/gcc-10 && make check
+
 TODO:
+- for logging, errors and debugging I kinda want a struct like
+Noun {
+  int id,
+  enum type,
+  string name,
+}
+
+instead of passing around ids, we would pass nouns
+
 - you can undo forever. stop it before it runs out of things to undo!
 - should `ObjectGlyph` be ncurses renderer specific?
   seems unlikely we would need to show the character in any other context.

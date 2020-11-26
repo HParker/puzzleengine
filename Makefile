@@ -11,6 +11,8 @@ default:
 	${CC} -o sdlpuzzlescript lex.yy.c puzzle.tab.c sdlRender.c runner.c puzzleData.c main.c `pkg-config --cflags --libs sdl2`
 
 debug:
+	${BISON} -d puzzle.y
+	${FLEX} puzzle.lex
 	${CC} -o debugpuzzlescript lex.yy.c puzzle.tab.c debugRender.c runner.c puzzleData.c main.c
 
 check:
