@@ -40,6 +40,5 @@ int main(int argc, char ** argv) {
 
   printHistory(&rt);
   closeRenderer();
-
   return 0;
 }

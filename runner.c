@@ -23,6 +23,18 @@ int isMoving(Runtime * rt, int objIndex, Direction direction) {
   return 0;
 }
 
+int playerLocation(Runtime * rt) {
+  int legendId = aliasLegendId("Player");
+
+  for (int i = 0; i < rt->objectCount; i++) {
+    if (rt->objects[i].deleted == 0 && aliasLegendContains(legendId, rt->objects[i].objId)) {
+      return (rt->objects[i].x + rt->objects[i].y * rt->width);
+    }
+  }
+  printf("Err: failed to find player location\n");
+  return -1;
+}
+
 Direction directionMoving(Runtime * rt, int objIndex) {
   for (int i = 0; i < rt->toMoveCount; i++) {
     if (rt->toMove[i].objIndex == objIndex) {
@@ -307,7 +319,7 @@ void applyMatch(Runtime * rt, Match * match) {
         //       I haven't done it yet because it might make undo easier
         rt->objects[match->parts[i].objIndex].deleted = 1;
       }
-
+      rt->objects[match->parts[i].objIndex].objId = match->parts[i].goalId;
       rt->objects[match->parts[i].objIndex].x = match->parts[i].goalX;
       rt->objects[match->parts[i].objIndex].y = match->parts[i].goalY;
 
@@ -486,6 +498,7 @@ int ruleStateMatchDir(Runtime * rt, Match * match, int ruleIndex, int matchState
   match->appliedDirection = dir;
 
   int success = 1;
+
   int count = rule(ruleIndex)->matchStates[matchStateIndex].partCount;
   for (int i = 0; i < count; i++) {
     success = 0;
@@ -519,7 +532,8 @@ int ruleStateMatchDir(Runtime * rt, Match * match, int ruleIndex, int matchState
 int ruleStateMatched(Runtime * rt, Match * match, int ruleIndex, int matchStateIndex, Direction applicationDirection) {
   int count = levelCellCount(rt->levelIndex);
   int matchedOne = 0;
-  int x, y;
+  int x = 0;
+  int y = 0;
 
     for (int i = 0; i < count; i++) {
       x = i % rt->width;
@@ -540,7 +554,8 @@ int ruleMatched(Runtime * rt, Match * match, int ruleIndex) {
   // RIGHT
   if (dirConstant == RIGHT || dirConstant == HORIZONTAL || dirConstant == NONE) {
     for (int matchStateIndex = 0; matchStateIndex < count; matchStateIndex++) {
-      ruleStateResult = ruleStateMatched(rt, match, ruleIndex, matchStateIndex, RIGHT);
+      Direction dir = RIGHT;
+      ruleStateResult = ruleStateMatched(rt, match, ruleIndex, matchStateIndex, dir);
       if (ruleStateResult == 0) {
         break;
       }
@@ -554,7 +569,8 @@ int ruleMatched(Runtime * rt, Match * match, int ruleIndex) {
   // UP
   if (dirConstant == UP || dirConstant == VERTICAL || dirConstant == NONE) {
     for (int matchStateIndex = 0; matchStateIndex < count; matchStateIndex++) {
-      ruleStateResult = ruleStateMatched(rt, match, ruleIndex, matchStateIndex, UP);
+      Direction dir = UP;
+      ruleStateResult = ruleStateMatched(rt, match, ruleIndex, matchStateIndex, dir);
       if (ruleStateResult == 0) {
         break;
       }
@@ -568,7 +584,8 @@ int ruleMatched(Runtime * rt, Match * match, int ruleIndex) {
   // LEFT
   if (dirConstant == LEFT || dirConstant == HORIZONTAL || dirConstant == NONE) {
     for (int matchStateIndex = 0; matchStateIndex < count; matchStateIndex++) {
-      ruleStateResult = ruleStateMatched(rt, match, ruleIndex, matchStateIndex, LEFT);
+      Direction dir = LEFT;
+      ruleStateResult = ruleStateMatched(rt, match, ruleIndex, matchStateIndex, dir);
       if (ruleStateResult == 0) {
         break;
       }
@@ -582,7 +599,8 @@ int ruleMatched(Runtime * rt, Match * match, int ruleIndex) {
   // DOWN
   if (dirConstant == DOWN || dirConstant == VERTICAL || dirConstant == NONE) {
     for (int matchStateIndex = 0; matchStateIndex < count; matchStateIndex++) {
-      ruleStateResult = ruleStateMatched(rt, match, ruleIndex, matchStateIndex, DOWN);
+      Direction dir = DOWN;
+      ruleStateResult = ruleStateMatched(rt, match, ruleIndex, matchStateIndex, dir);
       if (ruleStateResult == 0) {
         break;
       }
@@ -709,12 +727,9 @@ Direction handleInput(Runtime * rt, int input) {
 void markPlayerAsMoving(Runtime * rt, Direction dir) {
   int legendId = aliasLegendId("Player");
 
-  int count = aliasLegendObjectCount(legendId);
-  for (int i = 0; i < count; i++) {
-    for (int j = 0; j < rt->objectCount; j++) {
-      if (rt->objects[j].objId == aliasLegendObjectId(legendId, i)) {
-        addToMove(rt, NONE, j, dir);
-      }
+  for (int i = 0; i < rt->objectCount; i++) {
+    if (aliasLegendContains(legendId, rt->objects[i].objId)) {
+      addToMove(rt, NONE, i, dir);
     }
   }
 }
@@ -740,8 +755,8 @@ void addState(Runtime * rt) {
   }
   rt->states[rt->statesCount].levelIndex = rt->levelIndex;
   rt->states[rt->statesCount].objectCount = rt->objectCount;
-  rt->states[rt->statesCount].objectCapacity = rt->objectCount;
-  rt->states[rt->statesCount].objects = malloc(sizeof(Obj) * rt->objectCount);
+  rt->states[rt->statesCount].objectCapacity = rt->objectCapacity;
+  rt->states[rt->statesCount].objects = malloc(sizeof(Obj) * rt->objectCapacity);
   memcpy(rt->states[rt->statesCount].objects, rt->objects, sizeof(Obj) * rt->objectCount);
 
   rt->statesCount++;
@@ -749,6 +764,7 @@ void addState(Runtime * rt) {
 
 
 void update(Runtime * rt, Direction dir) {
+  int startingPlayerLocation = playerLocation(rt);
   addHistory(rt, dir);
   addState(rt);
 
@@ -760,6 +776,7 @@ void update(Runtime * rt, Direction dir) {
 
   // TODO: remove deleted objects?
   if (rt->levelType == SQUARES) {
+
     // Eyeball seems to prove that rules run before and after marking the player as moving
     // this however doesn't seem to be documented. I assume it is correct.
     applyRules(rt, NORMAL);
@@ -771,9 +788,9 @@ void update(Runtime * rt, Direction dir) {
     applyRules(rt, NORMAL);
 
     // apply marked for move
-    int playerMoved = moveObjects(rt);
+    moveObjects(rt);
 
-    if (requirePlayerMovement() && playerMoved == 0) {
+    if (requirePlayerMovement() && (startingPlayerLocation == playerLocation(rt))) {
       undo(rt);
     }
 

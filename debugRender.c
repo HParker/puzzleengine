@@ -93,6 +93,6 @@ void closeRenderer() {
 
 char input() {
   char rawInput[100];
-  gets(rawInput);
+  fgets(rawInput, 100, stdin);
   return rawInput[0];
 }

@@ -379,14 +379,10 @@ state_part: objects_on_same_square {
 
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->matchStates[r->matchStateCount];
-    RuleStatePart * rsp = &rs->parts[rs->partCount];
-
     rs->partCount++;
   } else {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->resultStates[r->resultStateCount];
-    RuleStatePart * rsp = &rs->parts[rs->partCount];
-
     rs->partCount++;
   }
 }

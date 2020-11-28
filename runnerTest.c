@@ -1920,32 +1920,85 @@ START_TEST (test_runs_lime_rick)
 }
 END_TEST
 
+START_TEST (test_runs_not_snake)
+{
+  FILE *file;
+  file = fopen("./puzzles/not_snake.puzz", "r");
+  Runtime rt;
+  startGame(&rt, file);
+
+  int moves[] = {
+                 RIGHT,
+                 RIGHT,
+                 UP,
+                 UP,
+                 LEFT,
+                 DOWN,
+                 LEFT,
+                 UP,
+                 LEFT,
+                 DOWN,
+                 LEFT,
+                 UP,
+                 LEFT,
+                 DOWN,
+                 DOWN,
+                 DOWN,
+                 DOWN,
+                 RIGHT,
+                 UP,
+                 RIGHT,
+                 DOWN,
+                 RIGHT,
+                 UP,
+                 RIGHT,
+                 DOWN,
+                 RIGHT,
+                 UP,
+                 RIGHT,
+                 DOWN,
+                 RIGHT,
+                 UP,
+                 UP,
+                 UP,
+                 UP,
+                 LEFT,
+                 DOWN
+  };
+
+  test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
+  ck_assert_int_eq(1, rt.gameWon);
+}
+END_TEST
+
 Suite * puzzle_script_parser_suite(void)
 {
   Suite * s;
-  TCase * test_Parser;
+  TCase * test_Runner;
 
   s = suite_create("Runner");
 
-  test_Parser = tcase_create("Runner");
-  tcase_add_test(test_Parser, test_runs_stumper);
-  tcase_add_test(test_Parser, test_runs_basic);
-  tcase_add_test(test_Parser, test_runs_eyeball_walk);
-  tcase_add_test(test_Parser, test_runs_match3);
-  tcase_add_test(test_Parser, test_runs_block_faker);
-  tcase_add_test(test_Parser, test_runs_constellation_z);
-  tcase_add_test(test_Parser, test_runs_kettle);
-  tcase_add_test(test_Parser, test_runs_lime_rick);
-  tcase_add_test(test_Parser, test_runs_match3);
-  tcase_add_test(test_Parser, test_runs_micro_ban);
-  tcase_add_test(test_Parser, test_runs_neko_puzzle);
-  /* tcase_add_test(test_Parser, test_parses_not_snake); */
-  /* tcase_add_test(test_Parser, test_parses_octat); */
-  /* tcase_add_test(test_Parser, test_parses_random_robots); */
-  /* tcase_add_test(test_Parser, test_parses_random_robots_spawner); */
-  /* tcase_add_test(test_Parser, test_parses_zen_puzzle_garden); */
+  test_Runner = tcase_create("Runner");
+  tcase_set_timeout(test_Runner, 100);
 
-  suite_add_tcase(s, test_Parser);
+  tcase_add_test(test_Runner, test_runs_stumper);
+  tcase_add_test(test_Runner, test_runs_basic);
+  tcase_add_test(test_Runner, test_runs_eyeball_walk);
+  tcase_add_test(test_Runner, test_runs_match3);
+  tcase_add_test(test_Runner, test_runs_block_faker);
+  tcase_add_test(test_Runner, test_runs_constellation_z);
+  tcase_add_test(test_Runner, test_runs_kettle);
+  tcase_add_test(test_Runner, test_runs_lime_rick);
+  tcase_add_test(test_Runner, test_runs_match3);
+  tcase_add_test(test_Runner, test_runs_micro_ban);
+  tcase_add_test(test_Runner, test_runs_neko_puzzle);
+  tcase_add_test(test_Runner, test_runs_not_snake);
+  /* tcase_add_test(test_Runner, test_parses_octat); */
+  /* tcase_add_test(test_Runner, test_parses_random_robots); */
+  /* tcase_add_test(test_Runner, test_parses_random_robots_spawner); */
+  /* tcase_add_test(test_Runner, test_parses_zen_puzzle_garden); */
+
+  suite_add_tcase(s, test_Runner);
   return s;
 }
 
