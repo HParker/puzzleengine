@@ -272,6 +272,7 @@ typedef struct Runtime {
   int historyCount;
   int historyCapacity;
   Direction * history;
+  int * map;
   int statesCount;
   int statesCapacity;
   State * states;
@@ -316,7 +317,7 @@ extern char glyphLegendKey(int id);
 
 // layers
 extern int objectLayer(int objId);
-
+extern int layerCount();
 // level
 extern int levelHeight(int levelIndex);
 extern int levelWidth(int levelIndex);

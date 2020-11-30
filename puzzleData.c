@@ -34,7 +34,7 @@ void incGlyphLegend() {
 }
 
 void incLayer() {
-  if (pd.layerCount + 1 == pd.layerCapacity) {
+  if (pd.layerCount == pd.layerCapacity) {
     printf("layer REALLOC\n");
     pd.layerCapacity += 50;
     pd.layers = realloc(pd.layers, sizeof(Layer) * pd.layerCapacity);
@@ -43,7 +43,7 @@ void incLayer() {
 }
 
 void incRule() {
-  if (pd.ruleCount + 1 == pd.ruleCapacity) {
+  if (pd.ruleCount == pd.ruleCapacity) {
     printf("RULE REALLOC\n");
     pd.ruleCapacity += 50;
     pd.rules = realloc(pd.rules, sizeof(Rule) * pd.ruleCapacity);
@@ -52,7 +52,7 @@ void incRule() {
 }
 
 void incWinCondition() {
-  if (pd.winConditionCount + 1 == pd.winConditionCapacity) {
+  if (pd.winConditionCount == pd.winConditionCapacity) {
     printf("winCondition REALLOC\n");
     pd.winConditionCapacity += 50;
     pd.winConditions = realloc(pd.winConditions, sizeof(WinCondition) * pd.winConditionCapacity);
@@ -61,7 +61,7 @@ void incWinCondition() {
 }
 
 void incLevel() {
-  if (pd.levelCount + 1 == pd.levelCapacity) {
+  if (pd.levelCount == pd.levelCapacity) {
     printf("level REALLOC\n");
     pd.levelCapacity += 50;
     pd.levels = realloc(pd.levels, sizeof(Level) * pd.levelCapacity);
@@ -157,9 +157,9 @@ void initPuzzleData() {
   pd.winConditions = malloc(sizeof(WinCondition) * pd.winConditionCapacity);
 
   pd.levelCount = 0;
-  pd.levelCapacity = 100;
+  pd.levelCapacity = 1000;
   pd.levels = malloc(sizeof(Level) * pd.levelCapacity);
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < 1000; i++) {
     pd.levels[i].cellIndex = 0;
     pd.levels[i].height = 0;
     pd.levels[i].width = 0;
@@ -221,6 +221,10 @@ int legendIdForGlyph(char glyph) {
   }
   printf("err: no id found '%c'\n", glyph);
   return -1;
+}
+
+int layerCount() {
+  return pd.layerCount;
 }
 
 int aliasLegendObjectCount(int id) {
@@ -291,11 +295,21 @@ int objectLayer(int objId) {
 }
 
 int levelHeight(int levelIndex) {
-  return pd.levels[levelIndex].height;
+  if (levelIndex < pd.levelCount) {
+    return pd.levels[levelIndex].height;
+  } else {
+    printf("err: asked for level out of bounds\n");
+    return -1;
+  }
 }
 
 int levelWidth(int levelIndex) {
-  return pd.levels[levelIndex].width;
+  if (levelIndex < pd.levelCount) {
+    return pd.levels[levelIndex].width;
+  } else {
+    printf("err: asked for level out of bounds\n");
+    return -1;
+  }
 }
 
 int levelCellCount(int levelIndex) {

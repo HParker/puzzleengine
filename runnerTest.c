@@ -4,7 +4,9 @@
 
 void test_solution(Runtime * rt, int moveCount, int moves[]) {
   for (int i = 0; i < moveCount; i++) {
-    update(rt, moves[i]);
+    if (rt->gameWon == 0) {
+      update(rt, moves[i]);
+    }
   }
   if (rt->gameWon == 0) {
     printf("Game incomplete %i/%i\n", rt->levelIndex, rt->pd->levelCount);

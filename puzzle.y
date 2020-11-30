@@ -68,6 +68,7 @@ int objectId(char * name) {
 
 int spriteIndex = 0;
 int legendIsAlias = 0;
+int rowWidth = 0;
 %}
 
 %union {
@@ -492,14 +493,14 @@ message_level:  MESSAGE ID {
 rows: rows row | row { pd.levels[pd.levelCount].levelType = SQUARES; }
 row: cells LEVEL_EOL {
   pd.levels[pd.levelCount].height++;
-  if (pd.levels[pd.levelCount].width == 0) {
-    pd.levels[pd.levelCount].width = pd.levels[pd.levelCount].cellIndex;
-  }
+  pd.levels[pd.levelCount].width = rowWidth;
+  rowWidth = 0;
 }
 
-cells: cell cells | cell;
+cells: cell cells | cell
 
 cell: GLYPH {
+  rowWidth++;
   pd.levels[pd.levelCount].cells[pd.levels[pd.levelCount].cellIndex] = $1;
   pd.levels[pd.levelCount].cellIndex++;
 }
