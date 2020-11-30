@@ -1,3 +1,8 @@
+before (optimization commit):
+  make check  35.91s user 10.31s system 99% cpu 46.612 total
+after:
+  make check  15.82s user 10.28s system 99% cpu 26.289 total
+
 make BISON=/usr/local/opt/bison/bin/bison FLEX=/usr/local/opt/flex/bin/flex CC=/usr/local/Cellar/gcc/10.2.0/bin/gcc-10 && make check
 
 TODO:

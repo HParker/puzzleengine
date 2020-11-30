@@ -335,8 +335,6 @@ void updateMap(Runtime * rt) {
 }
 
 void applyMatch(Runtime * rt, Match * match) {
-  updateMap(rt);
-
   if (match->cancel == 1) {
     undo(rt);
     return;
@@ -684,6 +682,7 @@ int fastApplyState(Runtime * rt, int ruleId, int stateId, Match * match) {
 }
 
 int fastApplyRule(Runtime * rt, int ruleId, Match * match) {
+  updateMap(rt);
   int applied = 0;
 
   int stateCount = rule(ruleId)->matchStateCount;
@@ -716,7 +715,6 @@ int fastApplyRules(Runtime * rt, ExecutionTime execTime) {
         applied = fastApplyRule(rt, ruleIndex, &match);
         if (applied && (match.partCount > 0 || match.cancel)) {
           applyMatch(rt, &match);
-          updateMap(rt);
         } else {
           applied = 0;
         }
@@ -760,7 +758,6 @@ int moveObjects(Runtime * rt) {
     }
   }
   rt->toMoveCount = 0;
-  updateMap(rt);
   return playerMoved;
 }
 
@@ -866,7 +863,6 @@ void update(Runtime * rt, Direction dir) {
 
   // TODO: remove deleted objects?
   if (rt->levelType == SQUARES) {
-    updateMap(rt);
     // Eyeball seems to prove that rules run before and after marking the player as moving
     // this however doesn't seem to be documented. I assume it is correct.
     fastApplyRules(rt, NORMAL);
