@@ -110,6 +110,9 @@ void initPuzzleData() {
   for (int i = 0; i < 1000; i++) {
     pd.aliasLegend[i].objectCount = 0;
     pd.aliasLegend[i].objectRelation = LEGEND_RELATION_UNKNOWN;
+    for (int j = 0; j < 100; j++) {
+      pd.aliasLegend[i].objects[j].id = -1;
+    }
   }
 
   pd.glyphLegendCount = 0;

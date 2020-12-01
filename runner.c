@@ -461,7 +461,7 @@ int alreadyResult(Runtime * rt, RuleStatePart * part, int anyDistance, Direction
   return 1;
 }
 
-int fastPartIdentity(Runtime * rt, int ruleId, int stateId, int partId, int identId, Direction appDir, int x, int y, Match * match) {
+int partIdentity(Runtime * rt, int ruleId, int stateId, int partId, int identId, Direction appDir, int x, int y, Match * match) {
   int objIndex = -1;
   int matched = 0;
   Direction dir = rule(ruleId)->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
@@ -528,13 +528,13 @@ int fastPartIdentity(Runtime * rt, int ruleId, int stateId, int partId, int iden
 }
 
 // TODO: remove part from this name
-int fastPartIdentitys(Runtime * rt, int ruleId, int stateId, int partId, Direction appDir, int x, int y, Match * match) {
+int partIdentitys(Runtime * rt, int ruleId, int stateId, int partId, Direction appDir, int x, int y, Match * match) {
   int prevMatchCount = match->partCount;
   int success = 0;
 
   int count = rule(ruleId)->matchStates[stateId].parts[partId].ruleIdentityCount;
   for (int i = 0; i < count; i++) {
-    success = fastPartIdentity(rt, ruleId, stateId, partId, i, appDir, x, y, match);
+    success = partIdentity(rt, ruleId, stateId, partId, i, appDir, x, y, match);
     if (success == 0) {
       match->partCount = prevMatchCount;
       return 0;
@@ -543,7 +543,7 @@ int fastPartIdentitys(Runtime * rt, int ruleId, int stateId, int partId, Directi
   return 1;
 }
 
-int fastIdentitysAtDistance(Runtime * rt, int ruleId, int stateId, int partId, Direction appDir, int distance, int x, int y, Match * match) {
+int identitysAtDistance(Runtime * rt, int ruleId, int stateId, int partId, Direction appDir, int distance, int x, int y, Match * match) {
   int dist = distance;
   int currentX = x + (dist * deltaX(appDir));
   int currentY = y + (dist * deltaY(appDir));
@@ -555,7 +555,7 @@ int fastIdentitysAtDistance(Runtime * rt, int ruleId, int stateId, int partId, D
     currentY = y + (dist * deltaY(appDir));
     if (onBoard(rt, currentX, currentY)) {
       /* printf("trying dist at (%i, %i)\n", currentX, currentY); */
-      if (fastPartIdentitys(rt, ruleId, stateId, partId, appDir, currentX, currentY, match)) {
+      if (partIdentitys(rt, ruleId, stateId, partId, appDir, currentX, currentY, match)) {
         return dist;
       }
       dist++;
@@ -564,7 +564,7 @@ int fastIdentitysAtDistance(Runtime * rt, int ruleId, int stateId, int partId, D
   return -1;
 }
 
-int fastCompleteMatch(Runtime * rt, int ruleId, int stateId, Direction appDir, int x, int y, Match * match) {
+int completeMatch(Runtime * rt, int ruleId, int stateId, Direction appDir, int x, int y, Match * match) {
   int prevPartCount = match->partCount;
   int anyDistance = 0;
   int distance = 0;
@@ -588,7 +588,7 @@ int fastCompleteMatch(Runtime * rt, int ruleId, int stateId, Direction appDir, i
       success = 1;
     } else {
       if (anyDistance == 1) {
-        dist = fastIdentitysAtDistance(rt, ruleId, stateId, i, appDir, distance, x, y, match);
+        dist = identitysAtDistance(rt, ruleId, stateId, i, appDir, distance, x, y, match);
         if (dist != -1) {
           distance = dist;
           success = 1;
@@ -598,7 +598,7 @@ int fastCompleteMatch(Runtime * rt, int ruleId, int stateId, Direction appDir, i
           anyDistance = 0;
         }
       } else {
-        if (fastPartIdentitys(rt, ruleId, stateId, i, appDir, currentX, currentY, match)) {
+        if (partIdentitys(rt, ruleId, stateId, i, appDir, currentX, currentY, match)) {
           success = 1;
           anyDistance = 0; // TODO: not needed
         }
@@ -615,29 +615,29 @@ int fastCompleteMatch(Runtime * rt, int ruleId, int stateId, Direction appDir, i
   return 1;
 }
 
-int fastContinueMatch(Runtime * rt, int ruleId, int stateId, int x, int y, Match * match) {
+int continueMatch(Runtime * rt, int ruleId, int stateId, int x, int y, Match * match) {
   Direction dirConstant = rule(ruleId)->directionConstraint;
 
   if (dirConstant == RIGHT || dirConstant == HORIZONTAL || dirConstant == NONE) {
-    if (fastCompleteMatch(rt, ruleId, stateId, RIGHT, x, y, match)) {
+    if (completeMatch(rt, ruleId, stateId, RIGHT, x, y, match)) {
       return 1;
     }
   }
 
   if (dirConstant == UP || dirConstant == VERTICAL || dirConstant == NONE) {
-    if (fastCompleteMatch(rt, ruleId, stateId, UP, x, y, match)) {
+    if (completeMatch(rt, ruleId, stateId, UP, x, y, match)) {
       return 1;
     }
   }
 
   if (dirConstant == LEFT || dirConstant == HORIZONTAL || dirConstant == NONE) {
-    if (fastCompleteMatch(rt, ruleId, stateId, LEFT, x, y, match)) {
+    if (completeMatch(rt, ruleId, stateId, LEFT, x, y, match)) {
       return 1;
     }
   }
 
   if (dirConstant == DOWN || dirConstant == VERTICAL || dirConstant == NONE) {
-    if (fastCompleteMatch(rt, ruleId, stateId, DOWN, x, y, match)) {
+    if (completeMatch(rt, ruleId, stateId, DOWN, x, y, match)) {
       return 1;
     }
   }
@@ -649,22 +649,24 @@ int cellMatch(Runtime * rt, int ruleId, int stateId, int x, int y, Match * match
   int legId, legAt;
   Direction dir;
 
-  legId = rule(ruleId)->matchStates[stateId].parts[0].ruleIdentity[0].legendId;
-  dir = rule(ruleId)->matchStates[stateId].parts[0].ruleIdentity[0].direction;
+  if (rule(ruleId)->matchStates[stateId].partCount > 0 && rule(ruleId)->matchStates[stateId].parts[0].ruleIdentityCount > 0 ) {
+    legId = rule(ruleId)->matchStates[stateId].parts[0].ruleIdentity[0].legendId;
+    dir = rule(ruleId)->matchStates[stateId].parts[0].ruleIdentity[0].direction;
 
-  legAt = legendAt(rt, legId, x, y);
-  if ((dir == COND_NO && legAt == 0) || (dir != COND_NO && legAt)) {
-    if (fastContinueMatch(rt, ruleId, stateId, x, y, match)) {
-      return 1;
-    } else {
-      match->partCount = prevMatchCount;
-      return 0;
+    legAt = legendAt(rt, legId, x, y);
+    if ((dir == COND_NO && legAt == 0) || (dir != COND_NO && legAt)) {
+      if (continueMatch(rt, ruleId, stateId, x, y, match)) {
+        return 1;
+      } else {
+        match->partCount = prevMatchCount;
+        return 0;
+      }
     }
   }
   return 0;
 }
 
-int fastApplyState(Runtime * rt, int ruleId, int stateId, Match * match) {
+int applyState(Runtime * rt, int ruleId, int stateId, Match * match) {
   int applied, x, y;
   int matchedOne = 0;
 
@@ -681,13 +683,13 @@ int fastApplyState(Runtime * rt, int ruleId, int stateId, Match * match) {
   return matchedOne;
 }
 
-int fastApplyRule(Runtime * rt, int ruleId, Match * match) {
+int applyRule(Runtime * rt, int ruleId, Match * match) {
   updateMap(rt);
   int applied = 0;
 
   int stateCount = rule(ruleId)->matchStateCount;
   for (int i = 0; i < stateCount; i++) {
-    applied = fastApplyState(rt, ruleId, i, match);
+    applied = applyState(rt, ruleId, i, match);
     if (applied == 0) {
       return 0;
     }
@@ -695,7 +697,7 @@ int fastApplyRule(Runtime * rt, int ruleId, Match * match) {
   return 1;
 }
 
-int fastApplyRules(Runtime * rt, ExecutionTime execTime) {
+int applyRules(Runtime * rt, ExecutionTime execTime) {
   int applied = 1;
   int maxAttempts = 100;
   int attempts = 0;
@@ -712,7 +714,7 @@ int fastApplyRules(Runtime * rt, ExecutionTime execTime) {
       applied = 0;
       match.partCount = 0;
       if (ruleApplies(rt, ruleIndex, execTime)) {
-        applied = fastApplyRule(rt, ruleIndex, &match);
+        applied = applyRule(rt, ruleIndex, &match);
         if (applied && (match.partCount > 0 || match.cancel)) {
           applyMatch(rt, &match);
         } else {
@@ -865,13 +867,13 @@ void update(Runtime * rt, Direction dir) {
   if (rt->levelType == SQUARES) {
     // Eyeball seems to prove that rules run before and after marking the player as moving
     // this however doesn't seem to be documented. I assume it is correct.
-    fastApplyRules(rt, NORMAL);
+    applyRules(rt, NORMAL);
 
     // mark player for moving
     markPlayerAsMoving(rt, dir);
 
     // apply rules
-    fastApplyRules(rt, NORMAL);
+    applyRules(rt, NORMAL);
 
     // apply marked for move
     moveObjects(rt);
@@ -883,7 +885,7 @@ void update(Runtime * rt, Direction dir) {
     rt->toMoveCount = 0; // TODO: this probably can be in the undo
 
     // apply late rules
-    fastApplyRules(rt, LATE);
+    applyRules(rt, LATE);
     updateLevel(rt);
   } else {
     if (dir == USE) {
