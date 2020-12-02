@@ -7,16 +7,21 @@
 #include "parser.h"
 
 void incObject() {
-  if (pd.objectCount == pd.objectCapacity) {
+  if (pd.objectCount + 1 == pd.objectCapacity) {
     printf("object REALLOC\n");
     pd.objectCapacity += 50;
     pd.objects = realloc(pd.objects, sizeof(Object) * pd.objectCapacity);
+    for (int i = pd.objectCount + 1; i < pd.objectCapacity; i++) {
+      pd.objects[i].colorCount = 0;
+      pd.objects[i].height = 0;
+      pd.objects[i].width = 0;
+    }
   }
   pd.objectCount++;
 }
 
 void incAliasLegend() {
-  if (pd.aliasLegendCount == pd.aliasLegendCapacity) {
+  if (pd.aliasLegendCount + 1 == pd.aliasLegendCapacity) {
     printf("aliasLegend REALLOC\n");
     pd.aliasLegendCapacity += 50;
     pd.aliasLegend = realloc(pd.aliasLegend, sizeof(Legend) * pd.aliasLegendCapacity);
@@ -25,25 +30,33 @@ void incAliasLegend() {
 }
 
 void incGlyphLegend() {
-  if (pd.glyphLegendCount == pd.glyphLegendCapacity) {
+  if (pd.glyphLegendCount + 1 == pd.glyphLegendCapacity) {
     printf("glyphLegend REALLOC\n");
     pd.glyphLegendCapacity += 50;
     pd.glyphLegend = realloc(pd.glyphLegend, sizeof(Legend) * pd.glyphLegendCapacity);
+
+    for (int i = pd.glyphLegendCount + 1; i < pd.glyphLegendCapacity; i++) {
+      pd.glyphLegend[i].objectCount = 0;
+      pd.glyphLegend[i].objectRelation = LEGEND_RELATION_UNKNOWN;
+    }
   }
   pd.glyphLegendCount++;
 }
 
 void incLayer() {
-  if (pd.layerCount == pd.layerCapacity) {
+  if (pd.layerCount + 1 == pd.layerCapacity) {
     printf("layer REALLOC\n");
     pd.layerCapacity += 50;
     pd.layers = realloc(pd.layers, sizeof(Layer) * pd.layerCapacity);
+    for (int i = pd.layerCount + 1; i < pd.layerCapacity; i++) {
+      pd.layers[i].width = 0;
+    }
   }
   pd.layerCount++;
 }
 
 void incRule() {
-  if (pd.ruleCount == pd.ruleCapacity) {
+  if (pd.ruleCount + 1 == pd.ruleCapacity) {
     printf("RULE REALLOC\n");
     pd.ruleCapacity += 50;
     pd.rules = realloc(pd.rules, sizeof(Rule) * pd.ruleCapacity);
@@ -52,7 +65,7 @@ void incRule() {
 }
 
 void incWinCondition() {
-  if (pd.winConditionCount == pd.winConditionCapacity) {
+  if (pd.winConditionCount + 1 == pd.winConditionCapacity) {
     printf("winCondition REALLOC\n");
     pd.winConditionCapacity += 50;
     pd.winConditions = realloc(pd.winConditions, sizeof(WinCondition) * pd.winConditionCapacity);
@@ -61,10 +74,15 @@ void incWinCondition() {
 }
 
 void incLevel() {
-  if (pd.levelCount == pd.levelCapacity) {
+  if (pd.levelCount + 1 == pd.levelCapacity) {
     printf("level REALLOC\n");
     pd.levelCapacity += 50;
     pd.levels = realloc(pd.levels, sizeof(Level) * pd.levelCapacity);
+    for (int i = pd.levelCount + 1; i < pd.levelCapacity; i++) {
+      pd.levels[i].cellIndex = 0;
+      pd.levels[i].height = 0;
+      pd.levels[i].width = 0;
+    }
   }
   pd.levelCount++;
 }
@@ -96,9 +114,9 @@ void initPuzzleData() {
   pd.runRulesOnLevelStart = 0;
 
   pd.objectCount = 0;
-  pd.objectCapacity = 1000;
+  pd.objectCapacity = 100;
   pd.objects = malloc(sizeof(Object) * pd.objectCapacity);
-  for (int i = 0; i < 1000; i++) {
+  for (int i = 0; i < pd.objectCapacity; i++) {
     pd.objects[i].colorCount = 0;
     pd.objects[i].height = 0;
     pd.objects[i].width = 0;
@@ -107,7 +125,7 @@ void initPuzzleData() {
   pd.aliasLegendCount = 0;
   pd.aliasLegendCapacity = 1000;
   pd.aliasLegend = malloc(sizeof(Legend) * pd.aliasLegendCapacity);
-  for (int i = 0; i < 1000; i++) {
+  for (int i = 0; i < pd.aliasLegendCapacity; i++) {
     pd.aliasLegend[i].objectCount = 0;
     pd.aliasLegend[i].objectRelation = LEGEND_RELATION_UNKNOWN;
     for (int j = 0; j < 100; j++) {
@@ -116,9 +134,9 @@ void initPuzzleData() {
   }
 
   pd.glyphLegendCount = 0;
-  pd.glyphLegendCapacity = 1000;
+  pd.glyphLegendCapacity = 100;
   pd.glyphLegend = malloc(sizeof(Legend) * pd.glyphLegendCapacity);
-  for (int i = 0; i < 1000; i++) {
+  for (int i = 0; i < pd.glyphLegendCapacity; i++) {
     pd.glyphLegend[i].objectCount = 0;
     pd.glyphLegend[i].objectRelation = LEGEND_RELATION_UNKNOWN;
   }
@@ -127,14 +145,14 @@ void initPuzzleData() {
   pd.layerCount = 0;
   pd.layerCapacity = 100;
   pd.layers = malloc(sizeof(Layer) * pd.layerCapacity);
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < pd.layerCapacity; i++) {
     pd.layers[i].width = 0;
   }
 
   pd.ruleCount = 0;
   pd.ruleCapacity = 100;
   pd.rules = malloc(sizeof(Rule) * pd.ruleCapacity);
-  for (int i = 0; i < 100; i++) {
+  for (int i = 0; i < pd.ruleCapacity; i++) {
     pd.rules[i].cancel = 0;
     pd.rules[i].matchStateCount = 0;
     pd.rules[i].resultStateCount = 0;
@@ -162,12 +180,11 @@ void initPuzzleData() {
   pd.levelCount = 0;
   pd.levelCapacity = 1000;
   pd.levels = malloc(sizeof(Level) * pd.levelCapacity);
-  for (int i = 0; i < 1000; i++) {
+  for (int i = 0; i < pd.levelCapacity; i++) {
     pd.levels[i].cellIndex = 0;
     pd.levels[i].height = 0;
     pd.levels[i].width = 0;
   }
-
 
   initStarterObjects();
 }
@@ -178,6 +195,15 @@ PuzzleData * parsePuzzle(FILE * file) {
   yyparse();
 
   return &pd;
+}
+
+void freePuzzle() {
+  free(pd.objects);
+  free(pd.aliasLegend);
+  free(pd.glyphLegend);
+  free(pd.layers);
+  free(pd.rules);
+  free(pd.winConditions);
 }
 
 int debug() {
@@ -281,7 +307,7 @@ int idForGlyph(char glyph) {
 }
 
 int objectLayer(int objId) {
-  if (aliasLegendContains(aliasLegendId("_Empty_"), objId)) {
+  if (aliasLegendContains(aliasLegendId("_Empty_"), objId) || objId == -1) {
     // TODO: we should catch this earlier
     return -1;
   }

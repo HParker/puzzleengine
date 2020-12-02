@@ -18,6 +18,9 @@ int aliasLegendId(char * name) {
         }
     }
     printf("err: '%s' which does not exist in alias legend\n", name);
+    for (int i = 0; i < pd.aliasLegendCount; i++) {
+      printf("wasn't key: '%s'\n", pd.aliasLegend[i].key);
+    }
     return -1;
 }
 
@@ -139,22 +142,22 @@ preamble_option: title
                | require_player_movement
 
 title: TITLE ID {
-  pd.title = strdup($2);
+  pd.title = $2;
 }
 author: AUTHOR ID {
-  pd.author = strdup($2);
+  pd.author = $2;
 }
 homepage: HOMEPAGE ID {
-  pd.homepage = strdup($2);
+  pd.homepage = $2;
 }
 
 require_player_movement: REQUIRE_PLAYER_MOVEMENT { pd.requirePlayerMovement = 1; }
 
-color_palette: COLOR_PALETTE ID { pd.colorPalette = strdup($2); }
+color_palette: COLOR_PALETTE ID { pd.colorPalette = $2; }
         ;
 again_interval: AGAIN_INTERVAL ID { pd.againInterval = 0.1f; }
         ;
-background_color: BACKGROUND_COLOR ID { pd.backgroundColor = strdup($2); }
+background_color: BACKGROUND_COLOR ID { pd.backgroundColor = $2; }
 
         ;
 flickscreen: FLICKSCREEN ID { yyerror("FLICKSCREEN IS NOT YET SUPPORTED\n"); }
@@ -173,7 +176,7 @@ norestart: NORESTART { pd.noRestart = 1; }
         ;
 scanline: SCANLINE { pd.scanLine = 1; }
         ;
-text_color: TEXT_COLOR ID { pd.textColor = strdup($2); }
+text_color: TEXT_COLOR ID { pd.textColor = $2; }
         ;
 throttle_movement: THROTTLE_MOVEMENT ID { pd.throttleMovement = 1; }
 
@@ -200,9 +203,9 @@ object_definition: object_name colors sprite { incObject(); }
 }
 
 object_name: OBJID GLYPH {
-                 pd.objects[pd.objectCount].name = strdup($1);
+                 pd.objects[pd.objectCount].name = $1;
 
-                 pd.aliasLegend[pd.aliasLegendCount].key = strdup($1);
+                 pd.aliasLegend[pd.aliasLegendCount].key = $1;
                  pd.aliasLegend[pd.aliasLegendCount].objects[0].id = pd.objectCount;
                  pd.aliasLegend[pd.aliasLegendCount].objectCount++;
                  incAliasLegend();
@@ -214,9 +217,9 @@ object_name: OBJID GLYPH {
                  incGlyphLegend();
 }
            | OBJID {
-               pd.objects[pd.objectCount].name = strdup($1);
+               pd.objects[pd.objectCount].name = $1;
 
-               pd.aliasLegend[pd.aliasLegendCount].key = strdup($1);
+               pd.aliasLegend[pd.aliasLegendCount].key = $1;
                pd.aliasLegend[pd.aliasLegendCount].objects[0].id = pd.objectCount;
                pd.aliasLegend[pd.aliasLegendCount].objectCount++;
                incAliasLegend();
@@ -225,7 +228,7 @@ object_name: OBJID GLYPH {
 colors: color colors | color
 
 color: COLOR {
-  pd.objects[pd.objectCount].colors[pd.objects[pd.objectCount].colorCount] = strdup($1);
+  pd.objects[pd.objectCount].colors[pd.objects[pd.objectCount].colorCount] = $1;
   pd.objects[pd.objectCount].colorCount++;
 }
 
@@ -261,7 +264,7 @@ legend_line: legend_id EQUALS legend_values end_legend_line {
 
 legend_id: LEGEND_ID {
   legendIsAlias = 1;
-  pd.aliasLegend[pd.aliasLegendCount].key = strdup($1);
+  pd.aliasLegend[pd.aliasLegendCount].key = $1;
 }
 
 legend_glyph: LEGEND_GLYPH {
@@ -280,6 +283,7 @@ legend_value: LEGEND_VALUE {
   } else {
     addObjectsToGlyphLegend($1);
   }
+  free($1);
 }
 
 legend_joiner: LEGEND_AND {
@@ -309,6 +313,7 @@ layer_objects: layer_object layer_objects
 
 layer_object: LAYER_NAME {
   addObjectsToLayer($1);
+  free($1);
 }
 
 rules: rule_line  rules
@@ -353,8 +358,10 @@ rule_prefix:    EXECUTION_TIME {
 rule_postfix: RULE_POSTFIX {
                   if (strcasecmp("cancel", $1) == 0) {
                       pd.rules[pd.ruleCount].cancel = 1;
+                      free($1);
                   } else {
                       /* printf("commands don't all work yet '%s'\n", $1); */
+                      free($1);
                   }
 }
             | MESSAGE ID {
@@ -420,6 +427,7 @@ object_part: OBJID {
 
     rid->direction = NONE;
     rid->legendId = aliasLegendId($1);
+    free($1);
     rsp->ruleIdentityCount++;
   } else {
     Rule * r = &pd.rules[pd.ruleCount];
@@ -429,6 +437,7 @@ object_part: OBJID {
 
     rid->direction = NONE;
     rid->legendId = aliasLegendId($1);
+    free($1);
     rsp->ruleIdentityCount++;
   }
 }
@@ -441,6 +450,7 @@ object_part: OBJID {
 
     rid->direction = $1;
     rid->legendId = aliasLegendId($2);
+    free($2);
     rsp->ruleIdentityCount++;
   } else {
     Rule * r = &pd.rules[pd.ruleCount];
@@ -450,6 +460,7 @@ object_part: OBJID {
 
     rid->direction = $1;
     rid->legendId = aliasLegendId($2);
+    free($2);
     rsp->ruleIdentityCount++;
   }
 }
@@ -463,7 +474,9 @@ wincondition_conditional: LOGIC_WORD OBJID LOGIC_ON OBJID {
   pd.winConditions[pd.winConditionCount].hasOnQualifier = 1;
   pd.winConditions[pd.winConditionCount].winQualifier = $1;
   pd.winConditions[pd.winConditionCount].winIdentifier = aliasLegendId($2);
+  free($2);
   pd.winConditions[pd.winConditionCount].onIndentifier = aliasLegendId($4);
+  free($4);
   incWinCondition();
 }
 
@@ -471,6 +484,7 @@ wincondition_unconditional: LOGIC_WORD OBJID {
   pd.winConditions[pd.winConditionCount].hasOnQualifier = 0;
   pd.winConditions[pd.winConditionCount].winQualifier = $1;
   pd.winConditions[pd.winConditionCount].winIdentifier = aliasLegendId($2);
+  free($2);
   incWinCondition();
 }
 
@@ -487,7 +501,7 @@ a_level:        message_level
 
 message_level:  MESSAGE ID {
   pd.levels[pd.levelCount].levelType = MESSAGE_TEXT;
-  pd.levels[pd.levelCount].message = strdup($2);
+  pd.levels[pd.levelCount].message = $2;
 }
 
 rows: rows row | row { pd.levels[pd.levelCount].levelType = SQUARES; }

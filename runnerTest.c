@@ -6,11 +6,13 @@ void test_solution(Runtime * rt, int moveCount, int moves[]) {
   for (int i = 0; i < moveCount; i++) {
     if (rt->gameWon == 0) {
       update(rt, moves[i]);
+      printf(".");
     }
   }
-  if (rt->gameWon == 0) {
-    printf("Game incomplete %i/%i\n", rt->levelIndex, rt->pd->levelCount);
-  }
+  /* if (rt->gameWon == 0) { */
+  /*   printf("Game incomplete %i/%i\n", rt->levelIndex, rt->pd->levelCount); */
+  /* } */
+  printf("\n");
 }
 
 START_TEST (test_runs_stumper)
@@ -41,7 +43,9 @@ START_TEST (test_runs_stumper)
   };
 
   test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
+
   ck_assert_int_eq(1, rt.gameWon);
+  endGame(&rt);
 }
 END_TEST
 
@@ -104,7 +108,9 @@ START_TEST (test_runs_basic)
                  RIGHT
   };
   test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
+
   ck_assert_int_eq(1, rt.gameWon);
+  endGame(&rt);
 }
 END_TEST
 
@@ -137,7 +143,9 @@ START_TEST (test_runs_eyeball_walk)
                  LEFT
   };
   test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
+
   ck_assert_int_eq(1, rt.gameWon);
+  endGame(&rt);
 }
 END_TEST
 
@@ -361,7 +369,9 @@ START_TEST (test_runs_block_faker)
                  USE
   };
   test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
+
   ck_assert_int_eq(1, rt.gameWon);
+  endGame(&rt);
 }
 END_TEST
 
@@ -464,7 +474,9 @@ START_TEST (test_runs_kettle)
   };
 
   test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
+
   ck_assert_int_eq(1, rt.gameWon);
+  endGame(&rt);
 }
 END_TEST
 
@@ -677,7 +689,9 @@ START_TEST (test_runs_constellation_z)
   };
 
   test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
+
   ck_assert_int_eq(10, rt.levelIndex);
+  endGame(&rt);
 }
 END_TEST
 
@@ -1388,7 +1402,9 @@ START_TEST (test_runs_micro_ban)
   };
 
   test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
+
   ck_assert_int_eq(1, rt.gameWon);
+  endGame(&rt);
 }
 END_TEST
 
@@ -1441,7 +1457,9 @@ START_TEST (test_runs_match3)
   };
 
   test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
+
   ck_assert_int_eq(1, rt.gameWon);
+  endGame(&rt);
 }
 END_TEST
 
@@ -1533,7 +1551,9 @@ START_TEST (test_runs_neko_puzzle)
   };
 
   test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
+
   ck_assert_int_eq(1, rt.gameWon);
+  endGame(&rt);
 }
 END_TEST
 
@@ -1918,7 +1938,9 @@ START_TEST (test_runs_lime_rick)
   };
 
   test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
+
   ck_assert_int_eq(1, rt.gameWon);
+  endGame(&rt);
 }
 END_TEST
 
@@ -1969,7 +1991,9 @@ START_TEST (test_runs_not_snake)
   };
 
   test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
+
   ck_assert_int_eq(1, rt.gameWon);
+  endGame(&rt);
 }
 END_TEST
 

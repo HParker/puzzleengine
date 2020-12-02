@@ -18,7 +18,7 @@ int legendAt(Runtime * rt, int legendId, int x, int y) {
     int cellIndex;
     for (int i = 0; i < layerCount(); i++) {
       cellIndex = (i * rt->width * rt->height) + (y * rt->width) + x;
-      if (aliasLegendContains(legendId, rt->objects[rt->map[cellIndex]].objId)) {
+      if (rt->map[cellIndex] != -1 && aliasLegendContains(legendId, rt->objects[rt->map[cellIndex]].objId)) {
         return 1;
       }
     }
@@ -33,7 +33,7 @@ int legendObjIndex(Runtime * rt, int legendId, int x, int y) {
   for (int i = 0; i < layerCount(); i++) {
     cellIndex = (i * rt->width * rt->height) + (y * rt->width) + x;
 
-    if (aliasLegendContains(legendId, rt->objects[rt->map[cellIndex]].objId)) {
+    if (rt->map[cellIndex] != -1 && aliasLegendContains(legendId, rt->objects[rt->map[cellIndex]].objId)) {
       return rt->map[cellIndex];
     }
   }
@@ -116,12 +116,6 @@ int matchesDirection(Direction ruleDir, Direction applicationDir, Direction dir)
 }
 
 void addToMove(Runtime * rt, Direction applicationDirection, int objIndex, Direction direction) {
-  if (rt->toMoveCount == rt->toMoveCapacity) {
-    rt->toMoveCapacity += 50;
-    printf("tomove realloc\n");
-    rt->toMove = realloc(rt->toMove, sizeof(ToMove) * rt->toMoveCapacity);
-  }
-
   for (int i = 0; i < rt->toMoveCount; i++) {
     if (rt->toMove[i].objIndex == objIndex) {
       rt->toMove[i].direction = direction;
@@ -129,25 +123,42 @@ void addToMove(Runtime * rt, Direction applicationDirection, int objIndex, Direc
     }
   }
 
-  rt->toMove[rt->toMoveCount].objIndex = objIndex;
-  // TODO: having this absolute dir here seems wrong, we should already convert it before trying to do the move.
-  /* Direction absoluteDir = absoluteDirection(applicationDirection, direction); */
-  rt->toMove[rt->toMoveCount].direction = direction;
-  rt->toMoveCount++;
+  if (rt->toMoveCount < rt->toMoveCapacity) {
+    rt->toMove[rt->toMoveCount].objIndex = objIndex;
+    rt->toMove[rt->toMoveCount].direction = direction;
+    rt->toMoveCount++;
+  } else {
+    rt->toMoveCapacity += 50;
+    printf("tomove realloc\n");
+    rt->toMove = realloc(rt->toMove, sizeof(ToMove) * rt->toMoveCapacity);
+
+    rt->toMove[rt->toMoveCount].objIndex = objIndex;
+    rt->toMove[rt->toMoveCount].direction = direction;
+    rt->toMoveCount++;
+  }
+
+  /* printf("adding toMove index: %i, objIndex: %i\n", rt->toMoveCount, objIndex); */
+
 }
 
 void addObj(Runtime * rt, int objId, int x, int y) {
-  if (rt->objectCount == rt->objectCapacity) {
-    printf("object realloc\n");
+  if (rt->objectCount < rt->objectCapacity) {
+    rt->objects[rt->objectCount].objId = objId;
+    rt->objects[rt->objectCount].x = x;
+    rt->objects[rt->objectCount].y = y;
+    rt->objects[rt->objectCount].deleted = 0;
+    rt->objectCount++;
+  } else {
+    printf("object realloc capacity %i -> %i\n", rt->objectCapacity, rt->objectCapacity + 50);
     rt->objectCapacity += 50;
-    rt->objects = realloc(rt->objects, sizeof(Direction) * rt->objectCapacity);
-  }
+    rt->objects = realloc(rt->objects, sizeof(Obj) * rt->objectCapacity);
 
-  rt->objects[rt->objectCount].objId = objId;
-  rt->objects[rt->objectCount].x = x;
-  rt->objects[rt->objectCount].y = y;
-  rt->objects[rt->objectCount].deleted = 0;
-  rt->objectCount++;
+    rt->objects[rt->objectCount].objId = objId;
+    rt->objects[rt->objectCount].x = x;
+    rt->objects[rt->objectCount].y = y;
+    rt->objects[rt->objectCount].deleted = 0;
+    rt->objectCount++;
+  }
 }
 
 void loadCell(Runtime * rt, char cell, int x, int y) {
@@ -156,7 +167,7 @@ void loadCell(Runtime * rt, char cell, int x, int y) {
   int backgroundId = aliasLegendObjectId(aliasLegendId("Background"), 0);
   for (int i = 0; i < count; i++) {
     int objId = glyphLegendObjectId(id, i);
-    if (backgroundId != objId) {
+    if (backgroundId != objId && objId != -1) {
       addObj(rt, objId, x, y);
     }
   }
@@ -209,17 +220,15 @@ void updateLevel(Runtime * rt) {
 void initGame(Runtime * rt) {
   rt->levelIndex = 0;
   rt->gameWon = 0;
-  rt->toMoveCount = 0;
-  rt->historyCount = 0;
   rt->prevHistoryCount = 0;
 
   rt->objectCount = 0;
-  rt->objectCapacity = 10000;
+  rt->objectCapacity = 1;
   rt->objects = malloc(sizeof(Obj) * rt->objectCapacity);
 
   rt->toMoveCount = 0;
-  rt->toMoveCapacity = 100;
-  rt->toMove = malloc(sizeof(ToMove) * rt->objectCapacity);
+  rt->toMoveCapacity = 1000;
+  rt->toMove = malloc(sizeof(ToMove) * rt->toMoveCapacity);
 
   rt->historyCount = 0;
   rt->historyCapacity = 1000;
@@ -229,7 +238,7 @@ void initGame(Runtime * rt) {
   rt->statesCapacity = 1000;
   rt->states = malloc(sizeof(State) * rt->statesCapacity);
 
-  rt->map = malloc(sizeof(int));
+  rt->map = malloc(1);
 }
 
 void startGame(Runtime * rt, FILE * file) {
@@ -238,22 +247,41 @@ void startGame(Runtime * rt, FILE * file) {
   loadLevel(rt);
 }
 
-void undo(Runtime * rt) {
-  rt->historyCount--;
-  rt->statesCount--;
-  rt->levelIndex = rt->states[rt->statesCount].levelIndex;
+void endGame(Runtime * rt) {
+  free(rt->objects);
+  free(rt->toMove);
+  free(rt->history);
+
+  for (int i = 0; i < rt->statesCount; i++) {
+    free(rt->states[i].objects);
+  }
+  free(rt->states);
+
+  free(rt->map);
+  freePuzzle();
+}
+
+
+void undo(Runtime * rt, int partial) {
+  rt->toMoveCount = 0;
+  if (partial == 0) {
+    free(rt->states[rt->statesCount].objects);
+  }
+
+  rt->objectCount = rt->states[rt->statesCount - 1].objectCount;
+  rt->objectCapacity = rt->states[rt->statesCount - 1].objectCapacity;
+  rt->objects = realloc(rt->objects, sizeof(Obj) * rt->states[rt->statesCount - 1].objectCapacity);
+
+  rt->levelIndex = rt->states[rt->statesCount - 1].levelIndex;
   rt->levelType = levelType(rt->levelIndex);
   rt->height = levelHeight(rt->levelIndex);
   rt->width = levelWidth(rt->levelIndex);
-  rt->toMoveCount = 0;
 
-  rt->objectCount = rt->states[rt->statesCount].objectCount;
-  if (rt->objectCapacity < rt->states[rt->statesCount].objectCapacity) {
-    printf("states rewind realloc\n");
-    rt->statesCapacity = rt->states[rt->statesCount].objectCapacity;
-    rt->states = realloc(rt->states, sizeof(State) * rt->statesCapacity);
-  }
-  memcpy(rt->objects, rt->states[rt->statesCount].objects, sizeof(State) * rt->statesCapacity);
+
+  memcpy(rt->objects, rt->states[rt->statesCount - 1].objects, sizeof(Obj) * rt->objectCapacity);
+
+  rt->statesCount--;
+  rt->historyCount--;
 }
 
 int isMovable(Runtime * rt, int x, int y, int layerIndex) {
@@ -321,22 +349,33 @@ void updateMap(Runtime * rt) {
   if (rt->levelType == SQUARES) {
     int layerId, x, y, cellIndex;
     for (int i = 0; i < layerCount() * rt->height * rt->width; i++) {
-      rt->map[i] = -100;
+      rt->map[i] = -1;
     }
 
     for (int i = 0; i < rt->objectCount; i++) {
-      layerId = objectLayer(rt->objects[i].objId);
-      x = rt->objects[i].x;
-      y = rt->objects[i].y;
-      cellIndex = (layerId * rt->width * rt->height) + (y * rt->width) + x;
-      rt->map[cellIndex] = i;
+      if (rt->objects[i].deleted == 0) {
+        layerId = objectLayer(rt->objects[i].objId);
+        if (layerId == -1) {
+          printf("no layer id for index: %i, objid: %i, deleted: %i\n", i, rt->objects[i].objId, rt->objects[i].deleted);
+        }
+
+
+        if (rt->objects[i].deleted == 0 && layerId != -1) {
+
+          x = rt->objects[i].x;
+          y = rt->objects[i].y;
+          cellIndex = (layerId * rt->width * rt->height) + (y * rt->width) + x;
+          /* printf("x: %i, y: %i, layerId: %i, cellIndex: %i\n", x, y, layerId, cellIndex); */
+          rt->map[cellIndex] = i;
+        }
+      }
     }
   }
 }
 
 void applyMatch(Runtime * rt, Match * match) {
   if (match->cancel == 1) {
-    undo(rt);
+    undo(rt, 1);
     return;
   }
 
@@ -362,7 +401,7 @@ void applyMatch(Runtime * rt, Match * match) {
   }
 
   for (int i = 0; i < match->partCount; i++) {
-    if (match->parts[i].newObject == 1) {
+    if (match->parts[i].newObject == 1 && match->parts[i].goalId != -1) {
       addObj(rt, match->parts[i].goalId, match->parts[i].goalX, match->parts[i].goalY);
     } else {
       // TODO: does this work if I use a alias with only one value?
@@ -475,7 +514,7 @@ int partIdentity(Runtime * rt, int ruleId, int stateId, int partId, int identId,
   } else {
     if (legAt) {
       objIndex = legendObjIndex(rt, legendId, x, y);
-      if (matchesDirection(dir, appDir, directionMoving(rt, objIndex))) {
+      if (objIndex != -1 && matchesDirection(dir, appDir, directionMoving(rt, objIndex)) == 1) {
         matched = 1;
       }
     }
@@ -512,7 +551,7 @@ int partIdentity(Runtime * rt, int ruleId, int stateId, int partId, int identId,
       } else {
         match->parts[match->partCount].goalDirection = absoluteDirection(appDir, resultPart->ruleIdentity[identId].direction);
 
-        if (aliasLegendContains(resultPart->ruleIdentity[identId].legendId, rt->objects[objIndex].objId) == 1) {
+        if (objIndex != -1 && aliasLegendContains(resultPart->ruleIdentity[identId].legendId, rt->objects[objIndex].objId) == 1) {
           match->parts[match->partCount].goalId = rt->objects[objIndex].objId;
         } else {
           match->parts[match->partCount].goalId = resultPart->ruleIdentity[identId].legendId;
@@ -838,16 +877,20 @@ void addState(Runtime * rt) {
   // This seems weird, but I think we only have to copy objects at the time.
   // Since history can continue where it was if you undo and `toMove`
   // should always be empty.
-  if (rt->statesCount == rt->statesCapacity) {
+  if (rt->statesCount < rt->statesCapacity) {
+
+  } else {
     printf("states realloc\n");
     rt->statesCapacity += 50;
     rt->states = realloc(rt->states, sizeof(State) * rt->statesCapacity);
   }
+
   rt->states[rt->statesCount].levelIndex = rt->levelIndex;
   rt->states[rt->statesCount].objectCount = rt->objectCount;
   rt->states[rt->statesCount].objectCapacity = rt->objectCapacity;
+
   rt->states[rt->statesCount].objects = malloc(sizeof(Obj) * rt->objectCapacity);
-  memcpy(rt->states[rt->statesCount].objects, rt->objects, sizeof(Obj) * rt->objectCount);
+  memcpy(rt->states[rt->statesCount].objects, rt->objects, sizeof(Obj) * rt->objectCapacity);
 
   rt->statesCount++;
 }
@@ -879,7 +922,8 @@ void update(Runtime * rt, Direction dir) {
     moveObjects(rt);
 
     if (requirePlayerMovement() && (startingPlayerLocation == playerLocation(rt))) {
-      undo(rt);
+      undo(rt, 1);
+
     }
 
     rt->toMoveCount = 0; // TODO: this probably can be in the undo

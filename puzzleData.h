@@ -262,17 +262,22 @@ typedef struct Runtime {
   char background;
   int height;
   int width;
+
   LevelType levelType;
   int objectCount;
   int objectCapacity;
   Obj * objects;
+
   int toMoveCount;
   int toMoveCapacity;
   ToMove * toMove;
+
   int historyCount;
   int historyCapacity;
   Direction * history;
+
   int * map;
+
   int statesCount;
   int statesCapacity;
   State * states;
@@ -281,6 +286,7 @@ typedef struct Runtime {
 
 // PuzzleData
 extern PuzzleData * parsePuzzle(FILE * file);
+extern void freePuzzle();
 extern char objectGlyph(int objId);
 extern char * objectName(int id);
 extern int objectSpriteCell(int id, int index);
@@ -336,8 +342,9 @@ extern Rule * rule(int index);
 // runner
 // Levels
 extern void startGame(Runtime * rt, FILE * file);
+extern void endGame(Runtime * rt);
 extern void nextLevel(Runtime * rt);
-extern void undo(Runtime * rt);
+extern void undo(Runtime * rt, int partial);
 extern int levelCount();
 
 // Winning

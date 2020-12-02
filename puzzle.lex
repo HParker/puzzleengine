@@ -122,7 +122,7 @@ color (color|colour)
 }
 
 <LEGEND>^[a-zA-Z0-9_\.#\*@]{2,} {
-  yylval.identifier = yytext;
+  yylval.identifier = strdup(yytext);
   return LEGEND_ID;
 }
 

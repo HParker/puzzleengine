@@ -28,7 +28,7 @@ int main(int argc, char ** argv) {
       break;
     }
     if (dir == UNDO && rt.statesCount > 0) {
-      undo(&rt);
+      undo(&rt, 0);
     } else {
       update(&rt, dir);
     }
@@ -40,5 +40,6 @@ int main(int argc, char ** argv) {
 
   printHistory(&rt);
   closeRenderer();
+  endGame(&rt);
   return 0;
 }
