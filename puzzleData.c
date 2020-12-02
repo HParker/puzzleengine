@@ -6,10 +6,12 @@
 #include "puzzleData.h"
 #include "parser.h"
 
+#define PUZZLE_MALLOC_INC 10;
+
 void incObject() {
-  if (pd.objectCount + 1 == pd.objectCapacity) {
+  if (pd.objectCount + 1 >= pd.objectCapacity) {
     printf("object REALLOC\n");
-    pd.objectCapacity += 50;
+    pd.objectCapacity += PUZZLE_MALLOC_INC;
     pd.objects = realloc(pd.objects, sizeof(Object) * pd.objectCapacity);
     for (int i = pd.objectCount + 1; i < pd.objectCapacity; i++) {
       pd.objects[i].colorCount = 0;
@@ -21,65 +23,224 @@ void incObject() {
 }
 
 void incAliasLegend() {
-  if (pd.aliasLegendCount + 1 == pd.aliasLegendCapacity) {
+  if (pd.aliasLegendCount + 1 >= pd.aliasLegendCapacity) {
     printf("aliasLegend REALLOC\n");
-    pd.aliasLegendCapacity += 50;
-    pd.aliasLegend = realloc(pd.aliasLegend, sizeof(Legend) * pd.aliasLegendCapacity);
+    pd.aliasLegendCapacity += PUZZLE_MALLOC_INC;
+    pd.aliasLegend = realloc(pd.aliasLegend, sizeof(AliasLegend) * pd.aliasLegendCapacity);
+    for (int i = pd.aliasLegendCount + 1; i < pd.aliasLegendCapacity; i++) {
+      pd.aliasLegend[i].objectCount = 0;
+      pd.aliasLegend[i].objectCapacity = 10;
+      pd.aliasLegend[i].objects = malloc(sizeof(LegendValue) * pd.aliasLegend[i].objectCapacity);
+    }
   }
   pd.aliasLegendCount++;
 }
 
 void incGlyphLegend() {
-  if (pd.glyphLegendCount + 1 == pd.glyphLegendCapacity) {
+  if (pd.glyphLegendCount + 1 >= pd.glyphLegendCapacity) {
     printf("glyphLegend REALLOC\n");
-    pd.glyphLegendCapacity += 50;
-    pd.glyphLegend = realloc(pd.glyphLegend, sizeof(Legend) * pd.glyphLegendCapacity);
-
+    pd.glyphLegendCapacity += PUZZLE_MALLOC_INC;
+    pd.glyphLegend = realloc(pd.glyphLegend, sizeof(GlyphLegend) * pd.glyphLegendCapacity);
     for (int i = pd.glyphLegendCount + 1; i < pd.glyphLegendCapacity; i++) {
       pd.glyphLegend[i].objectCount = 0;
-      pd.glyphLegend[i].objectRelation = LEGEND_RELATION_UNKNOWN;
+      pd.glyphLegend[i].objectCapacity = 10;
+      pd.glyphLegend[i].objects = malloc(sizeof(LegendValue) * pd.glyphLegend[i].objectCapacity);
     }
   }
   pd.glyphLegendCount++;
 }
 
+void incAliasLegendObject(int legendId) {
+  if (pd.aliasLegend[legendId].objectCount + 1 >= pd.aliasLegend[legendId].objectCapacity) {
+    pd.aliasLegend[legendId].objectCapacity += PUZZLE_MALLOC_INC;
+    pd.aliasLegend[legendId].objects = realloc(pd.aliasLegend[legendId].objects, sizeof(LegendValue) * pd.aliasLegend[legendId].objectCapacity);
+  }
+
+  pd.aliasLegend[legendId].objectCount++;
+}
+
+void incGlyphLegendObject(int legendId) {
+  if (pd.glyphLegend[legendId].objectCount + 1 >= pd.glyphLegend[legendId].objectCapacity) {
+    pd.glyphLegend[legendId].objectCapacity += PUZZLE_MALLOC_INC;
+    pd.glyphLegend[legendId].objects = realloc(pd.glyphLegend[legendId].objects, sizeof(LegendValue) * pd.glyphLegend[legendId].objectCapacity);
+  }
+
+  pd.glyphLegend[legendId].objectCount++;
+}
+
+
 void incLayer() {
-  if (pd.layerCount + 1 == pd.layerCapacity) {
+  if (pd.layerCount + 1 >= pd.layerCapacity) {
     printf("layer REALLOC\n");
-    pd.layerCapacity += 50;
+    pd.layerCapacity += PUZZLE_MALLOC_INC;
     pd.layers = realloc(pd.layers, sizeof(Layer) * pd.layerCapacity);
     for (int i = pd.layerCount + 1; i < pd.layerCapacity; i++) {
       pd.layers[i].width = 0;
+      pd.layers[i].objectCapacity = 100;
+      pd.layers[i].objectIds = malloc(sizeof(int) * pd.layers[i].objectCapacity);
     }
   }
   pd.layerCount++;
 }
 
+void incLayerWidth(int layerId) {
+  if (pd.layers[layerId].width + 1 >= pd.layers[layerId].objectCapacity) {
+    pd.layers[layerId].objectCapacity += PUZZLE_MALLOC_INC;
+    pd.layers[layerId].objectIds = malloc(sizeof(int) * pd.layers[layerId].objectCapacity);
+  }
+  pd.layers[layerId].width++;
+}
+
 void incRule() {
-  if (pd.ruleCount + 1 == pd.ruleCapacity) {
+  if (pd.ruleCount + 1 >= pd.ruleCapacity) {
     printf("RULE REALLOC\n");
-    pd.ruleCapacity += 50;
+    pd.ruleCapacity += PUZZLE_MALLOC_INC;
     pd.rules = realloc(pd.rules, sizeof(Rule) * pd.ruleCapacity);
+    for (int ruleId = pd.ruleCount + 1; ruleId < pd.ruleCapacity; ruleId++) {
+      pd.rules[ruleId].cancel = 0;
+      pd.rules[ruleId].matchStateDone = 0;
+      pd.rules[ruleId].directionConstraint = NONE;
+      pd.rules[ruleId].executionTime = NORMAL;
+
+      pd.rules[ruleId].matchStateCount = 0;
+      pd.rules[ruleId].matchStateCapacity = 1;
+      pd.rules[ruleId].matchStates = malloc(sizeof(RuleState) * pd.rules[ruleId].matchStateCapacity);
+
+      for (int stateId = pd.rules[ruleId].matchStateCount; stateId < pd.rules[ruleId].matchStateCapacity; stateId++) {
+        pd.rules[ruleId].matchStates[stateId].partCount = 0;
+        pd.rules[ruleId].matchStates[stateId].partCapacity = 1;
+        pd.rules[ruleId].matchStates[stateId].parts = malloc(sizeof(RuleStatePart) * pd.rules[ruleId].matchStates[stateId].partCapacity);
+        for (int partId = 0; partId < pd.rules[ruleId].matchStates[stateId].partCapacity; partId++) {
+          pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCount = 0;
+          pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCapacity = 5;
+          pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity = malloc(sizeof(RuleIdentity) * pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCapacity);
+          for (int ident = 0; ident < pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCapacity; ident++) {
+            pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[ident].direction = NONE;
+            pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[ident].legendId = -1;
+          }
+        }
+      }
+
+      pd.rules[ruleId].resultStateCount = 0;
+      pd.rules[ruleId].resultStateCapacity = 100;
+      pd.rules[ruleId].resultStates = malloc(sizeof(RuleState) * pd.rules[ruleId].resultStateCapacity);
+
+      for (int stateId = 0; stateId < pd.rules[ruleId].resultStateCapacity; stateId++) {
+        pd.rules[ruleId].resultStates[stateId].partCount = 0;
+        pd.rules[ruleId].resultStates[stateId].partCapacity = 1;
+        pd.rules[ruleId].resultStates[stateId].parts = malloc(sizeof(RuleStatePart) * pd.rules[ruleId].matchStates[stateId].partCapacity);
+        for (int partId = 0; partId < pd.rules[ruleId].resultStates[stateId].partCapacity; partId++) {
+          pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCount = 0;
+          pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCapacity = 5;
+          pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity = malloc(sizeof(RuleIdentity) * pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCapacity);
+          for (int ident = 0; ident < pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCapacity; ident++) {
+            pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity[ident].direction = NONE;
+            pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity[ident].legendId = -1;
+          }
+        }
+      }
+    }
   }
   pd.ruleCount++;
 }
 
+void incRuleMatchState(int ruleId) {
+  if (pd.rules[ruleId].matchStateCount + 1 >= pd.rules[ruleId].matchStateCapacity) {
+    pd.rules[ruleId].matchStateCapacity += PUZZLE_MALLOC_INC;
+    pd.rules[ruleId].matchStates = realloc(pd.rules[ruleId].matchStates, sizeof(RuleState) * pd.rules[ruleId].matchStateCapacity);
+    for (int stateId = pd.rules[ruleId].matchStateCount + 1; stateId < pd.rules[ruleId].matchStateCapacity; stateId++) {
+      pd.rules[ruleId].matchStates[stateId].partCount = 0;
+      pd.rules[ruleId].matchStates[stateId].partCapacity = 1;
+      pd.rules[ruleId].matchStates[stateId].parts = malloc(sizeof(RuleStatePart) * pd.rules[ruleId].matchStates[stateId].partCapacity);
+      for (int partId = 0; partId < pd.rules[ruleId].matchStates[stateId].partCapacity; partId++) {
+        pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCount = 0;
+        pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCapacity = 5;
+        pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity = malloc(sizeof(RuleIdentity) * pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCapacity);
+        for (int ident = 0; ident < pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCapacity; ident++) {
+          pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[ident].direction = NONE;
+          pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[ident].legendId = -1;
+        }
+      }
+    }
+  }
+  pd.rules[ruleId].matchStateCount++;
+}
+
+void incRuleResultState(int ruleId) {
+  if (pd.rules[ruleId].resultStateCount + 1 >= pd.rules[ruleId].resultStateCapacity) {
+    pd.rules[ruleId].resultStateCapacity += PUZZLE_MALLOC_INC;
+    pd.rules[ruleId].resultStates = realloc(pd.rules[ruleId].resultStates, sizeof(RuleState) * pd.rules[ruleId].resultStateCapacity);
+
+    for (int stateId = pd.rules[ruleId].resultStateCount + 1; stateId < pd.rules[ruleId].resultStateCapacity; stateId++) {
+      pd.rules[ruleId].resultStates[stateId].partCount = 0;
+      pd.rules[ruleId].resultStates[stateId].partCapacity = 1;
+      pd.rules[ruleId].resultStates[stateId].parts = malloc(sizeof(RuleStatePart) * pd.rules[ruleId].resultStates[stateId].partCapacity);
+      for (int partId = 0; partId < pd.rules[ruleId].resultStates[stateId].partCapacity; partId++) {
+        pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCount = 0;
+        pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCapacity = 5;
+        pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity = malloc(sizeof(RuleIdentity) * pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCapacity);
+        for (int ident = 0; ident < pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCapacity; ident++) {
+          pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity[ident].direction = NONE;
+          pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity[ident].legendId = -1;
+        }
+      }
+    }
+  }
+  pd.rules[ruleId].resultStateCount++;
+}
+
+void incMatchPart(int ruleId, int stateId) {
+  if (pd.rules[ruleId].matchStates[stateId].partCount + 1 >= pd.rules[ruleId].matchStates[stateId].partCapacity) {
+    pd.rules[ruleId].matchStates[stateId].partCapacity += PUZZLE_MALLOC_INC;
+    pd.rules[ruleId].matchStates[stateId].parts = realloc(pd.rules[ruleId].matchStates[stateId].parts, sizeof(RuleStatePart) * pd.rules[ruleId].matchStates[stateId].partCapacity);
+    for (int partId = pd.rules[ruleId].matchStates[stateId].partCount + 1 ; partId < pd.rules[ruleId].matchStates[stateId].partCapacity; partId++) {
+      pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCount = 0;
+      pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCapacity = 5;
+      pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity = malloc(sizeof(RuleIdentity) * pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCapacity);
+      for (int ident = 0; ident < pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCapacity; ident++) {
+        pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[ident].direction = NONE;
+        pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[ident].legendId = -1;
+      }
+    }
+  }
+  pd.rules[ruleId].matchStates[stateId].partCount++;
+}
+
+void incResultPart(int ruleId, int stateId) {
+  if (pd.rules[ruleId].resultStates[stateId].partCount + 1 >= pd.rules[ruleId].resultStates[stateId].partCapacity) {
+    pd.rules[ruleId].resultStates[stateId].partCapacity += PUZZLE_MALLOC_INC;
+    pd.rules[ruleId].resultStates[stateId].parts = realloc(pd.rules[ruleId].resultStates[stateId].parts, sizeof(RuleStatePart) * pd.rules[ruleId].resultStates[stateId].partCapacity);
+    for (int partId = pd.rules[ruleId].resultStates[stateId].partCount + 1; partId < pd.rules[ruleId].resultStates[stateId].partCapacity; partId++) {
+      pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCount = 0;
+      pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCapacity = 5;
+      pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity = malloc(sizeof(RuleIdentity) * pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCapacity);
+      for (int ident = 0; ident < pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCapacity; ident++) {
+        pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity[ident].direction = NONE;
+        pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity[ident].legendId = -1;
+      }
+    }
+  }
+  pd.rules[ruleId].resultStates[stateId].partCount++;
+}
+
 void incWinCondition() {
-  if (pd.winConditionCount + 1 == pd.winConditionCapacity) {
+  if (pd.winConditionCount + 1 >= pd.winConditionCapacity) {
     printf("winCondition REALLOC\n");
-    pd.winConditionCapacity += 50;
+    pd.winConditionCapacity += PUZZLE_MALLOC_INC;
     pd.winConditions = realloc(pd.winConditions, sizeof(WinCondition) * pd.winConditionCapacity);
   }
   pd.winConditionCount++;
 }
 
 void incLevel() {
-  if (pd.levelCount + 1 == pd.levelCapacity) {
+  if (pd.levelCount + 1 >= pd.levelCapacity) {
     printf("level REALLOC\n");
-    pd.levelCapacity += 50;
+    pd.levelCapacity += PUZZLE_MALLOC_INC;
     pd.levels = realloc(pd.levels, sizeof(Level) * pd.levelCapacity);
     for (int i = pd.levelCount + 1; i < pd.levelCapacity; i++) {
       pd.levels[i].cellIndex = 0;
+      pd.levels[i].cellCapacity = 100;
+      pd.levels[i].cells = malloc(sizeof(char) * pd.levels[i].cellCapacity);
       pd.levels[i].height = 0;
       pd.levels[i].width = 0;
     }
@@ -87,19 +248,26 @@ void incLevel() {
   pd.levelCount++;
 }
 
+void incCellIndex(int levelId) {
+  if (pd.levels[levelId].cellIndex + 1 >= pd.levels[levelId].cellCapacity) {
+    pd.levels[levelId].cellCapacity += PUZZLE_MALLOC_INC;
+    pd.levels[levelId].cells = realloc(pd.levels[levelId].cells, sizeof(char) * pd.levels[levelId].cellCapacity);
+  }
+  pd.levels[levelId].cellIndex++;
+}
 
 void initStarterObjects() {
-  pd.aliasLegend[pd.aliasLegendCount].key = "...";
+  pd.aliasLegend[pd.aliasLegendCount].key = strdup("...");
   pd.aliasLegend[pd.aliasLegendCount].objectCount = 1;
   pd.aliasLegend[pd.aliasLegendCount].objects[0].id = pd.objectCount;
-  pd.objects[pd.objectCount].name = "_Spread_";
+  pd.objects[pd.objectCount].name = strdup("_Spread_");
   incObject();
   incAliasLegend();
 
-  pd.aliasLegend[pd.aliasLegendCount].key = "_EMPTY_";
+  pd.aliasLegend[pd.aliasLegendCount].key = strdup("_EMPTY_");
   pd.aliasLegend[pd.aliasLegendCount].objectCount = 1;
   pd.aliasLegend[pd.aliasLegendCount].objects[0].id = pd.objectCount;
-  pd.objects[pd.objectCount].name = "_Empty_";
+  pd.objects[pd.objectCount].name = strdup("_Empty_");
   incObject();
   incAliasLegend();
 }
@@ -123,69 +291,95 @@ void initPuzzleData() {
   }
 
   pd.aliasLegendCount = 0;
-  pd.aliasLegendCapacity = 1000;
-  pd.aliasLegend = malloc(sizeof(Legend) * pd.aliasLegendCapacity);
+  pd.aliasLegendCapacity = 100;
+  pd.aliasLegend = malloc(sizeof(AliasLegend) * pd.aliasLegendCapacity);
   for (int i = 0; i < pd.aliasLegendCapacity; i++) {
-    pd.aliasLegend[i].objectCount = 0;
     pd.aliasLegend[i].objectRelation = LEGEND_RELATION_UNKNOWN;
-    for (int j = 0; j < 100; j++) {
-      pd.aliasLegend[i].objects[j].id = -1;
-    }
+    pd.aliasLegend[i].objectCount = 0;
+    pd.aliasLegend[i].objectCapacity = 10;
+    pd.aliasLegend[i].objects = malloc(sizeof(LegendValue) * pd.aliasLegend[i].objectCapacity);
   }
 
   pd.glyphLegendCount = 0;
   pd.glyphLegendCapacity = 100;
-  pd.glyphLegend = malloc(sizeof(Legend) * pd.glyphLegendCapacity);
+  pd.glyphLegend = malloc(sizeof(GlyphLegend) * pd.glyphLegendCapacity);
   for (int i = 0; i < pd.glyphLegendCapacity; i++) {
-    pd.glyphLegend[i].objectCount = 0;
     pd.glyphLegend[i].objectRelation = LEGEND_RELATION_UNKNOWN;
+    pd.glyphLegend[i].objectCount = 0;
+    pd.glyphLegend[i].objectCapacity = 10;
+    pd.glyphLegend[i].objects = malloc(sizeof(LegendValue) * pd.glyphLegend[i].objectCapacity);
   }
 
 
   pd.layerCount = 0;
-  pd.layerCapacity = 100;
+  pd.layerCapacity = 10;
   pd.layers = malloc(sizeof(Layer) * pd.layerCapacity);
   for (int i = 0; i < pd.layerCapacity; i++) {
     pd.layers[i].width = 0;
+    pd.layers[i].objectCapacity = 10;
+    pd.layers[i].objectIds = malloc(sizeof(int) * pd.layers[i].objectCapacity);
   }
 
   pd.ruleCount = 0;
   pd.ruleCapacity = 100;
   pd.rules = malloc(sizeof(Rule) * pd.ruleCapacity);
-  for (int i = 0; i < pd.ruleCapacity; i++) {
-    pd.rules[i].cancel = 0;
-    pd.rules[i].matchStateCount = 0;
-    pd.rules[i].resultStateCount = 0;
-    pd.rules[i].matchStateDone = 0;
-    pd.rules[i].directionConstraint = NONE;
-    pd.rules[i].executionTime = NORMAL;
-    for (int j = 0; j < 100; j++) {
-      pd.rules[i].matchStates[j].partCount = 0;
-      pd.rules[i].resultStates[j].partCount = 0;
-      for (int k = 0; k < 100; k++) {
-        pd.rules[i].matchStates[j].parts[k].ruleIdentityCount = 0;
-        pd.rules[i].resultStates[j].parts[k].ruleIdentityCount = 0;
-        for (int x = 0; x < 100; x++) {
-          pd.rules[i].resultStates[j].parts[k].ruleIdentity[x].direction = NONE;
-          pd.rules[i].resultStates[j].parts[k].ruleIdentity[x].legendId = -1;
+  for (int ruleId = 0; ruleId < pd.ruleCapacity; ruleId++) {
+    pd.rules[ruleId].cancel = 0; // TODO: delete me and see what happens
+    pd.rules[ruleId].matchStateDone = 0;
+    pd.rules[ruleId].directionConstraint = NONE;
+    pd.rules[ruleId].executionTime = NORMAL;
+
+    pd.rules[ruleId].matchStateCount = 0;
+    pd.rules[ruleId].matchStateCapacity = 100;
+    pd.rules[ruleId].matchStates = malloc(sizeof(RuleState) * pd.rules[ruleId].matchStateCapacity);
+    for (int stateId = 0; stateId < pd.rules[ruleId].matchStateCapacity; stateId++) {
+      pd.rules[ruleId].matchStates[stateId].partCount = 0;
+      pd.rules[ruleId].matchStates[stateId].partCapacity = 10;
+      pd.rules[ruleId].matchStates[stateId].parts = malloc(sizeof(RuleStatePart) * pd.rules[ruleId].matchStates[stateId].partCapacity);
+      for (int partId = 0; partId < pd.rules[ruleId].matchStates[stateId].partCapacity; partId++) {
+        pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCount = 0;
+        pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCapacity = 5;
+        pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity = malloc(sizeof(RuleIdentity) * pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCapacity);
+        for (int ident = 0; ident < pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCapacity; ident++) {
+          pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[ident].direction = NONE;
+          pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[ident].legendId = -1;
+        }
+      }
+    }
+
+    pd.rules[ruleId].resultStateCount = 0;
+    pd.rules[ruleId].resultStateCapacity = 100;
+    pd.rules[ruleId].resultStates = malloc(sizeof(RuleState) * pd.rules[ruleId].resultStateCapacity);
+    for (int stateId = 0; stateId < pd.rules[ruleId].resultStateCapacity; stateId++) {
+      pd.rules[ruleId].resultStates[stateId].partCount = 0;
+      pd.rules[ruleId].resultStates[stateId].partCapacity = 1;
+      pd.rules[ruleId].resultStates[stateId].parts = malloc(sizeof(RuleStatePart) * pd.rules[ruleId].resultStates[stateId].partCapacity);
+      for (int partId = 0; partId < pd.rules[ruleId].resultStates[stateId].partCapacity; partId++) {
+        pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCount = 0;
+        pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCapacity = 5;
+        pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity = malloc(sizeof(RuleIdentity) * pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCapacity);
+        for (int ident = 0; ident < pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCapacity; ident++) {
+          pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity[ident].direction = NONE;
+          pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity[ident].legendId = -1;
         }
       }
     }
   }
 
   pd.winConditionCount = 0;
-  pd.winConditionCapacity = 100;
+  pd.winConditionCapacity = 10;
   pd.winConditions = malloc(sizeof(WinCondition) * pd.winConditionCapacity);
 
   pd.levelCount = 0;
-  pd.levelCapacity = 1000;
+  pd.levelCapacity = 100;
   pd.levels = malloc(sizeof(Level) * pd.levelCapacity);
   for (int i = 0; i < pd.levelCapacity; i++) {
     pd.levels[i].cellIndex = 0;
+    pd.levels[i].cellCapacity = 1;
+    pd.levels[i].cells = malloc(sizeof(char) * pd.levels[i].cellCapacity);
     pd.levels[i].height = 0;
     pd.levels[i].width = 0;
   }
-
   initStarterObjects();
 }
 
@@ -198,11 +392,54 @@ PuzzleData * parsePuzzle(FILE * file) {
 }
 
 void freePuzzle() {
+
+  for (int i = 0; i < pd.objectCount; i++) {
+    free(pd.objects[i].name);
+  }
   free(pd.objects);
+
+  /* for (int i = 0; i < pd.aliasLegendCount; i++) { */
+  /*   free(pd.aliasLegend[i].key); */
+  /* } */
+
+  for (int i = 0; i < pd.aliasLegendCapacity; i++) {
+    free(pd.aliasLegend[i].objects);
+  }
   free(pd.aliasLegend);
+
+  for (int i = 0; i < pd.glyphLegendCapacity; i++) {
+    free(pd.glyphLegend[i].objects);
+  }
   free(pd.glyphLegend);
+
+  for (int i = 0; i < pd.layerCapacity; i++) {
+    free(pd.layers[i].objectIds);
+  }
   free(pd.layers);
+
+  for (int ruleId = 0; ruleId < pd.ruleCapacity; ruleId++) {
+    for (int stateId = 0; stateId < pd.rules[ruleId].matchStateCapacity; stateId++) {
+      for (int partId = 0; partId < pd.rules[ruleId].matchStates[stateId].partCapacity; partId++) {
+        free(pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity);
+      }
+      free(pd.rules[ruleId].matchStates[stateId].parts);
+    }
+    free(pd.rules[ruleId].matchStates);
+
+    for (int stateId = 0; stateId < pd.rules[ruleId].resultStateCapacity; stateId++) {
+      for (int partId = 0; partId < pd.rules[ruleId].resultStates[stateId].partCapacity; partId++) {
+        free(pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity);
+      }
+        free(pd.rules[ruleId].resultStates[stateId].parts);
+    }
+    free(pd.rules[ruleId].resultStates);
+  }
+
   free(pd.rules);
+
+  for (int i = 0; i < pd.levelCapacity; i++) {
+    free(pd.levels[i].cells);
+  }
   free(pd.winConditions);
 }
 
@@ -405,5 +642,5 @@ int winConditionCount() {
 }
 
 WinCondition * winCondition(int winConditionIndex) {
-  return &pd.winConditions[winConditionIndex];
+   return &pd.winConditions[winConditionIndex];
 }

@@ -171,6 +171,7 @@ Suite * puzzle_script_parser_suite(void)
     s = suite_create("Parser");
 
     test_Parser = tcase_create("Parser");
+    tcase_set_timeout(test_Parser, 100);
     tcase_add_test(test_Parser, test_parses_basic);
     tcase_add_test(test_Parser, test_parses_block_faker);
     tcase_add_test(test_Parser, test_parses_by_your_side);

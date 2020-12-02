@@ -38,7 +38,7 @@ void addObjectsToLayer(char * name) {
     int legId = aliasLegendId(name);
     for (int i = 0; i < pd.aliasLegend[legId].objectCount; i++) {
         pd.layers[pd.layerCount].objectIds[pd.layers[pd.layerCount].width] = pd.aliasLegend[legId].objects[i].id;
-        pd.layers[pd.layerCount].width++;
+        incLayerWidth(pd.layerCount);
     }
 }
 
@@ -46,7 +46,7 @@ void addObjectsToAliasLegend(char * name) {
     int legId = aliasLegendId(name);
     for (int i = 0; i < pd.aliasLegend[legId].objectCount; i++) {
         pd.aliasLegend[pd.aliasLegendCount].objects[pd.aliasLegend[pd.aliasLegendCount].objectCount].id = pd.aliasLegend[legId].objects[i].id;
-        pd.aliasLegend[pd.aliasLegendCount].objectCount++;
+        incAliasLegendObject(pd.aliasLegendCount);
     }
 }
 
@@ -55,7 +55,7 @@ void addObjectsToGlyphLegend(char * name) {
     int count = pd.aliasLegend[legId].objectCount;
     for (int i = 0; i < count; i++) {
         pd.glyphLegend[pd.glyphLegendCount].objects[pd.glyphLegend[pd.glyphLegendCount].objectCount].id = pd.aliasLegend[legId].objects[i].id;
-        pd.glyphLegend[pd.glyphLegendCount].objectCount++;
+        incGlyphLegendObject(pd.glyphLegendCount);
     }
 }
 
@@ -162,7 +162,9 @@ background_color: BACKGROUND_COLOR ID { pd.backgroundColor = $2; }
         ;
 flickscreen: FLICKSCREEN ID { yyerror("FLICKSCREEN IS NOT YET SUPPORTED\n"); }
         ;
-key_repeat_interval: KEY_REPEAT_INTERVAL DECIMAL { pd.keyRepeatInterval = 0.1f; }
+key_repeat_interval: KEY_REPEAT_INTERVAL DECIMAL {
+                         pd.keyRepeatInterval = 0.1f;
+}
 
         ;
 noaction: NOACTION { pd.noAction = 1; }
@@ -205,23 +207,25 @@ object_definition: object_name colors sprite { incObject(); }
 object_name: OBJID GLYPH {
                  pd.objects[pd.objectCount].name = $1;
 
-                 pd.aliasLegend[pd.aliasLegendCount].key = $1;
+                 pd.aliasLegend[pd.aliasLegendCount].key = strdup($1);
                  pd.aliasLegend[pd.aliasLegendCount].objects[0].id = pd.objectCount;
-                 pd.aliasLegend[pd.aliasLegendCount].objectCount++;
+
+                 incAliasLegendObject(pd.aliasLegendCount);
                  incAliasLegend();
                  // single char key
                  // They only reference AliasLegend names that have the actual object ID
                  pd.glyphLegend[pd.glyphLegendCount].key = $2;
                  pd.glyphLegend[pd.glyphLegendCount].objects[0].id = pd.objectCount;
-                 pd.glyphLegend[pd.glyphLegendCount].objectCount++;
+
+                 incGlyphLegendObject(pd.glyphLegendCount);
                  incGlyphLegend();
 }
            | OBJID {
                pd.objects[pd.objectCount].name = $1;
 
-               pd.aliasLegend[pd.aliasLegendCount].key = $1;
+               pd.aliasLegend[pd.aliasLegendCount].key = strdup($1);
                pd.aliasLegend[pd.aliasLegendCount].objects[0].id = pd.objectCount;
-               pd.aliasLegend[pd.aliasLegendCount].objectCount++;
+               incAliasLegendObject(pd.aliasLegendCount);
                incAliasLegend();
 }
 
@@ -373,10 +377,11 @@ state_definitions: state_definition state_definitions
 
 state_definition: OPEN_SQUARE state_internals CLOSE_SQUARE {
   if (pd.rules[pd.ruleCount].matchStateDone == 0) {
-    pd.rules[pd.ruleCount].matchStateCount++;
+    incRuleMatchState(pd.ruleCount);
   } else {
-    pd.rules[pd.ruleCount].resultStateCount++;
+    incRuleResultState(pd.ruleCount);
   }
+
 }
 
 state_internals: state_part VERTICAL_PIPE state_internals
@@ -387,11 +392,11 @@ state_part: objects_on_same_square {
 
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->matchStates[r->matchStateCount];
-    rs->partCount++;
+    incMatchPart(pd.ruleCount, r->matchStateCount);
   } else {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->resultStates[r->resultStateCount];
-    rs->partCount++;
+    incResultPart(pd.ruleCount, r->resultStateCount);
   }
 }
           | %empty {
@@ -401,18 +406,18 @@ state_part: objects_on_same_square {
       RuleStatePart * rsp = &rs->parts[rs->partCount];
 
       rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId("_EMPTY_");
-      rsp->ruleIdentityCount++;
 
-      rs->partCount++;
+      rsp->ruleIdentityCount++;
+      incMatchPart(pd.ruleCount, r->matchStateCount);
     } else {
       Rule * r = &pd.rules[pd.ruleCount];
       RuleState * rs = &r->resultStates[r->resultStateCount];
       RuleStatePart * rsp = &rs->parts[rs->partCount];
 
       rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId("_EMPTY_");
-      rsp->ruleIdentityCount++;
 
-      rs->partCount++;
+      rsp->ruleIdentityCount++;
+      incResultPart(pd.ruleCount, r->resultStateCount);
     }
 }
 
@@ -516,7 +521,7 @@ cells: cell cells | cell
 cell: GLYPH {
   rowWidth++;
   pd.levels[pd.levelCount].cells[pd.levels[pd.levelCount].cellIndex] = $1;
-  pd.levels[pd.levelCount].cellIndex++;
+  incCellIndex(pd.levelCount);
 }
 
 some_level_newlines: some_level_newlines LEVEL_EOL | LEVEL_EOL;

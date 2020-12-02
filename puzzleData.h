@@ -19,36 +19,31 @@ typedef enum LegendRelation
    LEGEND_RELATION_OR = 2
   } LegendRelation;
 
+// TODO: remove legend value. this is silly
 typedef struct LegendValue {
-  int id; // TODO: rename to object id. this is never a legend value anymore
+  int id;
 } LegendValue;
-
-typedef struct Legend {
-  int hasStringKey;
-  char key;
-  char * stringKey;
-  LegendRelation objectRelation;
-  int objectCount;
-  LegendValue objectValues[100];
-} Legend;
 
 typedef struct GlyphLegend {
   char key;
   LegendRelation objectRelation;
   int objectCount;
-  LegendValue objects[100];
+  int objectCapacity;
+  LegendValue * objects;
 } GlyphLegend;
 
 typedef struct AliasLegend {
   char * key;
   LegendRelation objectRelation;
   int objectCount;
-  LegendValue objects[100];
+  int objectCapacity;
+  LegendValue * objects;
 } AliasLegend;
 
 typedef struct Layer {
   int width;
-  int objectIds[1000];
+  int objectCapacity;
+  int * objectIds;
 } Layer;
 
 typedef enum WinQualifier // TODO: rename to logic words?
@@ -106,23 +101,30 @@ typedef struct RuleIdentity {
 // parts are split by `|`
 typedef struct RuleStatePart {
   int ruleIdentityCount;
-  RuleIdentity ruleIdentity[100];
+  int ruleIdentityCapacity;
+  RuleIdentity * ruleIdentity;
 } RuleStatePart;
 
 typedef struct RuleState {
   int partCount;
-  RuleStatePart parts[100];
+  int partCapacity;
+  RuleStatePart * parts;
 } RuleState;
 
 typedef struct Rule {
   int cancel;
-  int matchStateCount;
-  int resultStateCount;
+
   int matchStateDone; // TODO: this is only needed when parsing. maybe manage it there?
   Direction directionConstraint;
   ExecutionTime executionTime;
-  RuleState matchStates[100];
-  RuleState resultStates[100];
+
+  int matchStateCount;
+  int matchStateCapacity;
+  RuleState * matchStates;
+
+  int resultStateCount;
+  int resultStateCapacity;
+  RuleState * resultStates;
 } Rule;
 
 typedef struct MatchData {
@@ -160,7 +162,8 @@ typedef struct Level {
   int height;
   int width;
   int cellIndex;
-  char cells[1000];
+  int cellCapacity;
+  char * cells;
   char * message;
 } Level;
 
@@ -370,10 +373,21 @@ extern int legendId(char * name);
 extern void incObject();
 extern void incAliasLegend();
 extern void incGlyphLegend();
+extern void incAliasLegendObject(int legendId);
+extern void incGlyphLegendObject(int legendId);
 extern void incLayer();
+extern void incLayerWidth(int layerId);
+
 extern void incRule();
+extern void incRuleMatchState(int ruleId);
+extern void incRuleResultState(int ruleId);
+
+extern void incMatchPart(int ruleId, int stateId);
+extern void incResultPart(int ruleId, int stateId);
+
 extern void incWinCondition();
 extern void incLevel();
+extern void incCellIndex(int levelId);
 extern FILE * yyin;
 extern int yyparse();
 

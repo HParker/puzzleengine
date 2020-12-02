@@ -3,6 +3,31 @@
 #include <stdlib.h>
 #include "puzzleData.h"
 
+char * directionName(Direction dir) {
+  char * directionNames[] = {
+                             "RIGHT",
+                             "UP",
+                             "LEFT",
+                             "DOWN",
+                             "HORIZONTAL",
+                             "VERTICAL",
+                             "STATIONARY",
+                             "RANDOMDIR",
+                             "RANDOM",
+                             "REL_UP",
+                             "REL_DOWN",
+                             "REL_LEFT",
+                             "REL_RIGHT",
+                             "USE",
+                             "NONE",
+                             "COND_NO",
+                             "QUIT",
+                             "RESTART",
+                             "UNDO",
+  };
+  return directionNames[dir];
+}
+
 int onBoard(Runtime * rt, int x, int y) {
   if (x < 0 || x >= rt->width) {
     return 0;
@@ -18,7 +43,9 @@ int legendAt(Runtime * rt, int legendId, int x, int y) {
     int cellIndex;
     for (int i = 0; i < layerCount(); i++) {
       cellIndex = (i * rt->width * rt->height) + (y * rt->width) + x;
-      if (rt->map[cellIndex] != -1 && aliasLegendContains(legendId, rt->objects[rt->map[cellIndex]].objId)) {
+      if (rt->map[cellIndex] != -1 &&
+          aliasLegendContains(legendId, rt->objects[rt->map[cellIndex]].objId)
+          ) {
         return 1;
       }
     }
@@ -223,7 +250,7 @@ void initGame(Runtime * rt) {
   rt->prevHistoryCount = 0;
 
   rt->objectCount = 0;
-  rt->objectCapacity = 1;
+  rt->objectCapacity = 250;
   rt->objects = malloc(sizeof(Obj) * rt->objectCapacity);
 
   rt->toMoveCount = 0;
@@ -276,7 +303,6 @@ void undo(Runtime * rt, int partial) {
   rt->levelType = levelType(rt->levelIndex);
   rt->height = levelHeight(rt->levelIndex);
   rt->width = levelWidth(rt->levelIndex);
-
 
   memcpy(rt->objects, rt->states[rt->statesCount - 1].objects, sizeof(Obj) * rt->objectCapacity);
 
@@ -374,15 +400,10 @@ void updateMap(Runtime * rt) {
 }
 
 void applyMatch(Runtime * rt, Match * match) {
-  if (match->cancel == 1) {
-    undo(rt, 1);
-    return;
-  }
-
   if (rt->pd->debug == 1) {
     printf("applying count %i\n", match->partCount);
     for (int i = 0; i < match->partCount; i++) {
-      printf("Applying rule: %i cancel: %i new: %i, objIndex %i, (%i) id: '%s' (%i) -> '%s' (%i) location: (%i,%i) -> (%i,%i) goalMovment: %i\n",
+      printf("Applying rule: %i cancel: %i new: %i, objIndex %i, (%i) id: '%s' (%i) -> '%s' (%i) location: (%i,%i) -> (%i,%i) goalMovment: %s\n",
              match->ruleIndex,
              match->cancel,
              match->parts[i].newObject,
@@ -396,8 +417,13 @@ void applyMatch(Runtime * rt, Match * match) {
              rt->objects[match->parts[i].objIndex].y,
              match->parts[i].goalX,
              match->parts[i].goalY,
-             match->parts[i].goalDirection);
+             directionName(match->parts[i].goalDirection));
     }
+  }
+
+  if (match->cancel == 1) {
+    undo(rt, 1);
+    return;
   }
 
   for (int i = 0; i < match->partCount; i++) {
@@ -503,10 +529,14 @@ int alreadyResult(Runtime * rt, RuleStatePart * part, int anyDistance, Direction
 int partIdentity(Runtime * rt, int ruleId, int stateId, int partId, int identId, Direction appDir, int x, int y, Match * match) {
   int objIndex = -1;
   int matched = 0;
+
   Direction dir = rule(ruleId)->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
   int legendId = rule(ruleId)->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
 
+  /* int emptyId = aliasLegendId("_EMPTY_"); */
+
   int legAt = legendAt(rt, legendId, x, y);
+
   if (dir == COND_NO) {
     if (legAt == 0) {
       matched = 1;
@@ -545,6 +575,7 @@ int partIdentity(Runtime * rt, int ruleId, int stateId, int partId, int identId,
 
       if (rule(ruleId)->cancel) {
         // undo the whole turn...
+        // TODO: not sure we have to set goal* here since we ignore it for the cancel case
         match->parts[match->partCount].goalDirection = -1;
         match->parts[match->partCount].goalId = -1;
         match->cancel = 1;
@@ -561,6 +592,7 @@ int partIdentity(Runtime * rt, int ruleId, int stateId, int partId, int identId,
     }
   } else {
     match->partCount = prevPartCount;
+    match->cancel = 0;
     return 0;
   }
   return 1;
@@ -575,10 +607,14 @@ int partIdentitys(Runtime * rt, int ruleId, int stateId, int partId, Direction a
   for (int i = 0; i < count; i++) {
     success = partIdentity(rt, ruleId, stateId, partId, i, appDir, x, y, match);
     if (success == 0) {
+      /* printf("X -- FAILED rule: %i state: %i part: %i ident: %i, appDir: %s (%i, %i)\n", ruleId, stateId, partId, i, directionName(appDir), x, y); */
       match->partCount = prevMatchCount;
       return 0;
+    } else {
+      /* printf("V --- Matched rule: %i state: %i part: %i ident: %i, appDir: %s (%i, %i)\n", ruleId, stateId, partId, i, directionName(appDir), x, y); */
     }
   }
+
   return 1;
 }
 
@@ -589,7 +625,6 @@ int identitysAtDistance(Runtime * rt, int ruleId, int stateId, int partId, Direc
 
   // TODO: this sucks, we need to see how far to the edge
   for (int i = 0; i < 100; i++) {
-
     currentX = x + (dist * deltaX(appDir));
     currentY = y + (dist * deltaY(appDir));
     if (onBoard(rt, currentX, currentY)) {
@@ -749,11 +784,12 @@ int applyRules(Runtime * rt, ExecutionTime execTime) {
   for (int ruleIndex = 0; ruleIndex < count; ruleIndex++) {
     applied = 1;
     attempts = 0;
-    while (applied && attempts < maxAttempts) {
+    while (match.cancel == 0 && applied && attempts < maxAttempts) {
       applied = 0;
       match.partCount = 0;
       if (ruleApplies(rt, ruleIndex, execTime)) {
         applied = applyRule(rt, ruleIndex, &match);
+        /* printf("applied (%i) && (match.partCount (%i) > 0 || match.cancel (%i))\n", applied, match.partCount, match.cancel); */
         if (applied && (match.partCount > 0 || match.cancel)) {
           applyMatch(rt, &match);
         } else {
@@ -803,30 +839,8 @@ int moveObjects(Runtime * rt) {
 }
 
 void printHistory(Runtime * rt) {
-  char * directionNames[] = {
-                             "RIGHT",
-                             "UP",
-                             "LEFT",
-                             "DOWN",
-                             "HORIZONTAL",
-                             "VERTICAL",
-                             "STATIONARY",
-                             "RANDOMDIR",
-                             "RANDOM",
-                             "REL_UP",
-                             "REL_DOWN",
-                             "REL_LEFT",
-                             "REL_RIGHT",
-                             "USE",
-                             "NONE",
-                             "COND_NO",
-                             "QUIT",
-                             "RESTART",
-                             "UNDO",
-  };
-
   for (int i = 0; i < rt->historyCount; i++) {
-    printf("%s\n", directionNames[rt->history[i]]);
+    printf("%s\n", directionName(rt->history[i]));
   }
 }
 
@@ -910,26 +924,30 @@ void update(Runtime * rt, Direction dir) {
   if (rt->levelType == SQUARES) {
     // Eyeball seems to prove that rules run before and after marking the player as moving
     // this however doesn't seem to be documented. I assume it is correct.
+    int cancel = 0;
+    /* printf("======== EARLY RULES\n"); */
     applyRules(rt, NORMAL);
+
+    /* printf("======== EARLY RULES\n"); */
 
     // mark player for moving
     markPlayerAsMoving(rt, dir);
 
     // apply rules
-    applyRules(rt, NORMAL);
-
+    cancel = applyRules(rt, NORMAL);
     // apply marked for move
     moveObjects(rt);
-
-    if (requirePlayerMovement() && (startingPlayerLocation == playerLocation(rt))) {
-      undo(rt, 1);
-
-    }
-
-    rt->toMoveCount = 0; // TODO: this probably can be in the undo
+    rt->toMoveCount = 0;
 
     // apply late rules
     applyRules(rt, LATE);
+
+    if (requirePlayerMovement() && (startingPlayerLocation == playerLocation(rt))) {
+      /* printf("undo due to lack of player movement\n"); */
+      undo(rt, 1);
+      return;
+    }
+
     updateLevel(rt);
   } else {
     if (dir == USE) {

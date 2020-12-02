@@ -62,7 +62,7 @@ color (color|colour)
 
 <FLOAT>[0-9\.]+/[\n] {
   BEGIN INITIAL;
-  yylval.identifier = strdup(yytext);
+  yylval.decimal = 0.1f;
   return DECIMAL;
 }
 
