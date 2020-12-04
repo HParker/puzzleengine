@@ -430,7 +430,7 @@ object_part: OBJID {
     RuleStatePart * rsp = &rs->parts[rs->partCount];
     RuleIdentity * rid = &rsp->ruleIdentity[rsp->ruleIdentityCount];
 
-    rid->direction = NONE;
+    rid->direction = UNSPECIFIED;
     rid->legendId = aliasLegendId($1);
     free($1);
     rsp->ruleIdentityCount++;
@@ -440,7 +440,7 @@ object_part: OBJID {
     RuleStatePart * rsp = &rs->parts[rs->partCount];
     RuleIdentity * rid = &rsp->ruleIdentity[rsp->ruleIdentityCount];
 
-    rid->direction = NONE;
+    rid->direction = UNSPECIFIED;
     rid->legendId = aliasLegendId($1);
     free($1);
     rsp->ruleIdentityCount++;

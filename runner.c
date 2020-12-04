@@ -24,6 +24,7 @@ char * directionName(Direction dir) {
                              "QUIT",
                              "RESTART",
                              "UNDO",
+                             "UNSPECIFIED"
   };
   return directionNames[dir];
 }
@@ -119,10 +120,9 @@ Direction absoluteDirection(Direction applicationDirection, Direction ruleDir) {
   case REL_DOWN:
     return (Direction)((applicationDirection + 3) % 4);
   case NONE:
-    return NONE;
   case USE:
-    return NONE;
   case COND_NO:
+  case UNSPECIFIED:
     return NONE;
   default:
     printf("err: (absoluteDirection) unsupported direction (ad: %i rd: %i)\n", applicationDirection, ruleDir);
@@ -130,8 +130,8 @@ Direction absoluteDirection(Direction applicationDirection, Direction ruleDir) {
   }
 }
 
-int matchesDirection(Direction ruleDir, Direction applicationDir, Direction dir) {
-  if (dir == COND_NO) {
+int matchesDirection(Direction ruleDir, Direction applicationDir, Direction dir, int ignoreUnspec) {
+  if (dir == COND_NO || (ignoreUnspec && ruleDir == UNSPECIFIED)) {
     return 1; // TODO: remove special case here
   }
   Direction absoluteDir = absoluteDirection(applicationDir, ruleDir);
@@ -163,9 +163,6 @@ void addToMove(Runtime * rt, Direction applicationDirection, int objIndex, Direc
     rt->toMove[rt->toMoveCount].direction = direction;
     rt->toMoveCount++;
   }
-
-  /* printf("adding toMove index: %i, objIndex: %i\n", rt->toMoveCount, objIndex); */
-
 }
 
 void addObj(Runtime * rt, int objId, int x, int y) {
@@ -391,7 +388,6 @@ void updateMap(Runtime * rt) {
           x = rt->objects[i].x;
           y = rt->objects[i].y;
           cellIndex = (layerId * rt->width * rt->height) + (y * rt->width) + x;
-          /* printf("x: %i, y: %i, layerId: %i, cellIndex: %i\n", x, y, layerId, cellIndex); */
           rt->map[cellIndex] = i;
         }
       }
@@ -498,7 +494,9 @@ int objNotAt(Runtime * rt, int legendId, int x, int y) {
 // TODO: try simplifying with
 // int matchesPart(Runtime * rt, RuleStatepart * rp) {}
 
-int alreadyResult(Runtime * rt, RuleStatePart * part, int anyDistance, Direction dir, int x, int y) {
+int alreadyResult(Runtime * rt, RuleStatePart * part, RuleStatePart * matchPart, int anyDistance, Direction dir, int x, int y) {
+  // TODO: remove any distance here
+  int ignoreUnspecified;
   int matched = 0;
   if (part->ruleIdentityCount <= 0) {
     return 0;
@@ -507,6 +505,11 @@ int alreadyResult(Runtime * rt, RuleStatePart * part, int anyDistance, Direction
     matched = 0;
     int legendId = part->ruleIdentity[i].legendId;
     int ruleDir = part->ruleIdentity[i].direction;
+    if (ruleDir == UNSPECIFIED && matchPart->ruleIdentity[i].direction != UNSPECIFIED) {
+      ignoreUnspecified = 0;
+    } else {
+      ignoreUnspecified = 1;
+    }
     for (int j = 0; j < rt->objectCount; j++) {
       int legendContains = aliasLegendContains(legendId, rt->objects[j].objId);
       if (rt->objects[j].deleted == 0 &&
@@ -514,8 +517,7 @@ int alreadyResult(Runtime * rt, RuleStatePart * part, int anyDistance, Direction
             rt->objects[j].y == y) ||
            (anyDistance == 1 && matchAtDistance(dir, x, y, rt->objects[j].x, rt->objects[j].y))) &&
           ((ruleDir == COND_NO && objNotAt(rt, legendId, x, y)) || (ruleDir != COND_NO && legendContains == 1)) &&
-          matchesDirection(ruleDir, dir, directionMoving(rt, j))) {
-
+          matchesDirection(ruleDir, dir, directionMoving(rt, j), ignoreUnspecified)) {
         matched = 1;
       }
     }
@@ -544,17 +546,18 @@ int partIdentity(Runtime * rt, int ruleId, int stateId, int partId, int identId,
   } else {
     if (legAt) {
       objIndex = legendObjIndex(rt, legendId, x, y);
-      if (objIndex != -1 && matchesDirection(dir, appDir, directionMoving(rt, objIndex)) == 1) {
+      if (objIndex != -1 && matchesDirection(dir, appDir, directionMoving(rt, objIndex), 1) == 1) {
         matched = 1;
       }
     }
   }
 
   RuleStatePart * resultPart = &rule(ruleId)->resultStates[stateId].parts[partId];
+  RuleStatePart * matchPart = &rule(ruleId)->matchStates[stateId].parts[partId];
   int prevPartCount = match->partCount; // TODO: not sure this helps, we don't inc unless we succeeded
 
   if (matched) {
-    if (alreadyResult(rt, resultPart, 0, dir, x, y) == 0) {
+    if (alreadyResult(rt, resultPart, matchPart, 0, appDir, x, y) == 0) {
       match->ruleIndex = ruleId;
       if (dir == COND_NO || legendId == aliasLegendId("_EMPTY_")) {
         match->parts[match->partCount].objIndex = aliasLegendId("_EMPTY_");
@@ -922,19 +925,11 @@ void update(Runtime * rt, Direction dir) {
 
   // TODO: remove deleted objects?
   if (rt->levelType == SQUARES) {
-    // Eyeball seems to prove that rules run before and after marking the player as moving
-    // this however doesn't seem to be documented. I assume it is correct.
-    int cancel = 0;
-    /* printf("======== EARLY RULES\n"); */
-    applyRules(rt, NORMAL);
-
-    /* printf("======== EARLY RULES\n"); */
-
     // mark player for moving
     markPlayerAsMoving(rt, dir);
 
     // apply rules
-    cancel = applyRules(rt, NORMAL);
+    applyRules(rt, NORMAL);
     // apply marked for move
     moveObjects(rt);
     rt->toMoveCount = 0;

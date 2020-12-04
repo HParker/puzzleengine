@@ -52,8 +52,7 @@ typedef enum WinQualifier // TODO: rename to logic words?
    ANY  = 1,
    NO   = 2,
    SOME = 3,
-   ON   = 4,
-   UNSPECIFIED = 105
+   ON   = 4
   } WinQualifier;
 
 typedef struct WinCondition {
@@ -65,25 +64,26 @@ typedef struct WinCondition {
 
 typedef enum Direction
   {
-   RIGHT      = 0,
-   UP         = 1,
-   LEFT       = 2,
-   DOWN       = 3,
-   HORIZONTAL = 4,
-   VERTICAL   = 5,
-   STATIONARY = 6,
-   RANDOMDIR  = 7,
-   RANDOM     = 8,
-   REL_UP     = 9,
-   REL_DOWN   = 10,
-   REL_LEFT   = 11,
-   REL_RIGHT  = 12,
-   USE        = 13,
-   NONE       = 14,
-   COND_NO    = 15,
-   QUIT       = 16,
-   RESTART    = 17,
-   UNDO       = 18
+   RIGHT       = 0,
+   UP          = 1,
+   LEFT        = 2,
+   DOWN        = 3,
+   HORIZONTAL  = 4,
+   VERTICAL    = 5,
+   STATIONARY  = 6,
+   RANDOMDIR   = 7,
+   RANDOM      = 8,
+   REL_UP      = 9,
+   REL_DOWN    = 10,
+   REL_LEFT    = 11,
+   REL_RIGHT   = 12,
+   USE         = 13,
+   NONE        = 14,
+   COND_NO     = 15,
+   QUIT        = 16,
+   RESTART     = 17,
+   UNDO        = 18,
+   UNSPECIFIED = 19
   } Direction;
 
 typedef enum ExecutionTime
