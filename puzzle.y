@@ -405,6 +405,7 @@ state_part: objects_on_same_square {
       RuleState * rs = &r->matchStates[r->matchStateCount];
       RuleStatePart * rsp = &rs->parts[rs->partCount];
 
+      rsp->ruleIdentity[rsp->ruleIdentityCount].direction = UNSPECIFIED;
       rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId("_EMPTY_");
 
       rsp->ruleIdentityCount++;
@@ -414,6 +415,7 @@ state_part: objects_on_same_square {
       RuleState * rs = &r->resultStates[r->resultStateCount];
       RuleStatePart * rsp = &rs->parts[rs->partCount];
 
+      rsp->ruleIdentity[rsp->ruleIdentityCount].direction = UNSPECIFIED;
       rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId("_EMPTY_");
 
       rsp->ruleIdentityCount++;

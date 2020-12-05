@@ -1997,6 +1997,24 @@ START_TEST (test_runs_not_snake)
 }
 END_TEST
 
+START_TEST (test_runs_octat)
+{
+  FILE *file;
+  file = fopen("./puzzles/octat.puzz", "r");
+  Runtime rt;
+  startGame(&rt, file);
+
+  int moves[] = {
+                 RIGHT
+  };
+
+  test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
+
+  ck_assert_int_eq(0, rt.gameWon);
+  endGame(&rt);
+}
+END_TEST
+
 Suite * puzzle_script_parser_suite(void)
 {
   Suite * s;
@@ -2019,7 +2037,7 @@ Suite * puzzle_script_parser_suite(void)
   tcase_add_test(test_Runner, test_runs_micro_ban);
   tcase_add_test(test_Runner, test_runs_neko_puzzle);
   tcase_add_test(test_Runner, test_runs_not_snake);
-  /* tcase_add_test(test_Runner, test_parses_octat); */
+  tcase_add_test(test_Runner, test_runs_octat);
   /* tcase_add_test(test_Runner, test_parses_random_robots); */
   /* tcase_add_test(test_Runner, test_parses_random_robots_spawner); */
   /* tcase_add_test(test_Runner, test_parses_zen_puzzle_garden); */

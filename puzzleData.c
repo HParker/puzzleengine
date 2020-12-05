@@ -342,7 +342,7 @@ void initPuzzleData() {
         pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity = malloc(sizeof(RuleIdentity) * pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCapacity);
         for (int ident = 0; ident < pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCapacity; ident++) {
           pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[ident].direction = NONE;
-          pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[ident].legendId = -1;
+          pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[ident].legendId = 1; // TODO: this is empty, but that isn't clear
         }
       }
     }

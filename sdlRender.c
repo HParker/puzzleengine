@@ -189,9 +189,7 @@ void drawChar(int x, int y, int pixelSize, char * sprite) {
       SDL_SetRenderDrawColor(renderer, textColor.r, textColor.g, textColor.b, textColor.a);
       SDL_RenderFillRect(renderer, &sdlRect);
     }
-
   }
-
 }
 
 void drawObj(Runtime * rt, int objIndex) {
@@ -221,7 +219,6 @@ void drawObj(Runtime * rt, int objIndex) {
       sdlRect.y = (rt->objects[objIndex].y * pixelSize * height) + ((i / 5) * pixelSize);
       sdlRect.w = pixelSize;
       sdlRect.h = pixelSize;
-
 
       SDL_SetRenderDrawColor(renderer, cellColor.r, cellColor.g, cellColor.b, cellColor.a);
       SDL_RenderFillRect(renderer, &sdlRect);
@@ -281,8 +278,8 @@ void renderLevel(Runtime * rt) {
   int objLayer;
 
   renderBackground(rt);
-
-  for (int layer = 0; layer < 4; layer++) {
+  int count = layerCount();
+  for (int layer = 0; layer < count; layer++) {
     for (int i = 0; i < rt->objectCount; i++) {
       objLayer = objectLayer(rt->objects[i].objId);
       if (layer == objLayer) {
