@@ -389,14 +389,9 @@ state_internals: state_part VERTICAL_PIPE state_internals
 
 state_part: objects_on_same_square {
   if (pd.rules[pd.ruleCount].matchStateDone == 0) {
-
-    Rule * r = &pd.rules[pd.ruleCount];
-    RuleState * rs = &r->matchStates[r->matchStateCount];
-    incMatchPart(pd.ruleCount, r->matchStateCount);
+    incMatchPart(pd.ruleCount, pd.rules[pd.ruleCount].matchStateCount);
   } else {
-    Rule * r = &pd.rules[pd.ruleCount];
-    RuleState * rs = &r->resultStates[r->resultStateCount];
-    incResultPart(pd.ruleCount, r->resultStateCount);
+    incResultPart(pd.ruleCount, pd.rules[pd.ruleCount].resultStateCount);
   }
 }
           | %empty {

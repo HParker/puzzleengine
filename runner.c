@@ -494,7 +494,7 @@ int objNotAt(Runtime * rt, int legendId, int x, int y) {
   return 1;
 }
 
-int fast_alreadyResult(Runtime * rt, RuleStatePart * part, RuleStatePart * matchPart, Direction appDir, int x, int y) {
+int alreadyResult(Runtime * rt, RuleStatePart * part, RuleStatePart * matchPart, Direction appDir, int x, int y) {
   int ignoreUnspecified, objIndex;
   int matched = 0;
   if (part->ruleIdentityCount <= 0) {
@@ -511,7 +511,6 @@ int fast_alreadyResult(Runtime * rt, RuleStatePart * part, RuleStatePart * match
       ignoreUnspecified = 1;
     }
 
-    int emptyId = aliasLegendId("_EMPTY_");
     int legAt = legendAt(rt, legendId, x, y);
 
     if (ruleDir == COND_NO) {
@@ -521,42 +520,9 @@ int fast_alreadyResult(Runtime * rt, RuleStatePart * part, RuleStatePart * match
     } else {
       if (legAt) {
         objIndex = legendObjIndex(rt, legendId, x, y);
-        if (objIndex != -1 && matchesDirection(ruleDir, appDir, directionMoving(rt, objIndex), 1) == 1) {
+        if (objIndex != -1 && matchesDirection(ruleDir, appDir, directionMoving(rt, objIndex), ignoreUnspecified) == 1) {
           matched = 1;
         }
-      }
-    }
-    if (matched == 0) {
-      return 0;
-    }
-  }
-  return 1;
-}
-
-
-int alreadyResult(Runtime * rt, RuleStatePart * part, RuleStatePart * matchPart, Direction appDir, int x, int y) {
-  int ignoreUnspecified;
-  int matched = 0;
-  if (part->ruleIdentityCount <= 0) {
-    return 0;
-  }
-  for (int i = 0; i < part->ruleIdentityCount; i++) {
-    matched = 0;
-    int legendId = part->ruleIdentity[i].legendId;
-    int ruleDir = part->ruleIdentity[i].direction;
-    if (ruleDir == UNSPECIFIED && matchPart->ruleIdentity[i].direction != UNSPECIFIED) {
-      ignoreUnspecified = 0;
-    } else {
-      ignoreUnspecified = 1;
-    }
-    for (int j = 0; j < rt->objectCount; j++) {
-      int legendContains = aliasLegendContains(legendId, rt->objects[j].objId);
-      if (rt->objects[j].deleted == 0 &&
-          (rt->objects[j].x == x &&
-            rt->objects[j].y == y) &&
-          ((ruleDir == COND_NO && objNotAt(rt, legendId, x, y)) || (ruleDir != COND_NO && legendContains == 1)) &&
-          matchesDirection(ruleDir, appDir, directionMoving(rt, j), ignoreUnspecified)) {
-        matched = 1;
       }
     }
     if (matched == 0) {
