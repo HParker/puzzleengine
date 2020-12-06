@@ -383,7 +383,6 @@ void updateMap(Runtime * rt) {
           printf("no layer id for index: %i, objid: %i, deleted: %i\n", i, rt->objects[i].objId, rt->objects[i].deleted);
         }
 
-
         if (rt->objects[i].deleted == 0 && layerId != -1) {
           x = rt->objects[i].x;
           y = rt->objects[i].y;
@@ -428,23 +427,27 @@ void applyMatch(Runtime * rt, Match * match) {
   for (int i = 0; i < match->partCount; i++) {
     if (match->parts[i].newObject == 1 && match->parts[i].goalId != -1) {
       addObj(rt, match->parts[i].goalId, match->parts[i].goalX, match->parts[i].goalY);
-    } else {
+      // TODO: I don't like mutating this, lets try not to.
+      match->parts[i].objIndex = rt->objectCount - 1;
+    } else if (match->parts[i].goalId == aliasLegendId("_Empty_")) {
+      rt->objects[match->parts[i].objIndex].deleted = 1;
+    } else if (aliasLegendObjectCount(match->parts[i].goalId) == 1 && match->parts[i].goalId != aliasLegendId("...") && match->parts[i].goalId != aliasLegendId("_Empty_")) {
       // TODO: does this work if I use a alias with only one value?
-      if (aliasLegendObjectCount(match->parts[i].goalId) == 1 && match->parts[i].goalId != aliasLegendId("...") && match->parts[i].goalId != aliasLegendId("_Empty_")) {
-        rt->objects[match->parts[i].objIndex].objId = aliasLegendObjectId(match->parts[i].goalId, 0);
-      } else if (match->parts[i].goalId == aliasLegendId("_Empty_")) {
-        // TODO: we can handle deletes by just assigning `aliasLegendId("_Empty_")`
-        //       then removing them or marking them deleted later.
-        //       I haven't done it yet because it might make undo easier
-        rt->objects[match->parts[i].objIndex].deleted = 1;
-      }
+      rt->objects[match->parts[i].objIndex].objId = aliasLegendObjectId(match->parts[i].goalId, 0);
+    }
+
+    if (match->parts[i].objIndex == -1) {
+      printf("got here with objindex -1 why? goalId: %i\n", match->parts[i].goalId);
+    } else {
       rt->objects[match->parts[i].objIndex].objId = match->parts[i].goalId;
       rt->objects[match->parts[i].objIndex].x = match->parts[i].goalX;
       rt->objects[match->parts[i].objIndex].y = match->parts[i].goalY;
+    }
 
+    if (match->parts[i].goalDirection != -1) {
       addToMove(rt, match->appliedDirection, match->parts[i].objIndex,  match->parts[i].goalDirection);
     }
-  }
+   }
 }
 
 int distance(int i, int j) {
@@ -523,6 +526,18 @@ int alreadyResultIdentity(Runtime * rt, int ruleId, int stateId, int partId, int
   return matched;
 }
 
+int resultHasLegendId(int ruleId, int stateId, int partId, int legendId) {
+  if (rule(ruleId)->resultStates[stateId].parts[partId].ruleIdentityCount <= 0) {
+    return 0;
+  }
+  for (int i = 0; i < rule(ruleId)->resultStates[stateId].parts[partId].ruleIdentityCount; i++) {
+    if (rule(ruleId)->resultStates[stateId].parts[partId].ruleIdentity[i].legendId == legendId) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
 int alreadyResult(Runtime * rt, int ruleId, int stateId, int partId, Direction appDir, int x, int y) {
   int matched = 0;
   if (rule(ruleId)->resultStates[stateId].parts[partId].ruleIdentityCount <= 0) {
@@ -572,11 +587,13 @@ int partIdentity(Runtime * rt, int ruleId, int stateId, int partId, int identId,
         match->parts[match->partCount].newObject = 1;
         match->parts[match->partCount].goalX = x;
         match->parts[match->partCount].goalY = y;
+        match->parts[match->partCount].goalDirection = -1; // TODO: UNSPECIFIED, but must be handled in application first
       } else {
         match->parts[match->partCount].newObject = 0;
         match->parts[match->partCount].objIndex = objIndex;
         match->parts[match->partCount].goalX = rt->objects[objIndex].x;
         match->parts[match->partCount].goalY = rt->objects[objIndex].y;
+        match->parts[match->partCount].goalDirection = -1; // TODO: UNSPECIFIED, but must be handled in application first
       }
 
       // TODO: These are always the same
@@ -587,24 +604,30 @@ int partIdentity(Runtime * rt, int ruleId, int stateId, int partId, int identId,
         // undo the whole turn...
         // TODO: not sure we have to set goal* here since we ignore it for the cancel case
         match->parts[match->partCount].goalDirection = -1; // TODO: UNSPECIFIED, but must be handled in application first
-        match->parts[match->partCount].goalId = emptyId;
+        match->parts[match->partCount].goalId = -1;
         match->cancel = 1;
       } else {
         match->parts[match->partCount].goalDirection = absoluteDirection(appDir, resultPart->ruleIdentity[identId].direction);
 
         if (objIndex != -1 && aliasLegendContains(resultPart->ruleIdentity[identId].legendId, rt->objects[objIndex].objId) == 1) {
-          printf("found goal id in legend setting it to %i\n", rt->objects[objIndex].objId);
           match->parts[match->partCount].goalId = rt->objects[objIndex].objId;
         } else {
-          printf("DID NOT find goal id in legend setting it to %i\n", resultPart->ruleIdentity[identId].legendId);
           match->parts[match->partCount].goalId = resultPart->ruleIdentity[identId].legendId;
         }
       }
       match->partCount++;
     } else {
-      printf("Rule not applied because already result\n");
-      // TODO: if legend is not in result legend delete it!
-
+      if (resultHasLegendId(ruleId, stateId, partId, legendId) == 0 && ruleDir != COND_NO) {
+        printf("objectIndex %i\n", objIndex);
+        match->parts[match->partCount].objIndex = objIndex;
+        match->parts[match->partCount].goalId = emptyId;
+        match->parts[match->partCount].goalX = rt->objects[objIndex].x;
+        match->parts[match->partCount].goalY = rt->objects[objIndex].y;
+        match->parts[match->partCount].actualX = x;
+        match->parts[match->partCount].actualY = y;
+        match->parts[match->partCount].goalDirection = -1; // TODO: UNSPECIFIED, but must be handled in application first
+        match->partCount++;
+      }
     }
   } else {
     match->partCount = prevPartCount;

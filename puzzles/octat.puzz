@@ -1,7 +1,6 @@
 title Octat
 author Stephen Lavelle
 homepage www.increpare.com
-debug
 
 noundo
 require_player_movement

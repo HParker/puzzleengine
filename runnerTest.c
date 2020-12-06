@@ -3,16 +3,22 @@
 #include "puzzleData.h"
 
 void test_solution(Runtime * rt, int moveCount, int moves[]) {
+  printf("%s: ", rt->pd->title);
+  int currentLevel = 0;
   for (int i = 0; i < moveCount; i++) {
     if (rt->gameWon == 0) {
       update(rt, moves[i]);
-      printf(".");
+      if (rt->levelIndex > currentLevel) {
+        currentLevel = rt->levelIndex;
+        printf(".");
+      }
+
     }
   }
   /* if (rt->gameWon == 0) { */
   /*   printf("Game incomplete %i/%i\n", rt->levelIndex, rt->pd->levelCount); */
   /* } */
-  printf("\n");
+  printf(".\n");
 }
 
 START_TEST (test_runs_stumper)
@@ -41,7 +47,6 @@ START_TEST (test_runs_stumper)
                  RIGHT,
                  RIGHT
   };
-
   test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
 
   ck_assert_int_eq(1, rt.gameWon);
@@ -122,22 +127,54 @@ START_TEST (test_runs_eyeball_walk)
   startGame(&rt, file);
 
   int moves[] = {
+                 DOWN,
+                 DOWN,
+                 RIGHT,
+                 RIGHT,
+                 RIGHT,
+                 LEFT,
+                 LEFT,
                  UP,
+                 LEFT,
+                 UP,
+                 DOWN,
+                 DOWN,
+                 RIGHT,
+                 RIGHT,
+                 RIGHT,
+                 RIGHT,
+                 LEFT,
+                 LEFT,
+                 LEFT,
+                 LEFT,
+                 DOWN,
+                 RIGHT,
+                 RIGHT,
+                 RIGHT,
+                 RIGHT,
+                 RIGHT,
+                 RIGHT,
+                 LEFT,
+                 LEFT,
+                 LEFT,
+                 LEFT,
+                 LEFT,
+                 LEFT,
+                 LEFT,
                  LEFT,
                  DOWN,
                  DOWN,
-                 RIGHT,
-                 RIGHT,
-                 RIGHT,
-                 RIGHT,
-                 RIGHT,
+                 DOWN,
+                 DOWN,
                  UP,
                  UP,
                  DOWN,
                  DOWN,
+                 RIGHT,
                  DOWN,
-                 LEFT,
-                 LEFT,
+                 DOWN,
+                 RIGHT,
+                 RIGHT,
                  RIGHT,
                  LEFT,
                  LEFT
@@ -689,7 +726,6 @@ START_TEST (test_runs_constellation_z)
   };
 
   test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
-
   ck_assert_int_eq(10, rt.levelIndex);
   endGame(&rt);
 }
@@ -1402,7 +1438,6 @@ START_TEST (test_runs_micro_ban)
   };
 
   test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
-
   ck_assert_int_eq(1, rt.gameWon);
   endGame(&rt);
 }
@@ -1457,7 +1492,6 @@ START_TEST (test_runs_match3)
   };
 
   test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
-
   ck_assert_int_eq(1, rt.gameWon);
   endGame(&rt);
 }
@@ -1549,7 +1583,6 @@ START_TEST (test_runs_neko_puzzle)
                  DOWN,
                  USE
   };
-
   test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
 
   ck_assert_int_eq(1, rt.gameWon);
@@ -1936,7 +1969,6 @@ START_TEST (test_runs_lime_rick)
                  LEFT,
                  USE
   };
-
   test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
 
   ck_assert_int_eq(1, rt.gameWon);
@@ -1989,7 +2021,6 @@ START_TEST (test_runs_not_snake)
                  LEFT,
                  DOWN
   };
-
   test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
 
   ck_assert_int_eq(1, rt.gameWon);
@@ -2005,12 +2036,82 @@ START_TEST (test_runs_octat)
   startGame(&rt, file);
 
   int moves[] = {
-                 RIGHT
+                 USE,
+                 LEFT,
+                 LEFT,
+                 LEFT,
+                 LEFT,
+                 LEFT,
+                 USE,
+                 RIGHT,
+                 RIGHT,
+                 UP,
+                 UP,
+                 LEFT,
+                 DOWN,
+                 DOWN,
+                 LEFT,
+                 LEFT,
+                 USE,
+                 LEFT,
+                 UP,
+                 LEFT,
+                 DOWN,
+                 DOWN,
+                 LEFT,
+                 UP,
+                 LEFT,
+                 USE,
+                 LEFT,
+                 UP,
+                 LEFT,
+                 LEFT,
+                 UP,
+                 LEFT,
+                 DOWN,
+                 DOWN,
+                 RIGHT,
+                 DOWN,
+                 LEFT,
+                 DOWN,
+                 DOWN,
+                 LEFT,
+                 UP,
+                 LEFT,
+                 DOWN,
+                 RIGHT,
+                 UP,
+                 UP,
+                 LEFT,
+                 LEFT,
+                 DOWN,
+                 RIGHT,
+                 UP,
+                 UP,
+                 USE,
+                 UP,
+                 UP,
+                 LEFT,
+                 LEFT,
+                 LEFT,
+                 LEFT,
+                 UP,
+                 UP,
+                 RIGHT,
+                 DOWN,
+                 DOWN,
+                 RIGHT,
+                 DOWN,
+                 DOWN,
+                 LEFT,
+                 UP,
+                 LEFT,
+                 DOWN,
+                 USE
   };
-
   test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
 
-  ck_assert_int_eq(0, rt.gameWon);
+  ck_assert_int_eq(11, rt.levelIndex);
   endGame(&rt);
 }
 END_TEST
