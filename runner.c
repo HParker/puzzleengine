@@ -124,7 +124,11 @@ Direction absoluteDirection(Direction applicationDirection, Direction ruleDir) {
   case USE:
   case COND_NO:
   case UNSPECIFIED:
+  case STATIONARY:
     return NONE;
+  case RANDOMDIR:
+    // TODO: more robust random
+    return RIGHT;
   default:
     printf("err: (absoluteDirection) unsupported direction (ad: %i rd: %i)\n", applicationDirection, ruleDir);
     return NONE;
@@ -309,6 +313,11 @@ void undo(Runtime * rt, int partial) {
 }
 
 int isMovable(Runtime * rt, int x, int y, int layerIndex) {
+  // inbounds
+  if (x >= rt->width || x < 0 || y >= rt->height || y < 0) {
+    return 0;
+  }
+
   int hasCollidable = 0;
   for (int i = 0; i < rt->objectCount; i++) {
     if (rt->objects[i].deleted == 0 && rt->objects[i].x == x && rt->objects[i].y == y && layerIncludes(layerIndex, rt->objects[i].objId)) {
