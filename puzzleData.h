@@ -133,8 +133,6 @@ typedef struct MatchData {
   // legend id in rules could be things like `movable = Block or Player`
   // which isn't the legend id of the thing to actually place when applying the result state
   int ruleLegendId;
-  int actualX;
-  int actualY;
   int actualDirection;
   // goal
   int goalId;
@@ -184,7 +182,7 @@ typedef struct PuzzleData {
   int runRulesOnLevelStart;
 
   // global styling
-  char * colorPalette;
+  int colorPalette;
   char * backgroundColor;
   char * textColor;
   int flickScreenX;
@@ -369,6 +367,7 @@ extern int winConditionCount();
 extern WinCondition * winCondition(int winConditionIndex);
 
 // Parser methods
+extern int colorPaletteId(char * name);
 extern int legendId(char * name);
 extern void incObject();
 extern void incAliasLegend();

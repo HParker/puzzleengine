@@ -211,7 +211,7 @@ void renderMessage(Runtime * rt) {
   char * message = levelMessage(rt->levelIndex);
   int textLength = MeasureText(message, 20);
 
-  DrawText(message, WINDOW_SIZE / 2 - textLength / 2, WINDOW_SIZE / 2, 20, BLACK);
+  DrawText(message, WINDOW_SIZE / 2 - textLength / 2, WINDOW_SIZE / 2, 20, WHITE);
 }
 
 void render(Runtime * rt) {

@@ -3,6 +3,7 @@ author Anton Klinger
 homepage www.puzzlescript.net
 color_palette 7
 noaction
+debug
 
 ========
 OBJECTS

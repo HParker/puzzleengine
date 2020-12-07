@@ -146,7 +146,7 @@ color (color|colour)
 
 <SOUNDS>[^=]+
 
-<COLLISIONLAYERS>[A-Za-z]+ {
+<COLLISIONLAYERS>[A-Za-z0-9]+ {
   yylval.identifier = strdup(yytext);
   return LAYER_NAME;
 }
@@ -297,7 +297,12 @@ message[ ]+ {
   return MESSAGE;
 }
 
-{glyph} {
+<OBJECTS>{glyph} {
+  yylval.cell = yytext[0];
+  return GLYPH;
+}
+
+<LEVELS>{glyph} {
   yylval.cell = yytext[0];
   return GLYPH;
 }

@@ -153,7 +153,7 @@ homepage: HOMEPAGE ID {
 
 require_player_movement: REQUIRE_PLAYER_MOVEMENT { pd.requirePlayerMovement = 1; }
 
-color_palette: COLOR_PALETTE ID { pd.colorPalette = $2; }
+color_palette: COLOR_PALETTE ID { pd.colorPalette = colorPaletteId($2); }
         ;
 again_interval: AGAIN_INTERVAL ID { pd.againInterval = 0.1f; }
         ;
@@ -358,6 +358,10 @@ rule_prefix:    EXECUTION_TIME {
   pd.rules[pd.ruleCount].executionTime = NORMAL;
   pd.rules[pd.ruleCount].directionConstraint = $1;
 }
+        |       EXECUTION_TIME DIRECTION {
+  pd.rules[pd.ruleCount].executionTime = $1;
+  pd.rules[pd.ruleCount].directionConstraint = $2;
+}
 
 rule_postfix: RULE_POSTFIX {
                   if (strcasecmp("cancel", $1) == 0) {
@@ -443,7 +447,7 @@ object_part: OBJID {
     rsp->ruleIdentityCount++;
   }
 }
-           | DIRECTION OBJID {
+        |       DIRECTION OBJID {
   if (pd.rules[pd.ruleCount].matchStateDone == 0) {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->matchStates[r->matchStateCount];

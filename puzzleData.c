@@ -8,6 +8,40 @@
 
 #define PUZZLE_MALLOC_INC 10;
 
+int colorPaletteId(char * name) {
+  if (strcasecmp(name, "mastersystem") == 0) {
+    return 1;
+  } else if (strcasecmp(name, "gameboycolour") == 0) {
+    return 2;
+  } else if (strcasecmp(name, "gameboycolor") == 0) {
+    return 2;
+  } else if (strcasecmp(name, "amiga") == 0) {
+    return 3;
+  } else if (strcasecmp(name, "arnecolors") == 0) {
+    return 4;
+  } else if (strcasecmp(name, "famicom") == 0) {
+    return 5;
+  } else if (strcasecmp(name, "atari") == 0) {
+    return 6;
+  } else if (strcasecmp(name, "pastel") == 0) {
+    return 7;
+  } else if (strcasecmp(name, "ega") == 0) {
+    return 8;
+  } else if (strcasecmp(name, "amstrad") == 0) {
+    return 9;
+  } else if (strcasecmp(name, "proteus_mellow") == 0) {
+    return 10;
+  } else if (strcasecmp(name, "proteus_rich") == 0) {
+    return 11;
+  } else if (strcasecmp(name, "proteus_night") == 0) {
+    return 12;
+  } else if (strcasecmp(name, "c64") == 0) {
+    return 13;
+  } else if (strcasecmp(name, "whitingjp") == 0) {
+    return 14;
+  }
+}
+
 void incObject() {
   if (pd.objectCount + 1 >= pd.objectCapacity) {
     printf("object REALLOC\n");

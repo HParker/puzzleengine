@@ -138,7 +138,7 @@ int offsetZ = 0;
 void initRenderer() {
   InitWindow(WINDOW_SIZE, WINDOW_SIZE, "My first Raylib program");
   SetTargetFPS(60);
-  camera.position = (Vector3){ 0.0f, 0.0f, 100.0f };  // Camera position
+  camera.position = (Vector3){ 0.0f, 0.0f, 40.0f };  // Camera position
   camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
   camera.up = (Vector3){ 0.0f, -1.0f, 0.0f };          // Camera up vector (rotation towards target)
   camera.fovy = 40.0f;                                // Camera field-of-view Y
@@ -170,7 +170,7 @@ void renderBackground(Runtime * rt) {
         Vector3 cubePosition;
         cubePosition.x = -(cell % rt->width * pixelSize * width) + ((i % 5) * pixelSize);
         cubePosition.y = (cell / rt->width * pixelSize * height) + ((i / 5) * pixelSize);
-        cubePosition.z = -1.0f;
+        cubePosition.z = 0.0f;
 
         int w = pixelSize;
         int h = pixelSize;
@@ -206,7 +206,7 @@ void drawObj(Runtime * rt, int objIndex) {
       Vector3 cubePosition;
       cubePosition.x = -(rt->objects[objIndex].x * pixelSize * width) + ((i % 5) * pixelSize);
       cubePosition.y = (rt->objects[objIndex].y * pixelSize * height) + ((i / 5) * pixelSize);
-      cubePosition.z = 0;
+      cubePosition.z = 2;
       int w = pixelSize;
       int h = pixelSize;
       int l = pixelSize * 2;
@@ -245,7 +245,7 @@ void render(Runtime * rt) {
   camera.target.y = ((rt->height * 5) / 2);
 
   camera.position.x = -(((rt->width * 5) / 2) - 5);
-  camera.position.y = ((rt->height * 5) / 2) + 15;
+  camera.position.y = ((rt->height * 5) / 2) + 35;
 
 
   switch (rt->levelType) {
