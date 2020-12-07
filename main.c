@@ -21,20 +21,24 @@ int main(int argc, char ** argv) {
   rt.toMoveCount = 0;
   initRenderer();
 
+  char curInput;
   while (1) {
     render(&rt);
-    Direction dir = handleInput(&rt, input());
-    if (dir == QUIT) {
-      break;
-    }
-    if (dir == UNDO && rt.statesCount > 0) {
-      undo(&rt, 0);
-    } else {
-      update(&rt, dir);
-    }
+    curInput = input();
+    if (curInput != -1) {
+      Direction dir = handleInput(&rt, curInput);
+      if (dir == QUIT) {
+        break;
+      }
+      if (dir == UNDO && rt.statesCount > 0) {
+        undo(&rt, 0);
+      } else {
+        update(&rt, dir);
+      }
 
-    if (rt.gameWon == 1) {
-      break;
+      if (rt.gameWon == 1) {
+        break;
+      }
     }
   }
 

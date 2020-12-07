@@ -1,3 +1,6 @@
+#ifndef ALPHABET
+#define ALPHABET
+
 #include "puzzleData.h"
 
 char L_SPACE[25] = {
@@ -414,3 +417,4 @@ char * charSprite(char c) {
   printf("Error unsupported character '%c'\n", c);
   return L_SPACE;
 }
+#endif
