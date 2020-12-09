@@ -134,7 +134,7 @@ Direction absoluteDirection(Direction applicationDirection, Direction ruleDir) {
 
 int matchesDirection(Direction ruleDir, Direction applicationDir, Direction dir, int ignoreUnspec) {
   if (dir == COND_NO || (ignoreUnspec && ruleDir == UNSPECIFIED)) {
-    return 1; // TODO: remove special case here
+    return 1;
   }
   Direction absoluteDir = absoluteDirection(applicationDir, ruleDir);
   if (absoluteDir == dir) {
@@ -204,15 +204,10 @@ void loadLevel(Runtime * rt) {
       int y = i / rt->width;
       loadCell(rt, levelCell(rt->levelIndex, i), x, y);
     }
-  } else {
-    // Message style level
-    // Not sure we have to do anything
-    // Since we can just render the level from the message stored in the puzzle data;
   }
 
   // map
   if (rt->levelType == SQUARES) {
-    // TODO: I can malloc this once since I can find out the largest size
     free(rt->map);
     rt->map = malloc((sizeof(int) * rt->height * rt->width * layerCount()));
   }
@@ -283,7 +278,7 @@ void endGame(Runtime * rt) {
 void undo(Runtime * rt, int partial) {
   rt->toMoveCount = 0;
   if (partial == 0) {
-    /* free(rt->states[rt->statesCount].objects); */
+    free(rt->states[rt->statesCount].objects);
   }
 
   rt->objectCount = rt->states[rt->statesCount - 1].objectCount;
