@@ -586,7 +586,8 @@ void replaceCell(Runtime * rt, int ruleId, int stateId, int partId, Direction ap
       if (ruleDir != COND_NO) {
         if (legendAt(rt, legendId, x, y) == 0) {
           match->parts[match->partCount].newObject = 1;
-          match->parts[match->partCount].goalId = legendId;
+          // TODO: this should be ok all the time, but feels wrong.
+          match->parts[match->partCount].goalId = aliasLegendObjectId(legendId, 0);
           match->parts[match->partCount].goalX = x;
           match->parts[match->partCount].goalY = y;
 
