@@ -287,9 +287,7 @@ color (color|colour)
   return LOGIC_ON;
 }
 
-
-
-<WINCONDITIONS>[a-zA-Z\.]+ {
+<WINCONDITIONS>[a-zA-Z0-9\.]+ {
   yylval.identifier = strdup(yytext);
   return OBJID;
 }

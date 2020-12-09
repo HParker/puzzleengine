@@ -1,6 +1,8 @@
 #ifndef PUZZLE_DATA
 #define PUZZLE_DATA
 
+#include <time.h>
+
 // Object
 typedef struct Object {
   char * name;
@@ -258,6 +260,7 @@ typedef struct State {
 
 typedef struct Runtime {
   PuzzleData * pd;
+  time_t randomSeed;
   int gameWon;
   int levelIndex;
   char background;

@@ -2745,6 +2745,81 @@ START_TEST (test_runs_soliquid)
 }
 END_TEST
 
+START_TEST (test_runs_watch_your_step)
+{
+  FILE *file;
+  file = fopen("./puzzles/watch_your_step.puzz", "r");
+  Runtime rt;
+  startGame(&rt, file);
+
+  int moves[] = {
+                 USE,
+                 USE,
+                 USE,
+                 LEFT,
+                 UP,
+                 RIGHT,
+                 DOWN,
+                 LEFT,
+                 UP,
+                 RIGHT,
+                 RIGHT,
+                 DOWN,
+                 LEFT,
+                 RIGHT,
+                 UP,
+                 LEFT,
+                 RIGHT,
+                 RIGHT,
+                 DOWN,
+                 LEFT,
+                 LEFT,
+                 RIGHT,
+                 RIGHT,
+                 UP,
+                 LEFT,
+                 LEFT,
+                 RIGHT,
+                 RIGHT,
+                 DOWN,
+                 LEFT,
+                 RIGHT,
+                 UP,
+                 LEFT,
+                 RIGHT,
+                 RIGHT,
+                 DOWN,
+                 LEFT,
+                 LEFT,
+                 RIGHT,
+                 RIGHT,
+                 UP,
+                 LEFT,
+                 LEFT,
+                 LEFT,
+                 UP,
+                 LEFT,
+                 LEFT,
+                 DOWN,
+                 DOWN,
+                 RIGHT,
+                 LEFT,
+                 UP,
+                 UP,
+                 RIGHT,
+                 DOWN,
+                 LEFT,
+                 DOWN,
+                 RIGHT,
+                 USE
+  };
+  test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
+
+  ck_assert_int_eq(1, rt.gameWon);
+  endGame(&rt);
+}
+END_TEST
+
 Suite * puzzle_script_parser_suite(void)
 {
   Suite * s;
@@ -2772,6 +2847,7 @@ Suite * puzzle_script_parser_suite(void)
   /* tcase_add_test(test_Runner, test_parses_random_robots_spawner); */
   tcase_add_test(test_Runner, test_runs_zen_puzzle_garden);
   tcase_add_test(test_Runner, test_runs_soliquid);
+  tcase_add_test(test_Runner, test_runs_watch_your_step);
 
   suite_add_tcase(s, test_Runner);
   return s;

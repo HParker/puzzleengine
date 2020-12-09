@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 #include "puzzleData.h"
 
 char * directionName(Direction dir) {
@@ -124,8 +125,7 @@ Direction absoluteDirection(Direction applicationDirection, Direction ruleDir) {
   case STATIONARY:
     return NONE;
   case RANDOMDIR:
-    // TODO: more robust random
-    return RIGHT;
+    return (Direction)rand() % 4;
   default:
     printf("err: (absoluteDirection) unsupported direction (ad: %i rd: %i)\n", applicationDirection, ruleDir);
     return NONE;
@@ -235,6 +235,7 @@ void updateLevel(Runtime * rt) {
 }
 
 void initGame(Runtime * rt) {
+  srand((unsigned)time(&rt->randomSeed));
   rt->levelIndex = 0;
   rt->gameWon = 0;
   rt->prevHistoryCount = 0;
@@ -516,6 +517,19 @@ int alreadyResultIdentity(Runtime * rt, int ruleId, int stateId, int partId, int
   return matched;
 }
 
+Direction matchLegendDirection(int ruleId, int stateId, int partId, int legendId) {
+  if (rule(ruleId)->matchStates[stateId].parts[partId].ruleIdentityCount <= 0) {
+    return UNSPECIFIED;
+  }
+  for (int i = 0; i < rule(ruleId)->matchStates[stateId].parts[partId].ruleIdentityCount; i++) {
+    if (rule(ruleId)->matchStates[stateId].parts[partId].ruleIdentity[i].legendId == legendId) {
+      return rule(ruleId)->matchStates[stateId].parts[partId].ruleIdentity[i].direction;
+    }
+  }
+  return UNSPECIFIED;
+}
+
+
 int resultHasLegendId(int ruleId, int stateId, int partId, int legendId) {
   if (rule(ruleId)->resultStates[stateId].parts[partId].ruleIdentityCount <= 0) {
     return 0;
@@ -582,6 +596,7 @@ void replaceCell(Runtime * rt, int ruleId, int stateId, int partId, Direction ap
   for (int identId = 0; identId < resultIdentCount; identId++) {
     Direction ruleDir = rule(ruleId)->resultStates[stateId].parts[partId].ruleIdentity[identId].direction;
     int legendId = rule(ruleId)->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+    Direction matchDir = matchLegendDirection(ruleId, stateId, partId, legendId);
     if (legendId != emptyId) {
       if (ruleDir != COND_NO) {
         if (legendAt(rt, legendId, x, y) == 0) {
@@ -595,11 +610,13 @@ void replaceCell(Runtime * rt, int ruleId, int stateId, int partId, Direction ap
           match->partCount++;
         } else {
           int objIndex = legendObjIndex(rt, legendId, x, y);
-          match->parts[match->partCount].newObject = 0;
-          match->parts[match->partCount].goalId = -1; // Don't change the id
-          match->parts[match->partCount].objIndex = objIndex;
-          match->parts[match->partCount].goalDirection = absoluteDirection(appDir, ruleDir);
-          match->partCount++;
+          if (ruleDir != UNSPECIFIED || matchDir != UNSPECIFIED) {
+            match->parts[match->partCount].newObject = 0;
+            match->parts[match->partCount].goalId = -1; // Don't change the id
+            match->parts[match->partCount].objIndex = objIndex;
+            match->parts[match->partCount].goalDirection = absoluteDirection(appDir, ruleDir);
+            match->partCount++;
+          }
         }
       }
     }
@@ -1122,6 +1139,8 @@ int checkWinCondition(Runtime * rt, int winConditionIndex) {
   case ALL:
     return verifyAll(rt, winCondition(winConditionIndex)->winIdentifier, winCondition(winConditionIndex)->onIndentifier, winCondition(winConditionIndex)->hasOnQualifier);
   case SOME:
+    return verifyOne(rt, winCondition(winConditionIndex)->winIdentifier, winCondition(winConditionIndex)->onIndentifier, winCondition(winConditionIndex)->hasOnQualifier);
+  case ANY:
     return verifyOne(rt, winCondition(winConditionIndex)->winIdentifier, winCondition(winConditionIndex)->onIndentifier, winCondition(winConditionIndex)->hasOnQualifier);
   case NO:
     return verifyNone(rt, winCondition(winConditionIndex)->winIdentifier, winCondition(winConditionIndex)->onIndentifier, winCondition(winConditionIndex)->hasOnQualifier);
