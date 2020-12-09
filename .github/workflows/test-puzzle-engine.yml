@@ -15,7 +15,5 @@ jobs:
       run: sudo apt-get update
     - name: install deps
       run: sudo apt-get install flex bison check libncurses5-dev libncursesw5-dev libsdl2-dev
-    - name: make
-      run: make
     - name: make check
       run: make check

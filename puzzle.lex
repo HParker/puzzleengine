@@ -116,6 +116,12 @@ color (color|colour)
   return COLOR;
 }
 
+<OBJECTS>#[a-zA-Z0-9]+ {
+  yylval.identifier = strdup(yytext);
+  return COLOR;
+}
+
+
 <OBJECTS>[a-zA-Z][a-zA-Z_0-9]+ {
   yylval.identifier = strdup(yytext);
   return OBJID;
@@ -259,7 +265,7 @@ color (color|colour)
   return END_OF_RULE;
 }
 
-<WINCONDITIONS>(all|no|some) {
+<WINCONDITIONS>(all|no|some|any) {
   if (strcasecmp(yytext, "all") == 0) {
     yylval.enumValue = ALL;
   } else if (strcasecmp(yytext, "any") == 0) {

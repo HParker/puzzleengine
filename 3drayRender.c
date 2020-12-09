@@ -136,7 +136,7 @@ int offsetY = 0;
 int offsetZ = 0;
 
 void initRenderer() {
-  InitWindow(WINDOW_SIZE, WINDOW_SIZE, "My first Raylib program");
+  InitWindow(WINDOW_SIZE, WINDOW_SIZE, "My Puzzle Game");
   SetTargetFPS(60);
   camera.position = (Vector3){ 0.0f, 0.0f, 40.0f };  // Camera position
   camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
@@ -206,10 +206,10 @@ void drawObj(Runtime * rt, int objIndex) {
       Vector3 cubePosition;
       cubePosition.x = -(rt->objects[objIndex].x * pixelSize * width) + ((i % 5) * pixelSize);
       cubePosition.y = (rt->objects[objIndex].y * pixelSize * height) + ((i / 5) * pixelSize);
-      cubePosition.z = 2;
+      cubePosition.z = 2.5f;
       int w = pixelSize;
       int h = pixelSize;
-      int l = pixelSize * 2;
+      float l = pixelSize * 2.5f;
 
       DrawCube(cubePosition, w, h, l, cellColor);
     }

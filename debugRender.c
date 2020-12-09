@@ -45,8 +45,6 @@ void renderLevel(Runtime * rt) {
 
 void renderMessage(Runtime * rt) {
   char * message = levelMessage(rt->levelIndex);
-  int messageLength = strlen(message);
-
   printf("%s\n", message);
 }
 

@@ -69,6 +69,19 @@ const Color colors[] =
 const int colorCount = 25;
 
 Color colorFromName(char * name) {
+  if (name[0] == '#') {
+    char *str = name;
+    str++;
+    Color color;
+    int r, g, b;
+    sscanf(str, "%02x%02x%02x", &r, &g, &b);
+    color.r = r;
+    color.g = g;
+    color.b = b;
+    color.a = 255;
+    return color;
+  }
+
   for (int i = 0; i < colorCount; i++) {
     if (strcasecmp(colorNames[i], name) == 0) {
       return colors[i];

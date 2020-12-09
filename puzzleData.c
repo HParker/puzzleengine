@@ -40,6 +40,7 @@ int colorPaletteId(char * name) {
   } else if (strcasecmp(name, "whitingjp") == 0) {
     return 14;
   }
+  return 4;
 }
 
 void incObject() {
