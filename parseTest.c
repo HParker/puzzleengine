@@ -1,7 +1,6 @@
 #include <check.h>
 #include <stdio.h>
 #include "puzzleData.h"
-#include "parser.h"
 
 START_TEST (test_parses_basic)
 {
@@ -163,6 +162,15 @@ START_TEST (test_parses_zen_puzzle_garden)
 }
 END_TEST
 
+START_TEST (test_parses_enqueue)
+{
+  FILE *file;
+  file = fopen("./puzzles/enqueue.puzz", "r");
+  PuzzleData * pz = parsePuzzle(file);
+  ck_assert_str_eq(pz->title, "Enqueue");
+}
+END_TEST
+
 Suite * puzzle_script_parser_suite(void)
 {
     Suite * s;
@@ -188,6 +196,7 @@ Suite * puzzle_script_parser_suite(void)
     tcase_add_test(test_Parser, test_parses_random_robots);
     tcase_add_test(test_Parser, test_parses_random_robots_spawner);
     tcase_add_test(test_Parser, test_parses_zen_puzzle_garden);
+    tcase_add_test(test_Parser, test_parses_enqueue);
 
     suite_add_tcase(s, test_Parser);
     return s;

@@ -3,8 +3,8 @@ FLEX = flex
 CC = gcc
 
 default: parser
-	${CC} -g -o parseTest puzzle.tab.c lex.yy.c puzzleData.c parseTest.c `pkg-config --cflags --libs check`
-	${CC} -g -o runnerTest puzzle.tab.c lex.yy.c puzzleData.c runner.c runnerTest.c `pkg-config --cflags --libs check`
+	${CC} -g -o parseTest puzzle.tab.c puzzleData.c parseTest.c `pkg-config --cflags --libs check`
+	${CC} -g -o runnerTest puzzle.tab.c puzzleData.c runner.c runnerTest.c `pkg-config --cflags --libs check`
 
 parser:
 	${BISON} -d puzzle.y

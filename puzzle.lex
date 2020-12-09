@@ -9,7 +9,7 @@ int inMode = 0;
 #define yyterminate() return END_OF_FILE
 %}
 
-%option noyywrap caseless
+%option noyywrap caseless yylineno
 
 %s MODE
 %s IDENTIFIER
@@ -23,7 +23,7 @@ int inMode = 0;
 %s WINCONDITIONS
 %s LEVELS
 
-glyph [;\.0-9a-zA-Z\*#,@`'~]
+glyph [\+\-\!\?:"\{\}\[\];\.0-9a-zA-Z\*#,@`'~]
 
 colors (black|white|lightgray|lightgrey|gray|grey|darkgray|darkgrey|red|darkred|lightred|brown|darkbrown|lightbrown|orange|yellow|green|darkgreen|lightgreen|blue|lightblue|darkblue|purple|pink|transparent)
 
@@ -133,7 +133,7 @@ color (color|colour)
   return LEGEND_ID;
 }
 
-<LEGEND>^{glyph} {
+<LEGEND>^[\[\]\{\}:\?!\+\-;\.0-9a-zA-Z\*#,@`\'\"~] {
   yylval.cell = yytext[0];
   return LEGEND_GLYPH;
 }

@@ -266,7 +266,7 @@ late up [ Taker Wall | No Taker ] -> [ Wall | Taker ]
 
 (killing the filler/taker when it is finished)
 late [ Taker No Block ][ModeGen] -> [][SendMode] again
-late up [ Filler Wall | Wall ][WaitingGen] up [FillerTakerLocation | Block ][WaitingFiller] -> [ Wall | Wall ][ModeGen ReceiveMode][ | Block Taker][Filler] again
+late up [ Filler Wall | Wall ][WaitingGen] [FillerTakerLocation | Block ][WaitingFiller] -> [ Wall | Wall ][ModeGen ReceiveMode][ | Block Taker][Filler] again
 
 ==============
 WINCONDITIONS

@@ -4,11 +4,11 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include "puzzleData.h"
-#include "parser.h"
+#include "lex.yy.c"
 
 PuzzleData pd;
-int yyerror(const char *p) {
-    printf("ERROR: %s\n", p); exit(1);
+int yyerror(const char *str) {
+    fprintf(stderr,"line: %d | %s\n", yylineno, str);
 }
 
 int aliasLegendId(char * name) {

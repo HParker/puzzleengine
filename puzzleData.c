@@ -4,7 +4,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "puzzleData.h"
-#include "parser.h"
+
+extern PuzzleData pd;
 
 #define PUZZLE_MALLOC_INC 10;
 
