@@ -85,9 +85,9 @@ int rowWidth = 0;
 
 %token TITLE AUTHOR HOMEPAGE COLOR_PALETTE AGAIN_INTERVAL BACKGROUND_COLOR
 %token FLICKSCREEN KEY_REPEAT_INTERVAL NOACTION NOREPEAT_ACTION NOUNDO NORESTART
-%token REALTIME_INTERVAL REQUIRE_PLAYER_MOVEMENT RUN_RULES_ON_LEVEL_START
+%token REALTIME_INTERVAL REQUIRE_PLAYER_MOVEMENT
 %token SCANLINE TEXT_COLOR THROTTLE_MOVEMENT ZOOMSCREEN
-%token DEBUG VERBOSE_LOGGING
+%token DEBUG VERBOSE_LOGGING RUN_RULES_ON_LEVEL_START
 %token END_OF_FILE 0 "end of file"
 %token MODE_HEADER EQUALS END_LAYER END_OF_RULE MESSAGE LEGEND_AND LEGEND_OR
 %token  <identifier> ID OBJID COLOR LEGEND_ID LEGEND_VALUE END_LEGEND_LINE LAYER_NAME RULE_POSTFIX
@@ -139,6 +139,7 @@ preamble_option: title
                | zoomscreen
                | debug
                | verbose_logging
+               | run_rules_on_level_start
                | require_player_movement
 
 title: TITLE ID {
@@ -186,10 +187,13 @@ throttle_movement: THROTTLE_MOVEMENT ID { pd.throttleMovement = 1; }
 zoomscreen: ZOOMSCREEN ID { yyerror("ZOOMSCREEN IS NOT YET SUPPORTED\n"); }
         ;
 debug: DEBUG { pd.debug = 1; }
+
         ;
 verbose_logging: VERBOSE_LOGGING { pd.verboseLogging = 1; }
 
         ;
+
+run_rules_on_level_start: RUN_RULES_ON_LEVEL_START { pd.runRulesOnLevelStart = 1; }
 
 modechange: MODE_HEADER
 

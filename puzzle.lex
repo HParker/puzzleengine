@@ -40,9 +40,10 @@ color (color|colour)
 ^flickscreen[ ]+ { BEGIN IDENTIFIER; return FLICKSCREEN; }
 ^key_repeat_interval[ ]+ { BEGIN FLOAT; return KEY_REPEAT_INTERVAL; }
 ^noaction[ ]+ { BEGIN IDENTIFIER; return NOACTION; }
-^norepeat_action[ ]+ { BEGIN IDENTIFIER; return NOREPEAT_ACTION; }
-^noundo { BEGIN IDENTIFIER; return NOUNDO; }
-^norestart[ ]+ { BEGIN IDENTIFIER; return NORESTART; }
+^norepeat_action { return NOREPEAT_ACTION; }
+^noundo { return NOUNDO; }
+^norestart { return NORESTART; }
+^run_rules_on_level_start { return RUN_RULES_ON_LEVEL_START; }
 ^scanline[ ]+ { BEGIN IDENTIFIER; return SCANLINE; }
 ^text_color[ ]+ { BEGIN IDENTIFIER; return TEXT_COLOR; }
 ^throttle_movement[ ]+ { BEGIN IDENTIFIER; return THROTTLE_MOVEMENT; }
@@ -204,6 +205,11 @@ color (color|colour)
 
 <RULES>stationary {
   yylval.enumValue = STATIONARY;
+  return DIRECTION;
+}
+
+<RULES>action {
+  yylval.enumValue = USE;
   return DIRECTION;
 }
 

@@ -2820,6 +2820,57 @@ START_TEST (test_runs_watch_your_step)
 }
 END_TEST
 
+START_TEST (test_runs_block_crusher)
+{
+  FILE *file;
+  file = fopen("./puzzles/block_crusher.puzz", "r");
+  Runtime rt;
+  startGame(&rt, file);
+
+  int moves[] = {
+                 USE,
+                 RIGHT,
+                 USE,
+                 LEFT,
+                 UP,
+                 USE,
+                 LEFT,
+                 USE,
+                 UP,
+                 RIGHT,
+                 UP,
+                 RIGHT,
+                 DOWN,
+                 USE,
+                 LEFT,
+                 USE,
+                 DOWN,
+                 USE,
+                 DOWN,
+                 RIGHT,
+                 USE,
+                 USE,
+                 UP,
+                 RIGHT,
+                 USE,
+                 RIGHT,
+                 DOWN,
+                 USE,
+                 LEFT,
+                 LEFT,
+                 LEFT,
+                 USE,
+                 RIGHT,
+                 USE,
+                 RIGHT
+  };
+  test_solution(&rt, sizeof(moves)/sizeof(moves[0]), moves);
+
+  ck_assert_int_eq(1, rt.gameWon);
+  endGame(&rt);
+}
+END_TEST
+
 Suite * puzzle_script_parser_suite(void)
 {
   Suite * s;
@@ -2843,11 +2894,14 @@ Suite * puzzle_script_parser_suite(void)
   tcase_add_test(test_Runner, test_runs_neko_puzzle);
   tcase_add_test(test_Runner, test_runs_not_snake);
   tcase_add_test(test_Runner, test_runs_octat);
+  // TODO: come up with a way of testing these random levels work.
+  //       something like what eyeball_walk.
   /* tcase_add_test(test_Runner, test_parses_random_robots); */
   /* tcase_add_test(test_Runner, test_parses_random_robots_spawner); */
   tcase_add_test(test_Runner, test_runs_zen_puzzle_garden);
   tcase_add_test(test_Runner, test_runs_soliquid);
   tcase_add_test(test_Runner, test_runs_watch_your_step);
+  tcase_add_test(test_Runner, test_runs_block_crusher);
 
   suite_add_tcase(s, test_Runner);
   return s;

@@ -85,7 +85,7 @@ typedef enum Direction
    QUIT        = 16,
    RESTART     = 17,
    UNDO        = 18,
-   UNSPECIFIED = 19
+   UNSPECIFIED = 19,
   } Direction;
 
 typedef enum ExecutionTime
@@ -201,6 +201,7 @@ typedef struct PuzzleData {
   // debug
   int verboseLogging;
   int debug;
+
 
   int objectCount;
   int objectCapacity;

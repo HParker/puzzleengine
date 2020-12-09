@@ -120,12 +120,14 @@ Direction absoluteDirection(Direction applicationDirection, Direction ruleDir) {
     return (Direction)((applicationDirection + 3) % 4);
   case NONE:
   case USE:
+    return USE;
   case COND_NO:
   case UNSPECIFIED:
   case STATIONARY:
     return NONE;
   case RANDOMDIR:
     return (Direction)rand() % 4;
+
   default:
     printf("err: (absoluteDirection) unsupported direction (ad: %i rd: %i)\n", applicationDirection, ruleDir);
     return NONE;
