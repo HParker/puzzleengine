@@ -84,6 +84,17 @@ void initRenderer() {
     }
     printf("\n");
   }
+
+  printf("LAYERS LEGEND\n");
+  for (int i = 0; i < layerCount(); i++) {
+    printf("(%i) = ", i);
+    int count = layerWidth(i);
+    printf("(count %i) ", count);
+    for (int j = 0; j < count; j++) {
+      printf("'%i' ", layerObjectId(i, j));
+    }
+    printf("\n");
+  }
 }
 
 void closeRenderer() {

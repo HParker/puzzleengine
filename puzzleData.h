@@ -329,6 +329,9 @@ extern char glyphLegendKey(int id);
 // layers
 extern int objectLayer(int objId);
 extern int layerCount();
+extern int layerWidth(int layerId);
+extern int layerObjectId(int layerId, int objectIndex);
+
 // level
 extern int levelHeight(int levelIndex);
 extern int levelWidth(int levelIndex);

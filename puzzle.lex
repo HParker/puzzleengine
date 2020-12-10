@@ -23,7 +23,7 @@ int inMode = 0;
 %s WINCONDITIONS
 %s LEVELS
 
-glyph [\+\-\!\?:"\{\}\[\];\.0-9a-zA-Z\*#,@`'~]
+glyph [\+\-\!\?:\"\{\}\[\];\.0-9a-zA-Z\*#,@`'~]
 
 colors (black|white|lightgray|lightgrey|gray|grey|darkgray|darkgrey|red|darkred|lightred|brown|darkbrown|lightbrown|orange|yellow|green|darkgreen|lightgreen|blue|lightblue|darkblue|purple|pink|transparent)
 
@@ -257,14 +257,10 @@ color (color|colour)
 <RULES>-> {
   return ARROW;
 }
+
 <RULES>[a-zA-Z0-9_\.]+ {
   yylval.identifier = strdup(yytext);
   return OBJID;
-}
-
-<RULES>[a-zA-Z0-9_\.]+$ {
-  yylval.identifier = strdup(yytext);
-  return RULE_POSTFIX;
 }
 
 <RULES>\n+ {

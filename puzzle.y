@@ -367,7 +367,7 @@ rule_prefix:    EXECUTION_TIME {
   pd.rules[pd.ruleCount].directionConstraint = $2;
 }
 
-rule_postfix: RULE_POSTFIX {
+rule_postfix: OBJID {
                   if (strcasecmp("cancel", $1) == 0) {
                       pd.rules[pd.ruleCount].cancel = 1;
                       free($1);

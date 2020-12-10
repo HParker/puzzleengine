@@ -122,7 +122,7 @@ void incLayer() {
 void incLayerWidth(int layerId) {
   if (pd.layers[layerId].width + 1 >= pd.layers[layerId].objectCapacity) {
     pd.layers[layerId].objectCapacity += PUZZLE_MALLOC_INC;
-    pd.layers[layerId].objectIds = malloc(sizeof(int) * pd.layers[layerId].objectCapacity);
+    pd.layers[layerId].objectIds = realloc(pd.layers[layerId].objectIds, sizeof(int) * pd.layers[layerId].objectCapacity);
   }
   pd.layers[layerId].width++;
 }
@@ -348,7 +348,7 @@ void initPuzzleData() {
 
 
   pd.layerCount = 0;
-  pd.layerCapacity = 10;
+  pd.layerCapacity = 100;
   pd.layers = malloc(sizeof(Layer) * pd.layerCapacity);
   for (int i = 0; i < pd.layerCapacity; i++) {
     pd.layers[i].width = 0;
@@ -527,6 +527,14 @@ int legendIdForGlyph(char glyph) {
 
 int layerCount() {
   return pd.layerCount;
+}
+
+int layerWidth(int layerId) {
+  return pd.layers[layerId].width;
+}
+
+int layerObjectId(int layerId, int objectIndex) {
+  return pd.layers[layerId].objectIds[objectIndex];
 }
 
 int aliasLegendObjectCount(int id) {
