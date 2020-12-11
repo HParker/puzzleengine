@@ -64,6 +64,25 @@ typedef struct WinCondition {
   int onIndentifier;
 } WinCondition;
 
+typedef enum Command
+  {
+   SFX0 = 0,
+   SFX1 = 1,
+   SFX2 = 2,
+   SFX3 = 3,
+   SFX4 = 4,
+   SFX5 = 5,
+   SFX6 = 6,
+   SFX7 = 7,
+   SFX8 = 8,
+   SFX9 = 9,
+   AGAIN = 10,
+   CANCEL = 11,
+   CHECKPOINT = 12,
+   CMD_RESTART = 13,
+   WIN = 14,
+  } Command;
+
 typedef enum Direction
   {
    RIGHT       = 0,
@@ -114,7 +133,8 @@ typedef struct RuleState {
 } RuleState;
 
 typedef struct Rule {
-  int cancel;
+  int commandCount;
+  Command commands[10];
 
   int matchStateDone; // TODO: this is only needed when parsing. maybe manage it there?
   Direction directionConstraint;
@@ -387,6 +407,9 @@ extern void incLayerWidth(int layerId);
 extern void incRule();
 extern void incRuleMatchState(int ruleId);
 extern void incRuleResultState(int ruleId);
+
+extern int ruleCommandCount(int ruleId);
+extern int ruleCommandContains(int ruleId, Command cmd);
 
 extern void incMatchPart(int ruleId, int stateId);
 extern void incResultPart(int ruleId, int stateId);

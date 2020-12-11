@@ -133,7 +133,6 @@ void incRule() {
     pd.ruleCapacity += PUZZLE_MALLOC_INC;
     pd.rules = realloc(pd.rules, sizeof(Rule) * pd.ruleCapacity);
     for (int ruleId = pd.ruleCount + 1; ruleId < pd.ruleCapacity; ruleId++) {
-      pd.rules[ruleId].cancel = 0;
       pd.rules[ruleId].matchStateDone = 0;
       pd.rules[ruleId].directionConstraint = NONE;
       pd.rules[ruleId].executionTime = NORMAL;
@@ -259,6 +258,20 @@ void incResultPart(int ruleId, int stateId) {
   pd.rules[ruleId].resultStates[stateId].partCount++;
 }
 
+int ruleCommandCount(int ruleId) {
+  return pd.rules[ruleId].commandCount;
+}
+
+int ruleCommandContains(int ruleId, Command cmd) {
+  for (int i = 0; i < pd.rules[ruleId].commandCount; i++) {
+    if (pd.rules[ruleId].commands[i] == cmd) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+
 void incWinCondition() {
   if (pd.winConditionCount + 1 >= pd.winConditionCapacity) {
     printf("winCondition REALLOC\n");
@@ -360,7 +373,8 @@ void initPuzzleData() {
   pd.ruleCapacity = 100;
   pd.rules = malloc(sizeof(Rule) * pd.ruleCapacity);
   for (int ruleId = 0; ruleId < pd.ruleCapacity; ruleId++) {
-    pd.rules[ruleId].cancel = 0; // TODO: delete me and see what happens
+    pd.rules[ruleId].commandCount = 0;
+
     pd.rules[ruleId].matchStateDone = 0;
     pd.rules[ruleId].directionConstraint = NONE;
     pd.rules[ruleId].executionTime = NORMAL;

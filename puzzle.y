@@ -368,13 +368,39 @@ rule_prefix:    EXECUTION_TIME {
 }
 
 rule_postfix: OBJID {
-                  if (strcasecmp("cancel", $1) == 0) {
-                      pd.rules[pd.ruleCount].cancel = 1;
-                      free($1);
-                  } else {
-                      /* printf("commands don't all work yet '%s'\n", $1); */
-                      free($1);
-                  }
+    if (strcasecmp("sfx0", $1) == 0) {
+        pd.rules[pd.ruleCount].commands[pd.rules[pd.ruleCount].commandCount] = SFX0;
+    } else if (strcasecmp("sfx1", $1) == 0) {
+        pd.rules[pd.ruleCount].commands[pd.rules[pd.ruleCount].commandCount] = SFX1;
+    } else if (strcasecmp("sfx2", $1) == 0) {
+        pd.rules[pd.ruleCount].commands[pd.rules[pd.ruleCount].commandCount] = SFX2;
+    } else if (strcasecmp("sfx3", $1) == 0) {
+        pd.rules[pd.ruleCount].commands[pd.rules[pd.ruleCount].commandCount] = SFX3;
+    } else if (strcasecmp("sfx4", $1) == 0) {
+        pd.rules[pd.ruleCount].commands[pd.rules[pd.ruleCount].commandCount] = SFX4;
+    } else if (strcasecmp("sfx5", $1) == 0) {
+        pd.rules[pd.ruleCount].commands[pd.rules[pd.ruleCount].commandCount] = SFX5;
+    } else if (strcasecmp("sfx6", $1) == 0) {
+        pd.rules[pd.ruleCount].commands[pd.rules[pd.ruleCount].commandCount] = SFX6;
+    } else if (strcasecmp("sfx7", $1) == 0) {
+        pd.rules[pd.ruleCount].commands[pd.rules[pd.ruleCount].commandCount] = SFX7;
+    } else if (strcasecmp("sfx8", $1) == 0) {
+        pd.rules[pd.ruleCount].commands[pd.rules[pd.ruleCount].commandCount] = SFX8;
+    } else if (strcasecmp("sfx9", $1) == 0) {
+        pd.rules[pd.ruleCount].commands[pd.rules[pd.ruleCount].commandCount] = SFX9;
+    } else if (strcasecmp("again", $1) == 0) {
+        pd.rules[pd.ruleCount].commands[pd.rules[pd.ruleCount].commandCount] = AGAIN;
+    } else if (strcasecmp("cancel", $1) == 0) {
+        pd.rules[pd.ruleCount].commands[pd.rules[pd.ruleCount].commandCount] = CANCEL;
+    } else if (strcasecmp("checkpoint", $1) == 0) {
+        pd.rules[pd.ruleCount].commands[pd.rules[pd.ruleCount].commandCount] = CHECKPOINT;
+    } else if (strcasecmp("restart", $1) == 0) {
+        pd.rules[pd.ruleCount].commands[pd.rules[pd.ruleCount].commandCount] = RESTART;
+    } else if (strcasecmp("win", $1) == 0) {
+        pd.rules[pd.ruleCount].commands[pd.rules[pd.ruleCount].commandCount] = WIN;
+    }
+    pd.rules[pd.ruleCount].commandCount++;
+    free($1);
 }
             | MESSAGE ID {
   printf("this should show a message '%s'\n", $2);

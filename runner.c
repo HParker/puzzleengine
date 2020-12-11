@@ -555,7 +555,7 @@ int alreadyResult(Runtime * rt, int ruleId, int stateId, int partId, Direction a
 
 void replaceCell(Runtime * rt, int ruleId, int stateId, int partId, Direction appDir, int x, int y, Match * match) {
   match->ruleIndex = ruleId;
-  if (rule(ruleId)->cancel) {
+  if (ruleCommandContains(ruleId, CANCEL)) {
     match->cancel = 1;
     return;
   }
@@ -615,68 +615,6 @@ void replaceCell(Runtime * rt, int ruleId, int stateId, int partId, Direction ap
             match->partCount++;
           }
         }
-      }
-    }
-  }
-}
-
-void buildMatch(Runtime * rt, int ruleId, int stateId, int partId, int identId, Direction appDir, int x, int y, Match * match) {
-  Direction ruleDir = rule(ruleId)->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
-  int legendId = rule(ruleId)->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
-
-  RuleStatePart * resultPart = &rule(ruleId)->resultStates[stateId].parts[partId];
-  int emptyId = aliasLegendId("_EMPTY_");
-
-  if (rule(ruleId)->cancel) {
-    match->cancel = 1;
-  } else {
-    int objIndex = legendObjIndex(rt, legendId, x, y);
-    if (alreadyResult(rt, ruleId, stateId, partId, appDir, x, y) == 0) {
-      match->ruleIndex = ruleId;
-
-      // Set Goal Id
-      if (objIndex != -1 && aliasLegendContains(resultPart->ruleIdentity[identId].legendId, rt->objects[objIndex].objId) == 1) {
-        match->parts[match->partCount].goalId = rt->objects[objIndex].objId;
-      } else {
-        if (resultPart->ruleIdentity[identId].legendId != emptyId) {
-          match->parts[match->partCount].goalId = resultPart->ruleIdentity[identId].legendId;
-        } else {
-          // TODO: we can do better then -1 for failures, but this works
-          match->parts[match->partCount].goalId = -1;
-        }
-
-      }
-
-      match->parts[match->partCount].goalDirection = absoluteDirection(appDir, resultPart->ruleIdentity[identId].direction);
-
-      // TODO: This is still wrong...
-      //       This can technically just be aligned next to a part of the match side that is different
-      if (ruleDir == COND_NO || legendId == emptyId) {
-        match->parts[match->partCount].newObject = 1;
-        match->parts[match->partCount].objIndex = -1;
-        match->parts[match->partCount].goalX = x;
-        match->parts[match->partCount].goalY = y;
-        match->partCount++;
-      } else {
-        if (objIndex != -1) {
-          match->parts[match->partCount].newObject = 0;
-          match->parts[match->partCount].objIndex = objIndex;
-          match->parts[match->partCount].goalX = rt->objects[objIndex].x;
-          match->parts[match->partCount].goalY = rt->objects[objIndex].y;
-          match->partCount++;
-        }
-      }
-
-
-    } else {
-      if (objIndex != -1 && resultHasLegendId(ruleId, stateId, partId, legendId) == 0 && ruleDir != COND_NO) {
-        match->parts[match->partCount].objIndex = objIndex;
-        match->parts[match->partCount].goalId = emptyId;
-        match->parts[match->partCount].goalX = rt->objects[objIndex].x;
-        match->parts[match->partCount].goalY = rt->objects[objIndex].y;
-        // TODO: UNSPECIFIED, but must be handled in application first
-        match->parts[match->partCount].goalDirection = UNSPECIFIED;
-        match->partCount++;
       }
     }
   }
