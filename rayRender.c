@@ -87,7 +87,7 @@ Color colorFromName(char * name) {
       return colors[i];
     }
   }
-  printf("NO COLOR FOUND FOR NAME '%s'\n", name);
+  fprintf(stderr, "NO COLOR FOUND FOR NAME '%s'\n", name);
   return PINK;
 }
 
@@ -129,11 +129,11 @@ Color colorFromSprite(Runtime * rt, int objId, int cellIndex) {
     return TRANSPARENT;
 
   }
-  printf("FAILED TO MATCH A COLOR CODE id %i (%c)\n", objId, cell);
+  fprintf(stderr, "FAILED TO MATCH A COLOR CODE id %i (%c)\n", objId, cell);
   for (int i = 0; i < 25; i++) {
-    printf("%c", objectSpriteCell(objId, i));
+    fprintf(stderr, "%c", objectSpriteCell(objId, i));
   }
-  printf("\n");
+  fprintf(stderr, "\n");
   return PINK;
 }
 

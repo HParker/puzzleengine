@@ -414,7 +414,7 @@ char * charSprite(char c) {
     return L_SPACE;
   }
 
-  printf("Error unsupported character '%c'\n", c);
+  fprintf(stderr, "Error unsupported character '%c'\n", c);
   return L_SPACE;
 }
 #endif

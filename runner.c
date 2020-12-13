@@ -65,7 +65,7 @@ int legendObjIndex(Runtime * rt, int legendId, int x, int y) {
       return rt->map[cellIndex];
     }
   }
-  /* printf("err: missed %i is in %i\n", rt->objects[rt->map[cellIndex]].objId, legendId); */
+  /* fprintf(stderr, "err: missed %i is in %i\n", rt->objects[rt->map[cellIndex]].objId, legendId); */
   return -1;
 }
 
@@ -87,7 +87,7 @@ int playerLocation(Runtime * rt) {
       return (rt->objects[i].x + rt->objects[i].y * rt->width);
     }
   }
-  /* printf("Err: failed to find player location\n"); */
+  /* fprintf(stderr, "Err: failed to find player location\n"); */
   return -1;
 }
 
@@ -129,7 +129,7 @@ Direction absoluteDirection(Direction applicationDirection, Direction ruleDir) {
     return (Direction)rand() % 4;
 
   default:
-    printf("err: (absoluteDirection) unsupported direction (ad: %i rd: %i)\n", applicationDirection, ruleDir);
+    fprintf(stderr, "err: (absoluteDirection) unsupported direction (ad: %i rd: %i)\n", applicationDirection, ruleDir);
     return NONE;
   }
 }
@@ -340,7 +340,7 @@ int deltaX(Direction dir) {
   case NONE:
     return 0;
   default:
-    printf("Err: deltaX bad direction %i\n", dir);
+    fprintf(stderr, "Err: deltaX bad direction %i\n", dir);
     return 0;
   }
 }
@@ -359,7 +359,7 @@ int deltaY(Direction dir) {
   case NONE:
     return 0;
   default:
-    printf("Err: deltaY bad direction %i\n", dir);
+    fprintf(stderr, "Err: deltaY bad direction %i\n", dir);
     return 0;
   }
 }
@@ -375,7 +375,7 @@ void updateMap(Runtime * rt) {
       if (rt->objects[i].deleted == 0) {
         layerId = objectLayer(rt->objects[i].objId);
         if (layerId == -1) {
-          printf("err: no layer id for index: %i, objid: %i, deleted: %i\n", i, rt->objects[i].objId, rt->objects[i].deleted);
+          fprintf(stderr, "err: no layer id for index: %i, objid: %i, deleted: %i\n", i, rt->objects[i].objId, rt->objects[i].deleted);
         }
 
         if (rt->objects[i].deleted == 0 && layerId != -1) {
@@ -392,10 +392,10 @@ void updateMap(Runtime * rt) {
 void applyMatch(Runtime * rt, Match * match) {
   if (verboseLogging()) {
     if (match->cancel == 0) {
-      printf("applying count %i\n", match->partCount);
+      fprintf(stderr, "applying count %i\n", match->partCount);
       for (int i = 0; i < match->partCount; i++) {
         if (match->parts[i].newObject == 1) {
-          printf("Applying rule: %i new: %i id: '%s' (%i) location (%i, %i) goalMovment: %s\n",
+          fprintf(stderr, "Applying rule: %i new: %i id: '%s' (%i) location (%i, %i) goalMovment: %s\n",
                  match->ruleIndex,
                  match->parts[i].newObject,
                  objectName(match->parts[i].goalId),
@@ -405,7 +405,7 @@ void applyMatch(Runtime * rt, Match * match) {
                  directionName(match->parts[i].goalDirection)
                  );
         } else {
-          printf("Applying rule: %i new: %i, objIndex: %i, (%i) id: '%s' (%i) -> '%s' (%i) location: (%i, %i) -> (%i, %i) goalMovment: %s\n",
+          fprintf(stderr, "Applying rule: %i new: %i, objIndex: %i, (%i) id: '%s' (%i) -> '%s' (%i) location: (%i, %i) -> (%i, %i) goalMovment: %s\n",
                  match->ruleIndex,
                  match->parts[i].newObject,
                  match->parts[i].objIndex,
@@ -422,7 +422,7 @@ void applyMatch(Runtime * rt, Match * match) {
         }
       }
     } else {
-      printf("Applying rule: %i cancel\n", match->ruleIndex);
+      fprintf(stderr, "Applying rule: %i cancel\n", match->ruleIndex);
     }
   }
 
@@ -480,7 +480,7 @@ int matchAtDistance(Direction dir, int x, int y, int targetX, int targetY) {
       return 0;
     }
   default:
-    printf("err: (matchAtDistance) unsupported dir %i", dir);
+    fprintf(stderr, "err: (matchAtDistance) unsupported dir %i", dir);
     return 0;
   }
 }
@@ -650,13 +650,13 @@ int partIdentitys(Runtime * rt, int ruleId, int stateId, int partId, Direction a
   for (int i = 0; i < rule(ruleId)->matchStates[stateId].parts[partId].ruleIdentityCount; i++) {
     success = partIdentity(rt, ruleId, stateId, partId, i, appDir, x, y, match);
     if (success == 0) {
-      /* printf("X -- FAILED rule: %i state: %i part: %i ident: %i, appDir: %s (%i, %i)\n", ruleId, stateId, partId, i, directionName(appDir), x, y); */
+      /* fprintf(stderr, "X -- FAILED rule: %i state: %i part: %i ident: %i, appDir: %s (%i, %i)\n", ruleId, stateId, partId, i, directionName(appDir), x, y); */
       return 0;
     } else {
-      /* printf("V --- Matched rule: %i state: %i part: %i ident: %i, appDir: %s (%i, %i)\n", ruleId, stateId, partId, i, directionName(appDir), x, y); */
+      /* fprintf(stderr, "V --- Matched rule: %i state: %i part: %i ident: %i, appDir: %s (%i, %i)\n", ruleId, stateId, partId, i, directionName(appDir), x, y); */
     }
   }
-  /* printf("> --- Identity Success\n"); */
+  /* fprintf(stderr, "> --- Identity Success\n"); */
   return 1;
 }
 
@@ -846,7 +846,7 @@ int applyRules(Runtime * rt, ExecutionTime execTime) {
       match.partCount = 0;
       if (ruleApplies(rt, ruleIndex, execTime)) {
         applied = applyRule(rt, ruleIndex, &match);
-        /* printf("applied (%i) && (match.partCount (%i) > 0 || match.cancel (%i))\n", applied, match.partCount, match.cancel); */
+        /* fprintf(stderr, "applied (%i) && (match.partCount (%i) > 0 || match.cancel (%i))\n", applied, match.partCount, match.cancel); */
         if (applied && (match.partCount > 0 || match.cancel)) {
           if (match.cancel) {
             cancel = 1;
@@ -859,7 +859,7 @@ int applyRules(Runtime * rt, ExecutionTime execTime) {
       attempts++;
     }
     if (attempts >= maxAttempts) {
-      printf("warn: max attempts reached\n");
+      fprintf(stderr, "warn: max attempts reached\n");
     }
   }
   return cancel;
@@ -900,7 +900,7 @@ int moveObjects(Runtime * rt) {
 
 void printHistory(Runtime * rt) {
   for (int i = 0; i < rt->historyCount; i++) {
-    printf("%s\n", directionName(rt->history[i]));
+    fprintf(stderr, "%s\n", directionName(rt->history[i]));
   }
 }
 
@@ -1081,7 +1081,7 @@ int checkWinCondition(Runtime * rt, int winConditionIndex) {
   case NO:
     return verifyNone(rt, winCondition(winConditionIndex)->winIdentifier, winCondition(winConditionIndex)->onIndentifier, winCondition(winConditionIndex)->hasOnQualifier);
   default:
-    printf("err: unsupported win condition '%i'\n", winCondition(winConditionIndex)->winQualifier);
+    fprintf(stderr, "err: unsupported win condition '%i'\n", winCondition(winConditionIndex)->winQualifier);
     return 0;
   }
 }

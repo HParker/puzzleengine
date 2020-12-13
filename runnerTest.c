@@ -3,22 +3,22 @@
 #include "puzzleData.h"
 
 void test_solution(Runtime * rt, int moveCount, int moves[]) {
-  printf("%s: ", rt->pd->title);
+  fprintf(stderr, "%s: ", rt->pd->title);
   int currentLevel = 0;
   for (int i = 0; i < moveCount; i++) {
     if (rt->gameWon == 0) {
       update(rt, moves[i]);
       if (rt->levelIndex > currentLevel) {
         currentLevel = rt->levelIndex;
-        printf(".");
+        fprintf(stderr, ".");
       }
 
     }
   }
   /* if (rt->gameWon == 0) { */
-  /*   printf("Game incomplete %i/%i\n", rt->levelIndex, rt->pd->levelCount); */
+  /*   fprintf(stderr, "Game incomplete %i/%i\n", rt->levelIndex, rt->pd->levelCount); */
   /* } */
-  printf(".\n");
+  fprintf(stderr, ".\n");
 }
 
 START_TEST (test_runs_stumper)

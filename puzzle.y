@@ -8,7 +8,7 @@
 
 PuzzleData pd;
 int yyerror(const char *str) {
-    fprintf(stderr,"line: %d | %s\n", yylineno, str);
+    fprintf(stderr, "line: %d | %s\n", yylineno, str);
 }
 
 int aliasLegendId(char * name) {
@@ -17,9 +17,9 @@ int aliasLegendId(char * name) {
             return i;
         }
     }
-    printf("err: '%s' which does not exist in alias legend\n", name);
+    fprintf(stderr, "err: '%s' which does not exist in alias legend\n", name);
     for (int i = 0; i < pd.aliasLegendCount; i++) {
-      printf("wasn't key: '%s'\n", pd.aliasLegend[i].key);
+      fprintf(stderr, "wasn't key: '%s'\n", pd.aliasLegend[i].key);
     }
     return -1;
 }
@@ -30,7 +30,7 @@ int glyphLegendId(char glyph) {
             return i;
         }
     }
-    printf("err: '%c' which does not exist in glyph legend\n", glyph);
+    fprintf(stderr, "err: '%c' which does not exist in glyph legend\n", glyph);
     return -1;
 }
 
@@ -65,7 +65,7 @@ int objectId(char * name) {
             return i;
         }
     }
-    printf("objectId not found for '%s'\n", name);
+    fprintf(stderr, "objectId not found for '%s'\n", name);
     return -1;
 }
 
@@ -401,7 +401,7 @@ rule_postfix: OBJID {
     free($1);
 }
             | MESSAGE ID {
-  printf("this should show a message '%s'\n", $2);
+  fprintf(stderr, "this should show a message '%s'\n", $2);
 }
 
 match_states:   match_states match_state | match_state;

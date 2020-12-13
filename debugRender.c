@@ -33,19 +33,19 @@ void renderLevel(Runtime * rt) {
 
   // draw
   for (int i = 0; i < count; i++) {
-    printf("%c", map[i]);
+    fprintf(stderr, "%c", map[i]);
     col++;
     if ((i + 1) % (rt->width) == 0) {
       col = 0;
       row++;
-      printf("\n");
+      fprintf(stderr, "\n");
     }
   }
 }
 
 void renderMessage(Runtime * rt) {
   char * message = levelMessage(rt->levelIndex);
-  printf("%s\n", message);
+  fprintf(stderr, "%s\n", message);
 }
 
 void render(Runtime * rt) {
@@ -60,40 +60,40 @@ void render(Runtime * rt) {
 }
 
 void initRenderer() {
-    printf("OBJECTS\n");
+    fprintf(stderr, "OBJECTS\n");
   for (int i = 0; i < objectCount(); i++) {
-    printf("(%i) '%s'\n", i, objectName(i));
+    fprintf(stderr, "(%i) '%s'\n", i, objectName(i));
   }
 
-  printf("ALIAS LEGEND\n");
+  fprintf(stderr, "ALIAS LEGEND\n");
   for (int i = 0; i < aliasLegendCount(); i++) {
-    printf("(%i) '%s' = ", i, aliasLegendKey(i));
+    fprintf(stderr, "(%i) '%s' = ", i, aliasLegendKey(i));
     for (int j = 0; j < aliasLegendObjectCount(i); j++) {
-      printf("'%i' ", aliasLegendObjectId(i, j));
+      fprintf(stderr, "'%i' ", aliasLegendObjectId(i, j));
     }
-    printf("\n");
+    fprintf(stderr, "\n");
   }
 
-  printf("GLYPH LEGEND\n");
+  fprintf(stderr, "GLYPH LEGEND\n");
   for (int i = 0; i < glyphLegendCount(); i++) {
-    printf("(%i) '%c' = ", i, glyphLegendKey(i));
+    fprintf(stderr, "(%i) '%c' = ", i, glyphLegendKey(i));
     int count = glyphLegendObjectCount(i);
-    printf(" (count %i) ", count);
+    fprintf(stderr, " (count %i) ", count);
     for (int j = 0; j < count; j++) {
-      printf("'%i' ", glyphLegendObjectId(i, j));
+      fprintf(stderr, "'%i' ", glyphLegendObjectId(i, j));
     }
-    printf("\n");
+    fprintf(stderr, "\n");
   }
 
-  printf("LAYERS LEGEND\n");
+  fprintf(stderr, "LAYERS LEGEND\n");
   for (int i = 0; i < layerCount(); i++) {
-    printf("(%i) = ", i);
+    fprintf(stderr, "(%i) = ", i);
     int count = layerWidth(i);
-    printf("(count %i) ", count);
+    fprintf(stderr, "(count %i) ", count);
     for (int j = 0; j < count; j++) {
-      printf("'%i' ", layerObjectId(i, j));
+      fprintf(stderr, "'%i' ", layerObjectId(i, j));
     }
-    printf("\n");
+    fprintf(stderr, "\n");
   }
 }
 

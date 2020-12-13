@@ -67,19 +67,19 @@ void drawObj(Runtime * rt, int objIndex) {
 
 void initRenderer() {
   if (SDL_Init(SDL_INIT_VIDEO) != 0){
-    printf("ERROR Initializing SDL2\n");
+    fprintf(stderr, "ERROR Initializing SDL2\n");
     shouldQuit = 1;
   }
 
   window = SDL_CreateWindow("Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_SIZE, WINDOW_SIZE, SDL_WINDOW_SHOWN);
   if (window == NULL) {
-    printf("ERROR making window\n");
+    fprintf(stderr, "ERROR making window\n");
     shouldQuit = 1;
   }
 
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
   if (renderer == NULL) {
-    printf("ERROR making renderer\n");
+    fprintf(stderr, "ERROR making renderer\n");
     shouldQuit = 1;
   }
 }

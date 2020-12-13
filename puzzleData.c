@@ -71,7 +71,7 @@ int colorPaletteId(char * name) {
 
 void incObject() {
   if (pd.objectCount + 1 >= pd.objectCapacity) {
-    printf("object REALLOC\n");
+    fprintf(stderr, "object REALLOC\n");
     pd.objectCapacity += PUZZLE_MALLOC_INC;
     pd.objects = realloc(pd.objects, sizeof(Object) * pd.objectCapacity);
     for (int i = pd.objectCount + 1; i < pd.objectCapacity; i++) {
@@ -85,7 +85,7 @@ void incObject() {
 
 void incAliasLegend() {
   if (pd.aliasLegendCount + 1 >= pd.aliasLegendCapacity) {
-    printf("aliasLegend REALLOC\n");
+    fprintf(stderr, "aliasLegend REALLOC\n");
     pd.aliasLegendCapacity += PUZZLE_MALLOC_INC;
     pd.aliasLegend = realloc(pd.aliasLegend, sizeof(AliasLegend) * pd.aliasLegendCapacity);
     for (int i = pd.aliasLegendCount + 1; i < pd.aliasLegendCapacity; i++) {
@@ -99,7 +99,7 @@ void incAliasLegend() {
 
 void incGlyphLegend() {
   if (pd.glyphLegendCount + 1 >= pd.glyphLegendCapacity) {
-    printf("glyphLegend REALLOC\n");
+    fprintf(stderr, "glyphLegend REALLOC\n");
     pd.glyphLegendCapacity += PUZZLE_MALLOC_INC;
     pd.glyphLegend = realloc(pd.glyphLegend, sizeof(GlyphLegend) * pd.glyphLegendCapacity);
     for (int i = pd.glyphLegendCount + 1; i < pd.glyphLegendCapacity; i++) {
@@ -132,7 +132,7 @@ void incGlyphLegendObject(int legendId) {
 
 void incLayer() {
   if (pd.layerCount + 1 >= pd.layerCapacity) {
-    printf("layer REALLOC\n");
+    fprintf(stderr, "layer REALLOC\n");
     pd.layerCapacity += PUZZLE_MALLOC_INC;
     pd.layers = realloc(pd.layers, sizeof(Layer) * pd.layerCapacity);
     for (int i = pd.layerCount + 1; i < pd.layerCapacity; i++) {
@@ -154,7 +154,7 @@ void incLayerWidth(int layerId) {
 
 void incRule() {
   if (pd.ruleCount + 1 >= pd.ruleCapacity) {
-    printf("RULE REALLOC\n");
+    fprintf(stderr, "RULE REALLOC\n");
     pd.ruleCapacity += PUZZLE_MALLOC_INC;
     pd.rules = realloc(pd.rules, sizeof(Rule) * pd.ruleCapacity);
     for (int ruleId = pd.ruleCount + 1; ruleId < pd.ruleCapacity; ruleId++) {
@@ -298,7 +298,7 @@ int ruleCommandContains(int ruleId, Command cmd) {
 
 void incWinCondition() {
   if (pd.winConditionCount + 1 >= pd.winConditionCapacity) {
-    printf("winCondition REALLOC\n");
+    fprintf(stderr, "winCondition REALLOC\n");
     pd.winConditionCapacity += PUZZLE_MALLOC_INC;
     pd.winConditions = realloc(pd.winConditions, sizeof(WinCondition) * pd.winConditionCapacity);
   }
@@ -307,7 +307,7 @@ void incWinCondition() {
 
 void incLevel() {
   if (pd.levelCount + 1 >= pd.levelCapacity) {
-    printf("level REALLOC\n");
+    fprintf(stderr, "level REALLOC\n");
     pd.levelCapacity += PUZZLE_MALLOC_INC;
     pd.levels = realloc(pd.levels, sizeof(Level) * pd.levelCapacity);
     for (int i = pd.levelCount + 1; i < pd.levelCapacity; i++) {
@@ -532,7 +532,7 @@ char * objectColor(int id, int index) {
   if (index < pd.objects[id].colorCount) {
     return pd.objects[id].colors[index];
   } else {
-    printf("Color out of bounds\n");
+    fprintf(stderr, "Color out of bounds\n");
     return "!";
   }
 
@@ -544,7 +544,7 @@ char objectGlyph(int objId) {
       return pd.glyphLegend[i].key;
     }
   }
-  printf("err: no key found '%s' (%i)\n", objectName(objId), objId);
+  fprintf(stderr, "err: no key found '%s' (%i)\n", objectName(objId), objId);
   return '!';
 }
 
@@ -554,7 +554,7 @@ int legendIdForGlyph(char glyph) {
       return i;
     }
   }
-  printf("err: no id found '%c'\n", glyph);
+  fprintf(stderr, "err: no id found '%c'\n", glyph);
   return -1;
 }
 
@@ -610,13 +610,13 @@ int idForGlyph(char glyph) {
   for (int i = 0; i < pd.glyphLegendCount; i++) {
     if (toupper(pd.glyphLegend[i].key) == toupper(glyph)) {
       if (pd.glyphLegend[i].objectCount > 1) {
-        printf("err: multi object key '%c'\n", glyph);
+        fprintf(stderr, "err: multi object key '%c'\n", glyph);
       } else {
         return pd.glyphLegend[i].objects[0].id;
       }
     }
   }
-  printf("err: no id found '%c'\n", glyph);
+  fprintf(stderr, "err: no id found '%c'\n", glyph);
   return -1;
 }
 
@@ -633,7 +633,7 @@ int objectLayer(int objId) {
       }
     }
   }
-  printf("err: layer not found for objid: '%s' (%i) \n", objectName(objId), objId);
+  fprintf(stderr, "err: layer not found for objid: '%s' (%i) \n", objectName(objId), objId);
   return -1;
 }
 
@@ -641,7 +641,7 @@ int levelHeight(int levelIndex) {
   if (levelIndex < pd.levelCount) {
     return pd.levels[levelIndex].height;
   } else {
-    printf("err: asked for level out of bounds\n");
+    fprintf(stderr, "err: asked for level out of bounds\n");
     return -1;
   }
 }
@@ -650,7 +650,7 @@ int levelWidth(int levelIndex) {
   if (levelIndex < pd.levelCount) {
     return pd.levels[levelIndex].width;
   } else {
-    printf("err: asked for level out of bounds\n");
+    fprintf(stderr, "err: asked for level out of bounds\n");
     return -1;
   }
 }
