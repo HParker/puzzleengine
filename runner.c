@@ -914,15 +914,16 @@ Direction handleInput(Runtime * rt, int input) {
     return LEFT;
   } else if (input == 'd') {
     return RIGHT;
-  } else if (input == 'x') {
+  } else if (input == 'x' && noAction() == 0) {
     return USE;
   } else if (input == 'q') {
     return QUIT;
-  } else if (input == 'r') {
+  } else if (input == 'r' && noRestart() == 0) {
     return RESTART;
-  } else if (input == 'z') {
+  } else if (input == 'z' && noUndo() == 0) {
     return UNDO;
   } else {
+    // Is this none or something else?
     return NONE;
   }
 }

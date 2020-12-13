@@ -27,17 +27,19 @@ int main(int argc, char ** argv) {
     curInput = input();
     if (curInput != -1) {
       Direction dir = handleInput(&rt, curInput);
-      if (dir == QUIT) {
-        break;
-      }
-      if (dir == UNDO && rt.statesCount > 0) {
-        undo(&rt, 0);
-      } else {
-        update(&rt, dir);
-      }
+      if (dir != NONE) {
+        if (dir == QUIT) {
+          break;
+        }
+        if (dir == UNDO && rt.statesCount > 0) {
+          undo(&rt, 0);
+        } else {
+          update(&rt, dir);
+        }
 
-      if (rt.gameWon == 1) {
-        break;
+        if (rt.gameWon == 1) {
+          break;
+        }
       }
     }
   }

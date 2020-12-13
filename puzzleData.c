@@ -9,6 +9,22 @@ extern PuzzleData pd;
 
 #define PUZZLE_MALLOC_INC 10;
 
+int noAction() {
+  return pd.noAction;
+}
+
+int noRestart() {
+  return pd.noAction;
+}
+
+int noUndo() {
+  return pd.noUndo;
+}
+
+int noRepeatAction() {
+  return pd.noRepeatAction;
+}
+
 int colorPaletteId(char * name) {
   if (strcasecmp(name, "mastersystem") == 0) {
     return 1;

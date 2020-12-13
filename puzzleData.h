@@ -379,9 +379,6 @@ extern int levelCount();
 extern int checkWinCondition(Runtime * rt, int winConditionIndex);
 extern int checkWinConditions(Runtime * rt);
 
-// Drawing
-extern void render(Runtime * rt);
-
 // Update
 extern Direction handleInput(Runtime * rt, int input);
 extern void update(Runtime * rt, Direction dir);
@@ -394,6 +391,11 @@ extern int winConditionCount();
 extern WinCondition * winCondition(int winConditionIndex);
 
 // Parser methods
+extern int noAction();
+extern int noRestart();
+extern int noUndo();
+extern int noRepeatAction();
+
 extern int colorPaletteId(char * name);
 extern int legendId(char * name);
 extern void incObject();
