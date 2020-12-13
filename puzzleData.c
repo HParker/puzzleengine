@@ -25,6 +25,15 @@ int noRepeatAction() {
   return pd.noRepeatAction;
 }
 
+int debug() {
+  return pd.debug;
+}
+
+int verboseLogging() {
+  return pd.verboseLogging;
+}
+
+
 int colorPaletteId(char * name) {
   if (strcasecmp(name, "mastersystem") == 0) {
     return 1;
@@ -507,10 +516,6 @@ void freePuzzle() {
     free(pd.levels[i].cells);
   }
   free(pd.winConditions);
-}
-
-int debug() {
-  return pd.debug;
 }
 
 int requirePlayerMovement() {

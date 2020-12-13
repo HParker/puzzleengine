@@ -395,6 +395,8 @@ extern int noAction();
 extern int noRestart();
 extern int noUndo();
 extern int noRepeatAction();
+extern int debug();
+extern int verboseLogging();
 
 extern int colorPaletteId(char * name);
 extern int legendId(char * name);

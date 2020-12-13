@@ -390,7 +390,7 @@ void updateMap(Runtime * rt) {
 }
 
 void applyMatch(Runtime * rt, Match * match) {
-  if (rt->pd->debug == 1) {
+  if (verboseLogging()) {
     if (match->cancel == 0) {
       printf("applying count %i\n", match->partCount);
       for (int i = 0; i < match->partCount; i++) {

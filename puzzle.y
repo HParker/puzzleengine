@@ -100,24 +100,24 @@ int rowWidth = 0;
 %token <cell> GLYPH LEGEND_GLYPH
 %token <enumValue> LOGIC_WORD LOGIC_ON DIRECTION EXECUTION_TIME
 
+
+
 %%
-puzzlescript:
-                preamble
-                modechange
-                object_definitions
-                modechange
-                legend_lines
-                modechange
-                sounds
-                modechange
-                collision_lines
-                modechange
-                rules
-                modechange
-                winconditions
-                modechange
-                levels
-        ;
+puzzlescript: preamble
+              modechange
+              object_definitions
+              modechange
+              legend_lines
+              modechange
+              sounds
+              modechange
+              collision_lines
+              modechange
+              rules
+              modechange
+              winconditions
+              modechange
+              levels;
 
 preamble: preamble preamble_option | %empty;
 
@@ -141,56 +141,58 @@ preamble_option: title
                | verbose_logging
                | run_rules_on_level_start
                | require_player_movement
+                ;
 
-title: TITLE ID {
-  pd.title = $2;
-}
-author: AUTHOR ID {
-  pd.author = $2;
-}
-homepage: HOMEPAGE ID {
-  pd.homepage = $2;
-}
+title: TITLE ID { pd.title = $2; }
+author: AUTHOR ID { pd.author = $2; }
+homepage: HOMEPAGE ID { pd.homepage = $2; }
 
 require_player_movement: REQUIRE_PLAYER_MOVEMENT { pd.requirePlayerMovement = 1; }
+        ;
 
 color_palette: COLOR_PALETTE ID { pd.colorPalette = colorPaletteId($2); }
         ;
+
 again_interval: AGAIN_INTERVAL ID { pd.againInterval = 0.1f; }
         ;
-background_color: BACKGROUND_COLOR ID { pd.backgroundColor = $2; }
 
+background_color: BACKGROUND_COLOR ID { pd.backgroundColor = $2; }
         ;
+
 flickscreen: FLICKSCREEN ID { yyerror("FLICKSCREEN IS NOT YET SUPPORTED\n"); }
         ;
-key_repeat_interval: KEY_REPEAT_INTERVAL DECIMAL {
-                         pd.keyRepeatInterval = 0.1f;
-}
 
+key_repeat_interval: KEY_REPEAT_INTERVAL DECIMAL { pd.keyRepeatInterval = 0.1f; }
         ;
+
 noaction: NOACTION { pd.noAction = 1; }
         ;
-norepeat_action: NOREPEAT_ACTION { pd.noRepeatAction = 1; }
 
+norepeat_action: NOREPEAT_ACTION { pd.noRepeatAction = 1; }
         ;
+
 noundo: NOUNDO { pd.noUndo = 1; }
         ;
+
 norestart: NORESTART { pd.noRestart = 1; }
         ;
+
 scanline: SCANLINE { pd.scanLine = 1; }
         ;
+
 text_color: TEXT_COLOR ID { pd.textColor = $2; }
         ;
-throttle_movement: THROTTLE_MOVEMENT ID { pd.throttleMovement = 1; }
 
+throttle_movement: THROTTLE_MOVEMENT ID { pd.throttleMovement = 1; }
         ;
+
 zoomscreen: ZOOMSCREEN ID { yyerror("ZOOMSCREEN IS NOT YET SUPPORTED\n"); }
         ;
+
 debug: DEBUG { pd.debug = 1; }
-
         ;
-verbose_logging: VERBOSE_LOGGING { pd.verboseLogging = 1; }
 
+verbose_logging: VERBOSE_LOGGING { pd.verboseLogging = 1; }
         ;
 
 run_rules_on_level_start: RUN_RULES_ON_LEVEL_START { pd.runRulesOnLevelStart = 1; }
