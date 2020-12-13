@@ -309,7 +309,6 @@ char LZ[25] = {
                '.','0','0','0','0'
 };
 
-
 char * charSprite(char c) {
   switch (c) {
   case '0':
@@ -413,8 +412,8 @@ char * charSprite(char c) {
   case ' ':
     return L_SPACE;
   }
-
   fprintf(stderr, "Error unsupported character '%c'\n", c);
   return L_SPACE;
 }
+
 #endif

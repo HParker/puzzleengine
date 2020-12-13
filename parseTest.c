@@ -8,8 +8,6 @@ START_TEST (test_parses_basic)
   file = fopen("./puzzles/basic.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
   ck_assert_str_eq(pz->title, "Simple Block Pushing Game");
-  /* ck_assert_int_eq(pz->objectCount, 5); */
-  /* ck_assert_int_eq(pz->legendCount, 11); */
   ck_assert_int_eq(pz->layerCount, 3);
   ck_assert_int_eq(pz->ruleCount, 1);
   ck_assert_int_eq(pz->levelCount, 2);
@@ -22,8 +20,6 @@ START_TEST (test_parses_block_faker)
   file = fopen("./puzzles/block_faker.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
   ck_assert_str_eq(pz->title, "Block Faker");
-  /* ck_assert_int_eq(pz->objectCount, 11); */
-  /* ck_assert_int_eq(pz->legendCount, 27); */
   ck_assert_int_eq(pz->layerCount, 4);
   ck_assert_int_eq(pz->ruleCount, 7);
   ck_assert_int_eq(pz->levelCount, 10);
@@ -36,8 +32,6 @@ START_TEST (test_parses_by_your_side)
   file = fopen("./puzzles/by_your_side.puzz", "r");
   PuzzleData * pz = parsePuzzle(file);
   ck_assert_str_eq(pz->title, "By Your Side");
-  /* ck_assert_int_eq(pz->objectCount, 23); */
-  /* ck_assert_int_eq(pz->legendCount, 55); */
   ck_assert_int_eq(pz->layerCount, 4);
   ck_assert_int_eq(pz->ruleCount, 6);
   ck_assert_int_eq(pz->levelCount, 12);
@@ -173,47 +167,47 @@ END_TEST
 
 Suite * puzzle_script_parser_suite(void)
 {
-    Suite * s;
-    TCase * test_Parser;
+  Suite * s;
+  TCase * test_Parser;
 
-    s = suite_create("Parser");
+  s = suite_create("Parser");
 
-    test_Parser = tcase_create("Parser");
-    tcase_set_timeout(test_Parser, 100);
-    tcase_add_test(test_Parser, test_parses_basic);
-    tcase_add_test(test_Parser, test_parses_block_faker);
-    tcase_add_test(test_Parser, test_parses_by_your_side);
-    tcase_add_test(test_Parser, test_parses_constellation_z);
-    tcase_add_test(test_Parser, test_parses_eyeball);
-    tcase_add_test(test_Parser, test_parses_kettle);
-    tcase_add_test(test_Parser, test_parses_lime_rick);
-    tcase_add_test(test_Parser, test_parses_match3);
-    tcase_add_test(test_Parser, test_parses_micro_ban);
-    tcase_add_test(test_Parser, test_parses_minimum);
-    tcase_add_test(test_Parser, test_parses_neko_puzzle);
-    tcase_add_test(test_Parser, test_parses_not_snake);
-    tcase_add_test(test_Parser, test_parses_octat);
-    tcase_add_test(test_Parser, test_parses_random_robots);
-    tcase_add_test(test_Parser, test_parses_random_robots_spawner);
-    tcase_add_test(test_Parser, test_parses_zen_puzzle_garden);
-    tcase_add_test(test_Parser, test_parses_enqueue);
+  test_Parser = tcase_create("Parser");
+  tcase_set_timeout(test_Parser, 100);
+  tcase_add_test(test_Parser, test_parses_basic);
+  tcase_add_test(test_Parser, test_parses_block_faker);
+  tcase_add_test(test_Parser, test_parses_by_your_side);
+  tcase_add_test(test_Parser, test_parses_constellation_z);
+  tcase_add_test(test_Parser, test_parses_eyeball);
+  tcase_add_test(test_Parser, test_parses_kettle);
+  tcase_add_test(test_Parser, test_parses_lime_rick);
+  tcase_add_test(test_Parser, test_parses_match3);
+  tcase_add_test(test_Parser, test_parses_micro_ban);
+  tcase_add_test(test_Parser, test_parses_minimum);
+  tcase_add_test(test_Parser, test_parses_neko_puzzle);
+  tcase_add_test(test_Parser, test_parses_not_snake);
+  tcase_add_test(test_Parser, test_parses_octat);
+  tcase_add_test(test_Parser, test_parses_random_robots);
+  tcase_add_test(test_Parser, test_parses_random_robots_spawner);
+  tcase_add_test(test_Parser, test_parses_zen_puzzle_garden);
+  tcase_add_test(test_Parser, test_parses_enqueue);
 
-    suite_add_tcase(s, test_Parser);
-    return s;
+  suite_add_tcase(s, test_Parser);
+  return s;
 }
 
 
 int main(void)
- {
-    int number_failed;
-    Suite *s;
-    SRunner *sr;
+{
+  int number_failed;
+  Suite *s;
+  SRunner *sr;
 
-    s = puzzle_script_parser_suite();
-    sr = srunner_create(s);
+  s = puzzle_script_parser_suite();
+  sr = srunner_create(s);
 
-    srunner_run_all(sr, CK_NORMAL);
-    number_failed = srunner_ntests_failed(sr);
-    srunner_free(sr);
-    return (number_failed == 0) ? 0 : 1;
- }
+  srunner_run_all(sr, CK_NORMAL);
+  number_failed = srunner_ntests_failed(sr);
+  srunner_free(sr);
+  return (number_failed == 0) ? 0 : 1;
+}
