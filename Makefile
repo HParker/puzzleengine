@@ -3,32 +3,32 @@ FLEX = flex
 CC = gcc
 
 default: parser
-	${CC} -g -o parseTest puzzle.tab.c puzzleData.c parseTest.c `pkg-config --cflags --libs check`
-	${CC} -g -o runnerTest puzzle.tab.c puzzleData.c runner.c runnerTest.c `pkg-config --cflags --libs check`
+	mkdir -p bin
+	${CC} -g -o ./bin/parseTest puzzle.tab.c puzzleData.c test/parseTest.c `pkg-config --cflags --libs check`
+	${CC} -g -o ./bin/runnerTest puzzle.tab.c debugRender.c puzzleData.c runner.c test/runnerTest.c `pkg-config --cflags --libs check`
 
 parser:
 	${BISON} -d puzzle.y
 	${FLEX} puzzle.lex
 
 sdl: parser
-	${CC} -o sdlpuzzlescript puzzle.tab.c sdlRender.c runner.c puzzleData.c main.c `pkg-config --cflags --libs sdl2`
+	${CC} -o ./bin/sdlpuzzlescript puzzle.tab.c sdlRender.c runner.c puzzleData.c main.c `pkg-config --cflags --libs sdl2`
 
 
 check: default
-	./parseTest && ./runnerTest
-
+	./bin/parseTest && ./bin/runnerTest
 
 debug: parser
-	${CC} -o debugpuzzlescript puzzle.tab.c debugRender.c runner.c puzzleData.c main.c
+	${CC} -o ./bin/debugpuzzlescript puzzle.tab.c debugRender.c runner.c puzzleData.c main.c
 
 nc: parser
-	${CC} -o ncpuzzlescript puzzle.tab.c render.c runner.c puzzleData.c main.c `pkg-config --cflags --libs ncurses`
+	${CC} -o ./bin/ncpuzzlescript puzzle.tab.c render.c runner.c puzzleData.c main.c `pkg-config --cflags --libs ncurses`
 
 ray: parser
-	${CC} -o raypuzzlescript puzzle.tab.c rayRender.c runner.c puzzleData.c main.c `pkg-config --cflags --libs raylib`
-	${CC} -o 3draypuzzlescript puzzle.tab.c 3drayRender.c runner.c puzzleData.c main.c `pkg-config --cflags --libs raylib`
+	${CC} -o ./bin/raypuzzlescript puzzle.tab.c rayRender.c runner.c puzzleData.c main.c `pkg-config --cflags --libs raylib`
+	${CC} -o ./bin/3draypuzzlescript puzzle.tab.c 3drayRender.c runner.c puzzleData.c main.c `pkg-config --cflags --libs raylib`
 
 all: default sdl debug nc ray
 
 clean:
-	rm puzzle.tab.h puzzle.tab.c parseTest runnerTest sdlpuzzlescript ncpuzzlescript raypuzzlescript 3draypuzzlescript
+	rm puzzle.tab.h puzzle.tab.c ./bin/parseTest ./bin/runnerTest ./bin/sdlpuzzlescript ./bin/ncpuzzlescript ./bin/raypuzzlescript ./bin/3draypuzzlescript

@@ -1,4 +1,5 @@
 *.o
+bin/*
 puzzle.tab.c
 puzzle.tab.h
 lex.yy.c
