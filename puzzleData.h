@@ -136,7 +136,6 @@ typedef struct Rule {
   int commandCount;
   Command commands[10];
 
-  int matchStateDone; // TODO: this is only needed when parsing. maybe manage it there?
   Direction directionConstraint;
   ExecutionTime executionTime;
 

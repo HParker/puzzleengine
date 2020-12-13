@@ -100,8 +100,6 @@ int rowWidth = 0;
 %token <cell> GLYPH LEGEND_GLYPH
 %token <enumValue> LOGIC_WORD LOGIC_ON DIRECTION EXECUTION_TIME
 
-
-
 %%
 puzzlescript: preamble
               modechange
@@ -326,35 +324,33 @@ layer_object: LAYER_NAME {
   free($1);
 }
 
-rules: rule_line  rules
+rules: rules rule_line
      | rule_line
-
+     ;
 
 rule_line: rule some_eor { incRule(); }
         ;
 
 some_eor:       some_eor END_OF_RULE | END_OF_RULE;
 
-rule:           rule_prefix state_definitions arrow state_definitions rule_postfix
-        |       rule_prefix state_definitions arrow state_definitions
-        |       state_definitions arrow state_definitions rule_postfix {
+rule:           rule_prefix match_states arrow result_states rule_postfix
+        |       rule_prefix match_states arrow result_states
+        |       match_states arrow result_states rule_postfix {
     pd.rules[pd.ruleCount].executionTime = NORMAL;
     pd.rules[pd.ruleCount].directionConstraint = NONE;
 }
-        |       state_definitions arrow state_definitions {
+        |       match_states arrow result_states {
     pd.rules[pd.ruleCount].executionTime = NORMAL;
     pd.rules[pd.ruleCount].directionConstraint = NONE;
 }
-        |       state_definitions arrow rule_postfix
+        |       match_states arrow rule_postfix
                 {
     pd.rules[pd.ruleCount].executionTime = NORMAL;
     pd.rules[pd.ruleCount].directionConstraint = NONE;
 }
-        |       rule_prefix state_definitions arrow rule_postfix
+        |       rule_prefix match_states arrow rule_postfix
 
-arrow: ARROW {
-  pd.rules[pd.ruleCount].matchStateDone = 1;
-}
+arrow: ARROW
 
 rule_prefix:    EXECUTION_TIME {
   pd.rules[pd.ruleCount].executionTime = $1;
@@ -408,56 +404,31 @@ rule_postfix: OBJID {
   printf("this should show a message '%s'\n", $2);
 }
 
-state_definitions: state_definition state_definitions
-                 | state_definition
+match_states:   match_states match_state | match_state;
 
-state_definition: OPEN_SQUARE state_internals CLOSE_SQUARE {
-  if (pd.rules[pd.ruleCount].matchStateDone == 0) {
-    incRuleMatchState(pd.ruleCount);
-  } else {
-    incRuleResultState(pd.ruleCount);
-  }
+match_state:    OPEN_SQUARE match_state_internals CLOSE_SQUARE { incRuleMatchState(pd.ruleCount); }
 
+match_state_internals: match_state_internals VERTICAL_PIPE match_state_part
+                |      match_state_part
+
+
+match_state_part: match_on_square { incMatchPart(pd.ruleCount, pd.rules[pd.ruleCount].matchStateCount); }
+        |       %empty {
+  Rule * r = &pd.rules[pd.ruleCount];
+  RuleState * rs = &r->matchStates[r->matchStateCount];
+  RuleStatePart * rsp = &rs->parts[rs->partCount];
+
+  rsp->ruleIdentity[rsp->ruleIdentityCount].direction = UNSPECIFIED;
+  rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId("_EMPTY_");
+
+  rsp->ruleIdentityCount++;
+  incMatchPart(pd.ruleCount, r->matchStateCount);
 }
 
-state_internals: state_part VERTICAL_PIPE state_internals
-               | state_part
 
-state_part: objects_on_same_square {
-  if (pd.rules[pd.ruleCount].matchStateDone == 0) {
-    incMatchPart(pd.ruleCount, pd.rules[pd.ruleCount].matchStateCount);
-  } else {
-    incResultPart(pd.ruleCount, pd.rules[pd.ruleCount].resultStateCount);
-  }
-}
-          | %empty {
-    if (pd.rules[pd.ruleCount].matchStateDone == 0) {
-      Rule * r = &pd.rules[pd.ruleCount];
-      RuleState * rs = &r->matchStates[r->matchStateCount];
-      RuleStatePart * rsp = &rs->parts[rs->partCount];
+match_on_square: match_on_square match_object_part | match_object_part;
 
-      rsp->ruleIdentity[rsp->ruleIdentityCount].direction = UNSPECIFIED;
-      rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId("_EMPTY_");
-
-      rsp->ruleIdentityCount++;
-      incMatchPart(pd.ruleCount, r->matchStateCount);
-    } else {
-      Rule * r = &pd.rules[pd.ruleCount];
-      RuleState * rs = &r->resultStates[r->resultStateCount];
-      RuleStatePart * rsp = &rs->parts[rs->partCount];
-
-      rsp->ruleIdentity[rsp->ruleIdentityCount].direction = UNSPECIFIED;
-      rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId("_EMPTY_");
-
-      rsp->ruleIdentityCount++;
-      incResultPart(pd.ruleCount, r->resultStateCount);
-    }
-}
-
-objects_on_same_square: objects_on_same_square object_part | object_part
-
-object_part: OBJID {
-  if (pd.rules[pd.ruleCount].matchStateDone == 0) {
+match_object_part: OBJID {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->matchStates[r->matchStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
@@ -467,20 +438,8 @@ object_part: OBJID {
     rid->legendId = aliasLegendId($1);
     free($1);
     rsp->ruleIdentityCount++;
-  } else {
-    Rule * r = &pd.rules[pd.ruleCount];
-    RuleState * rs = &r->resultStates[r->resultStateCount];
-    RuleStatePart * rsp = &rs->parts[rs->partCount];
-    RuleIdentity * rid = &rsp->ruleIdentity[rsp->ruleIdentityCount];
-
-    rid->direction = UNSPECIFIED;
-    rid->legendId = aliasLegendId($1);
-    free($1);
-    rsp->ruleIdentityCount++;
-  }
 }
-        |       DIRECTION OBJID {
-  if (pd.rules[pd.ruleCount].matchStateDone == 0) {
+                 | DIRECTION OBJID {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->matchStates[r->matchStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
@@ -490,7 +449,44 @@ object_part: OBJID {
     rid->legendId = aliasLegendId($2);
     free($2);
     rsp->ruleIdentityCount++;
-  } else {
+}
+
+result_states:   result_states result_state | result_state;
+
+result_state:    OPEN_SQUARE result_state_internals CLOSE_SQUARE { incRuleResultState(pd.ruleCount); }
+
+result_state_internals: result_state_internals VERTICAL_PIPE result_state_part
+                |      result_state_part
+
+
+result_state_part: result_on_square { incResultPart(pd.ruleCount, pd.rules[pd.ruleCount].resultStateCount); }
+        |       %empty {
+  Rule * r = &pd.rules[pd.ruleCount];
+  RuleState * rs = &r->resultStates[r->resultStateCount];
+  RuleStatePart * rsp = &rs->parts[rs->partCount];
+
+  rsp->ruleIdentity[rsp->ruleIdentityCount].direction = UNSPECIFIED;
+  rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId("_EMPTY_");
+
+  rsp->ruleIdentityCount++;
+  incResultPart(pd.ruleCount, r->resultStateCount);
+}
+
+
+result_on_square: result_on_square result_object_part | result_object_part;
+
+result_object_part: OBJID {
+    Rule * r = &pd.rules[pd.ruleCount];
+    RuleState * rs = &r->resultStates[r->resultStateCount];
+    RuleStatePart * rsp = &rs->parts[rs->partCount];
+    RuleIdentity * rid = &rsp->ruleIdentity[rsp->ruleIdentityCount];
+
+    rid->direction = UNSPECIFIED;
+    rid->legendId = aliasLegendId($1);
+    free($1);
+    rsp->ruleIdentityCount++;
+}
+                 | DIRECTION OBJID {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->resultStates[r->resultStateCount];
     RuleStatePart * rsp = &rs->parts[rs->partCount];
@@ -500,15 +496,18 @@ object_part: OBJID {
     rid->legendId = aliasLegendId($2);
     free($2);
     rsp->ruleIdentityCount++;
-  }
 }
 
 winconditions: winconditions wincondition | %empty;
 
-wincondition: wincondition_unconditional
-            | wincondition_conditional
-
-wincondition_conditional: LOGIC_WORD OBJID LOGIC_ON OBJID {
+wincondition:   LOGIC_WORD OBJID {
+  pd.winConditions[pd.winConditionCount].hasOnQualifier = 0;
+  pd.winConditions[pd.winConditionCount].winQualifier = $1;
+  pd.winConditions[pd.winConditionCount].winIdentifier = aliasLegendId($2);
+  free($2);
+  incWinCondition();
+}
+        |       LOGIC_WORD OBJID LOGIC_ON OBJID {
   pd.winConditions[pd.winConditionCount].hasOnQualifier = 1;
   pd.winConditions[pd.winConditionCount].winQualifier = $1;
   pd.winConditions[pd.winConditionCount].winIdentifier = aliasLegendId($2);
@@ -517,16 +516,6 @@ wincondition_conditional: LOGIC_WORD OBJID LOGIC_ON OBJID {
   free($4);
   incWinCondition();
 }
-
-wincondition_unconditional: LOGIC_WORD OBJID {
-  pd.winConditions[pd.winConditionCount].hasOnQualifier = 0;
-  pd.winConditions[pd.winConditionCount].winQualifier = $1;
-  pd.winConditions[pd.winConditionCount].winIdentifier = aliasLegendId($2);
-  free($2);
-  incWinCondition();
-}
-
-
 
 levels: levels level | level;
 

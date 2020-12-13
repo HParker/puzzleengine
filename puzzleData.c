@@ -158,7 +158,6 @@ void incRule() {
     pd.ruleCapacity += PUZZLE_MALLOC_INC;
     pd.rules = realloc(pd.rules, sizeof(Rule) * pd.ruleCapacity);
     for (int ruleId = pd.ruleCount + 1; ruleId < pd.ruleCapacity; ruleId++) {
-      pd.rules[ruleId].matchStateDone = 0;
       pd.rules[ruleId].directionConstraint = NONE;
       pd.rules[ruleId].executionTime = NORMAL;
 
@@ -400,7 +399,6 @@ void initPuzzleData() {
   for (int ruleId = 0; ruleId < pd.ruleCapacity; ruleId++) {
     pd.rules[ruleId].commandCount = 0;
 
-    pd.rules[ruleId].matchStateDone = 0;
     pd.rules[ruleId].directionConstraint = NONE;
     pd.rules[ruleId].executionTime = NORMAL;
 
