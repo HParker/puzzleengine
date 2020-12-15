@@ -6,9 +6,9 @@
 void test_solution_file(Runtime * rt, char * puzzleFileName, char * solutionFileName) {
   FILE * puzzleFile = fopen(puzzleFileName, "r");
   FILE * solutionFile = fopen(solutionFileName, "r");
+  initRenderer();
 
   startGame(rt, puzzleFile);
-  /* initRenderer(); */
 
   printf("%s: ", rt->pd->title);
 
@@ -34,8 +34,8 @@ void test_solution_file(Runtime * rt, char * puzzleFileName, char * solutionFile
     }
 
     update(rt, dir);
-    /* render(rt); */
-    /* printf("\n"); */
+    render(rt);
+
     if (rt->levelIndex > currentLevel) {
       currentLevel = rt->levelIndex;
       printf(".");
@@ -45,6 +45,7 @@ void test_solution_file(Runtime * rt, char * puzzleFileName, char * solutionFile
   /*   fprintf(stderr, "Game incomplete %i/%i\n", rt->levelIndex, rt->pd->levelCount); */
   /* } */
   printf(".\n");
+  closeRenderer();
 }
 
 
@@ -74,7 +75,6 @@ START_TEST (test_runs_stumper)
 
   ck_assert_int_eq(1, rt.gameWon);
   endGame(&rt);
-  /* closeRenderer(); */
 }
 END_TEST
 
@@ -236,6 +236,7 @@ Suite * puzzle_script_parser_suite(void)
   s = suite_create("Runner");
 
   test_Runner = tcase_create("Runner");
+  tcase_set_timeout(test_Runner, 100);
 
   tcase_add_test(test_Runner, test_runs_stumper);
   tcase_add_test(test_Runner, test_runs_basic);
@@ -260,6 +261,7 @@ Suite * puzzle_script_parser_suite(void)
   tcase_add_test(test_Runner, test_runs_block_crusher);
 
   suite_add_tcase(s, test_Runner);
+
   return s;
 }
 
@@ -276,5 +278,6 @@ int main(void)
   srunner_run_all(sr, CK_NORMAL);
   number_failed = srunner_ntests_failed(sr);
   srunner_free(sr);
+
   return (number_failed == 0) ? 0 : 1;
 }

@@ -140,7 +140,7 @@ Color colorFromSprite(Runtime * rt, int objId, int cellIndex) {
 #define WINDOW_SIZE 840
 
 void initRenderer() {
-  InitWindow(WINDOW_SIZE, WINDOW_SIZE, "My first Raylib program");
+  InitWindow(WINDOW_SIZE, WINDOW_SIZE, "My Puzzle");
   SetTargetFPS(60);
 }
 
