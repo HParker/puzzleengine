@@ -23,7 +23,10 @@ int inMode = 0;
 %s WINCONDITIONS
 %s LEVELS
 
-glyph [\+\-\!\?:\"\{\}\[\];\.0-9a-zA-Z\*#,@`'~]
+glyph [\+\-\!\?:\"\{\}\[\];\.0-9a-zA-Z\*#,@`\'~\%&\/\|_\>]
+hexcode #([a-fA-F0-9]{6}|[a-fA-F0-9]{3})
+
+name ([a-zA-Z0-9_#]*[a-zA-Z][a-zA-Z0-9_]*){2,}
 
 colors (black|white|lightgray|lightgrey|gray|grey|darkgray|darkgrey|red|darkred|lightred|brown|darkbrown|lightbrown|orange|yellow|green|darkgreen|lightgreen|blue|lightblue|darkblue|purple|pink|transparent)
 
@@ -39,6 +42,7 @@ color (color|colour)
 ^background_color[ ]+ { BEGIN IDENTIFIER; return BACKGROUND_COLOR; }
 ^flickscreen[ ]+ { BEGIN IDENTIFIER; return FLICKSCREEN; }
 ^key_repeat_interval[ ]+ { BEGIN FLOAT; return KEY_REPEAT_INTERVAL; }
+^realtime_interval[ ]+ { BEGIN FLOAT; return REALTIME_INTERVAL; }
 ^noaction { return NOACTION; }
 ^norepeat_action { return NOREPEAT_ACTION; }
 ^noundo { return NOUNDO; }
@@ -48,10 +52,22 @@ color (color|colour)
 ^text_color[ ]+ { BEGIN IDENTIFIER; return TEXT_COLOR; }
 ^throttle_movement[ ]+ { BEGIN IDENTIFIER; return THROTTLE_MOVEMENT; }
 ^zoomscreen[ ]+ { BEGIN IDENTIFIER; return ZOOMSCREEN; }
-^debug { return DEBUG; }
-^verbose_logging[ ]+ { BEGIN IDENTIFIER; return VERBOSE_LOGGING; }
+^enable_level_select {}
 
-<IDENTIFIER>[a-zA-Z0-9\./:\!',\/~ ]+ {
+^debug { return DEBUG; }
+^verbose_logging { return VERBOSE_LOGGING; }
+
+<IDENTIFIER>[a-zA-Z0-9\./:\!\',\/~ ]+ {
+  if (modeToEnter == -1) {
+      BEGIN INITIAL;
+  } else {
+      BEGIN modeToEnter;
+  }
+  yylval.identifier = strdup(yytext);
+  return ID;
+}
+
+<IDENTIFIER>{hexcode} {
   if (modeToEnter == -1) {
       BEGIN INITIAL;
   } else {
@@ -112,20 +128,23 @@ color (color|colour)
   return MODE_HEADER;
 }
 
-<OBJECTS>{colors} {
-  yylval.identifier = strdup(yytext);
-  return COLOR;
+<OBJECTS>\n {
+  return END_OF_OBJECT_LINE;
 }
 
-<OBJECTS>#[a-zA-Z0-9]+ {
-  yylval.identifier = strdup(yytext);
-  return COLOR;
-}
-
-
-<OBJECTS>[a-zA-Z][a-zA-Z_0-9]+ {
+<OBJECTS>{name} {
   yylval.identifier = strdup(yytext);
   return OBJID;
+}
+
+<OBJECTS>{hexcode} {
+  yylval.identifier = strdup(yytext);
+  return OBJID;
+}
+
+<OBJECTS>{glyph} {
+  yylval.cell = yytext[0];
+  return GLYPH;
 }
 
 <LEGEND>^[a-zA-Z0-9_\.#\*@]{2,} {
@@ -133,7 +152,7 @@ color (color|colour)
   return LEGEND_ID;
 }
 
-<LEGEND>^[\[\]\{\}:\?!\+\-;\.0-9a-zA-Z\*#,@`\'\"~] {
+<LEGEND>^{glyph}/[ ] {
   yylval.cell = yytext[0];
   return LEGEND_GLYPH;
 }
@@ -208,6 +227,11 @@ color (color|colour)
   return DIRECTION;
 }
 
+<RULES>moving {
+  yylval.enumValue = MOVING;
+  return DIRECTION;
+}
+
 <RULES>action {
   yylval.enumValue = USE;
   return DIRECTION;
@@ -258,7 +282,12 @@ color (color|colour)
   return ARROW;
 }
 
-<RULES>[a-zA-Z0-9_\.]+ {
+<RULES>{name} {
+  yylval.identifier = strdup(yytext);
+  return OBJID;
+}
+
+<RULES>\.\.\. {
   yylval.identifier = strdup(yytext);
   return OBJID;
 }
@@ -289,7 +318,7 @@ color (color|colour)
   return LOGIC_ON;
 }
 
-<WINCONDITIONS>[a-zA-Z0-9\.]+ {
+<WINCONDITIONS>{name} {
   yylval.identifier = strdup(yytext);
   return OBJID;
 }
@@ -301,11 +330,6 @@ color (color|colour)
 message[ ]+ {
   BEGIN IDENTIFIER;
   return MESSAGE;
-}
-
-<OBJECTS>{glyph} {
-  yylval.cell = yytext[0];
-  return GLYPH;
 }
 
 <LEVELS>{glyph} {
@@ -320,9 +344,9 @@ message[ ]+ {
   BEGIN COMMENT;
 }
 
-<COMMENT>[^\)\(]* {
+<COMMENT>[^\)^\(]* {
 }
-<COMMENT>\)[\n]* {
+<COMMENT>\) {
   commentNestingLevel--;
   if (commentNestingLevel == 0) {
     if (modeToEnter == -1) {
@@ -330,7 +354,6 @@ message[ ]+ {
     } else {
       BEGIN modeToEnter;
     }
-
   }
 }
 %%

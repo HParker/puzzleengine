@@ -105,6 +105,7 @@ typedef enum Direction
    RESTART     = 17,
    UNDO        = 18,
    UNSPECIFIED = 19,
+   MOVING      = 20
   } Direction;
 
 typedef enum ExecutionTime

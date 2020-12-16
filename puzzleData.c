@@ -165,7 +165,7 @@ void incRule() {
       pd.rules[ruleId].matchStateCapacity = 1;
       pd.rules[ruleId].matchStates = malloc(sizeof(RuleState) * pd.rules[ruleId].matchStateCapacity);
 
-      for (int stateId = pd.rules[ruleId].matchStateCount; stateId < pd.rules[ruleId].matchStateCapacity; stateId++) {
+      for (int stateId = 0; stateId < pd.rules[ruleId].matchStateCapacity; stateId++) {
         pd.rules[ruleId].matchStates[stateId].partCount = 0;
         pd.rules[ruleId].matchStates[stateId].partCapacity = 1;
         pd.rules[ruleId].matchStates[stateId].parts = malloc(sizeof(RuleStatePart) * pd.rules[ruleId].matchStates[stateId].partCapacity);
@@ -181,12 +181,12 @@ void incRule() {
       }
 
       pd.rules[ruleId].resultStateCount = 0;
-      pd.rules[ruleId].resultStateCapacity = 100;
+      pd.rules[ruleId].resultStateCapacity = 1;
       pd.rules[ruleId].resultStates = malloc(sizeof(RuleState) * pd.rules[ruleId].resultStateCapacity);
 
       for (int stateId = 0; stateId < pd.rules[ruleId].resultStateCapacity; stateId++) {
         pd.rules[ruleId].resultStates[stateId].partCount = 0;
-        pd.rules[ruleId].resultStates[stateId].partCapacity = 1;
+        pd.rules[ruleId].resultStates[stateId].partCapacity = 100;
         pd.rules[ruleId].resultStates[stateId].parts = malloc(sizeof(RuleStatePart) * pd.rules[ruleId].matchStates[stateId].partCapacity);
         for (int partId = 0; partId < pd.rules[ruleId].resultStates[stateId].partCapacity; partId++) {
           pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCount = 0;
@@ -209,7 +209,7 @@ void incRuleMatchState(int ruleId) {
     pd.rules[ruleId].matchStates = realloc(pd.rules[ruleId].matchStates, sizeof(RuleState) * pd.rules[ruleId].matchStateCapacity);
     for (int stateId = pd.rules[ruleId].matchStateCount + 1; stateId < pd.rules[ruleId].matchStateCapacity; stateId++) {
       pd.rules[ruleId].matchStates[stateId].partCount = 0;
-      pd.rules[ruleId].matchStates[stateId].partCapacity = 1;
+      pd.rules[ruleId].matchStates[stateId].partCapacity = 100;
       pd.rules[ruleId].matchStates[stateId].parts = malloc(sizeof(RuleStatePart) * pd.rules[ruleId].matchStates[stateId].partCapacity);
       for (int partId = 0; partId < pd.rules[ruleId].matchStates[stateId].partCapacity; partId++) {
         pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCount = 0;
@@ -403,11 +403,11 @@ void initPuzzleData() {
     pd.rules[ruleId].executionTime = NORMAL;
 
     pd.rules[ruleId].matchStateCount = 0;
-    pd.rules[ruleId].matchStateCapacity = 100;
+    pd.rules[ruleId].matchStateCapacity = 1;
     pd.rules[ruleId].matchStates = malloc(sizeof(RuleState) * pd.rules[ruleId].matchStateCapacity);
     for (int stateId = 0; stateId < pd.rules[ruleId].matchStateCapacity; stateId++) {
       pd.rules[ruleId].matchStates[stateId].partCount = 0;
-      pd.rules[ruleId].matchStates[stateId].partCapacity = 10;
+      pd.rules[ruleId].matchStates[stateId].partCapacity = 1;
       pd.rules[ruleId].matchStates[stateId].parts = malloc(sizeof(RuleStatePart) * pd.rules[ruleId].matchStates[stateId].partCapacity);
       for (int partId = 0; partId < pd.rules[ruleId].matchStates[stateId].partCapacity; partId++) {
         pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCount = 0;
@@ -421,7 +421,7 @@ void initPuzzleData() {
     }
 
     pd.rules[ruleId].resultStateCount = 0;
-    pd.rules[ruleId].resultStateCapacity = 100;
+    pd.rules[ruleId].resultStateCapacity = 1;
     pd.rules[ruleId].resultStates = malloc(sizeof(RuleState) * pd.rules[ruleId].resultStateCapacity);
     for (int stateId = 0; stateId < pd.rules[ruleId].resultStateCapacity; stateId++) {
       pd.rules[ruleId].resultStates[stateId].partCount = 0;

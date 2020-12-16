@@ -9,6 +9,7 @@
 PuzzleData pd;
 int yyerror(const char *str) {
     fprintf(stderr, "line: %d | %s\n", yylineno, str);
+    exit(1);
 }
 
 int aliasLegendId(char * name) {
@@ -89,11 +90,10 @@ int rowWidth = 0;
 %token SCANLINE TEXT_COLOR THROTTLE_MOVEMENT ZOOMSCREEN
 %token DEBUG VERBOSE_LOGGING RUN_RULES_ON_LEVEL_START
 %token END_OF_FILE 0 "end of file"
-%token MODE_HEADER EQUALS END_LAYER END_OF_RULE MESSAGE LEGEND_AND LEGEND_OR
+%token MODE_HEADER EQUALS END_LAYER END_OF_RULE MESSAGE LEGEND_AND LEGEND_OR END_OF_OBJECT_LINE
 %token  <identifier> ID OBJID COLOR LEGEND_ID LEGEND_VALUE END_LEGEND_LINE LAYER_NAME RULE_POSTFIX
 %token  <decimal> DECIMAL
 
-// Rules tokens (ALSO USES OBJID)
 %token MOVE_RIGHT MOVE_UP MOVE_LEFT MOVE_DOWN
 %token OPEN_SQUARE CLOSE_SQUARE VERTICAL_PIPE ARROW
 %token LEVEL_EOL LEVEL_EMPTY_LINE
@@ -127,6 +127,7 @@ preamble_option: title
                | background_color
                | flickscreen
                | key_repeat_interval
+               | realtime_interval
                | noaction
                | norepeat_action
                | noundo
@@ -163,6 +164,9 @@ flickscreen: FLICKSCREEN ID { yyerror("FLICKSCREEN IS NOT YET SUPPORTED\n"); }
 key_repeat_interval: KEY_REPEAT_INTERVAL DECIMAL { pd.keyRepeatInterval = 0.1f; }
         ;
 
+realtime_interval: REALTIME_INTERVAL DECIMAL { }
+        ;
+
 noaction: NOACTION { pd.noAction = 1; }
         ;
 
@@ -197,15 +201,18 @@ run_rules_on_level_start: RUN_RULES_ON_LEVEL_START { pd.runRulesOnLevelStart = 1
 
 modechange: MODE_HEADER
 
+some_object_eol: some_object_eol END_OF_OBJECT_LINE | END_OF_OBJECT_LINE;
+any_object_eol: some_object_eol | %empty;
+
 object_definitions: object_definition object_definitions
                   | object_definition
 
-object_definition: object_name colors sprite { incObject(); }
-                       | object_name color {
-                           for (int i = 0; i < 25; i++) {
-                               pd.objects[pd.objectCount].sprite[i] = '0';
-                           }
-                           incObject();
+object_definition: any_object_eol object_name some_object_eol colors some_object_eol sprite some_object_eol { incObject(); }
+                 | any_object_eol object_name some_object_eol colors some_object_eol {
+  for (int i = 0; i < 25; i++) {
+      pd.objects[pd.objectCount].sprite[i] = '0';
+  }
+  incObject();
 }
 
 object_name: OBJID GLYPH {
@@ -233,14 +240,14 @@ object_name: OBJID GLYPH {
                incAliasLegend();
 }
 
-colors: color colors | color
+colors: colors color | color;
 
-color: COLOR {
+color: OBJID {
   pd.objects[pd.objectCount].colors[pd.objects[pd.objectCount].colorCount] = $1;
   pd.objects[pd.objectCount].colorCount++;
 }
 
-sprite: sprite_row sprite_row sprite_row sprite_row sprite_row {
+sprite: sprite_row some_object_eol sprite_row some_object_eol sprite_row some_object_eol sprite_row some_object_eol sprite_row {
   spriteIndex = 0;
 }
 
@@ -328,10 +335,10 @@ rules: rules rule_line
      | rule_line
      ;
 
-rule_line: rule some_eor { incRule(); }
-        ;
+rule_line: any_eor rule some_eor { incRule(); }
 
-some_eor:       some_eor END_OF_RULE | END_OF_RULE;
+some_eor: some_eor END_OF_RULE | END_OF_RULE;
+any_eor: some_eor | %empty;
 
 rule:           rule_prefix match_states arrow result_states rule_postfix
         |       rule_prefix match_states arrow result_states
@@ -413,7 +420,7 @@ match_state_internals: match_state_internals VERTICAL_PIPE match_state_part
 
 
 match_state_part: match_on_square { incMatchPart(pd.ruleCount, pd.rules[pd.ruleCount].matchStateCount); }
-        |       %empty {
+                | %empty {
   Rule * r = &pd.rules[pd.ruleCount];
   RuleState * rs = &r->matchStates[r->matchStateCount];
   RuleStatePart * rsp = &rs->parts[rs->partCount];
@@ -517,10 +524,15 @@ wincondition:   LOGIC_WORD OBJID {
   incWinCondition();
 }
 
-levels: levels level | level;
+some_level_eol: some_level_eol LEVEL_EOL | LEVEL_EOL;
+any_level_eol: some_level_eol | %empty;
 
-level:          a_level some_level_newlines { incLevel(); }
-        |       a_level  END_OF_FILE { incLevel(); }
+levels: any_level_eol the_levels;
+
+the_levels: the_levels level | level;
+
+level:          a_level some_level_eol { incLevel(); }
+        |       a_level END_OF_FILE { incLevel(); }
 
 a_level:        message_level
         |       rows
@@ -545,6 +557,4 @@ cell: GLYPH {
   pd.levels[pd.levelCount].cells[pd.levels[pd.levelCount].cellIndex] = $1;
   incCellIndex(pd.levelCount);
 }
-
-some_level_newlines: some_level_newlines LEVEL_EOL | LEVEL_EOL;
 %%
