@@ -57,7 +57,7 @@ color (color|colour)
 ^debug { return DEBUG; }
 ^verbose_logging { return VERBOSE_LOGGING; }
 
-<IDENTIFIER>[a-zA-Z0-9\./:\!\',\/~ ]+ {
+<IDENTIFIER>.*/[\n] {
   if (modeToEnter == -1) {
       BEGIN INITIAL;
   } else {
