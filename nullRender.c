@@ -6,4 +6,4 @@
 void initRenderer() {}
 void closeRenderer() {}
 void render(Runtime * rt) {}
-char input() {}
+char input() { return '@'; }

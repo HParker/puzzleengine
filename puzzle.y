@@ -400,7 +400,7 @@ rule_postfix: OBJID {
     } else if (strcasecmp("checkpoint", $1) == 0) {
         pd.rules[pd.ruleCount].commands[pd.rules[pd.ruleCount].commandCount] = CHECKPOINT;
     } else if (strcasecmp("restart", $1) == 0) {
-        pd.rules[pd.ruleCount].commands[pd.rules[pd.ruleCount].commandCount] = RESTART;
+        pd.rules[pd.ruleCount].commands[pd.rules[pd.ruleCount].commandCount] = CMD_RESTART;
     } else if (strcasecmp("win", $1) == 0) {
         pd.rules[pd.ruleCount].commands[pd.rules[pd.ruleCount].commandCount] = WIN;
     }

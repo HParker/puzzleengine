@@ -1,0 +1,1225 @@
+title Mortar
+author Toomber
+homepage https://toombler.itch.io/
+
+(again_interval 0.05)
+
+realtime_interval 0.08
+
+background_color #3c1518
+
+enable_level_select
+
+========
+OBJECTS
+========
+
+Background
+#d58936 #d58936  (#ba8712) (#fbc40e)
+11111
+01111
+11101
+11111
+10111
+
+
+Target
+#554a4b (#495057) (#bf0603)
+.....
+.000.
+.0.0.
+.000.
+.....
+
+Wall
+#D65636 #69140e (#c33f28) (#708d81 #001427)
+00010
+11111
+01000
+11111
+00010
+
+Crate
+#b14700 (#a44200) (#001427)
+00000
+0...0
+0...0
+0...0
+00000
+
+PersonInside
+#D65636 (#708d81) transparent #bf0603
+00010
+11111
+01000
+11111
+00010
+
+SolidWall
+#3c1518 (#4f635b) (#708d81) (#000000 #1F1F1F #3F3F3F #5F5F5F #7F7F7F #9F9F9F #BFBFBF #DFDFDF #FFFFFF)
+
+TempPersonExistsAlready
+white
+
+TempCannotPushCrate
+white
+
+
+pattern0
+#BF0603 #B40804 #AA0A06 #9F0B07 #940D09 #890F0A #7F110B #74120D #69140E
+65445
+53236
+41146
+32355
+44554
+
+pattern1
+#BF0603 #B40804 #AA0A06 #9F0B07 #940D09 #890F0A #7F110B #74120D #69140E
+65445
+64235
+42146
+32355
+44554
+
+pattern2
+#BF0603 #B40804 #AA0A06 #9F0B07 #940D09 #890F0A #7F110B #74120D #69140E
+66544
+65335
+52135
+42245
+44454
+
+pattern3
+#BF0603 #B40804 #AA0A06 #9F0B07 #940D09 #890F0A #7F110B #74120D #69140E
+56544
+76335
+63125
+42245
+43444
+
+pattern4
+#BF0603 #B40804 #AA0A06 #9F0B07 #940D09 #890F0A #7F110B #74120D #69140E
+56544
+66434
+64225
+42135
+43344
+
+pattern5
+#BF0603 #B40804 #AA0A06 #9F0B07 #940D09 #890F0A #7F110B #74120D #69140E
+45543
+67534
+65224
+53135
+33344
+
+pattern6
+#BF0603 #B40804 #AA0A06 #9F0B07 #940D09 #890F0A #7F110B #74120D #69140E
+45543
+67533
+66324
+54224
+43334
+
+pattern7
+#BF0603 #B40804 #AA0A06 #9F0B07 #940D09 #890F0A #7F110B #74120D #69140E
+34543
+57633
+67423
+54224
+43334
+
+pattern8
+#BF0603 #B40804 #AA0A06 #9F0B07 #940D09 #890F0A #7F110B #74120D #69140E
+34543
+46643
+67533
+55324
+43334
+
+pattern9
+#BF0603 #B40804 #AA0A06 #9F0B07 #940D09 #890F0A #7F110B #74120D #69140E
+23443
+36642
+57633
+56423
+43334
+
+pattern10
+#BF0603 #B40804 #AA0A06 #9F0B07 #940D09 #890F0A #7F110B #74120D #69140E
+23443
+35652
+47742
+56533
+44334
+
+pattern11
+#BF0603 #B40804 #AA0A06 #9F0B07 #940D09 #890F0A #7F110B #74120D #69140E
+23443
+24653
+46742
+56533
+44334
+
+pattern12
+#BF0603 #B40804 #AA0A06 #9F0B07 #940D09 #890F0A #7F110B #74120D #69140E
+22344
+23553
+36753
+46643
+44434
+
+pattern13
+#BF0603 #B40804 #AA0A06 #9F0B07 #940D09 #890F0A #7F110B #74120D #69140E
+32344
+12553
+25763
+46643
+45444
+
+pattern14
+#BF0603 #B40804 #AA0A06 #9F0B07 #940D09 #890F0A #7F110B #74120D #69140E
+32344
+22454
+24663
+46753
+45544
+
+pattern15
+#BF0603 #B40804 #AA0A06 #9F0B07 #940D09 #890F0A #7F110B #74120D #69140E
+43345
+21354
+23664
+35753
+55544
+
+pattern16
+#BF0603 #B40804 #AA0A06 #9F0B07 #940D09 #890F0A #7F110B #74120D #69140E
+43345
+21355
+22564
+34664
+45554
+
+pattern17
+#BF0603 #B40804 #AA0A06 #9F0B07 #940D09 #890F0A #7F110B #74120D #69140E
+54345
+31255
+21465
+34664
+45554
+
+pattern18
+#BF0603 #B40804 #AA0A06 #9F0B07 #940D09 #890F0A #7F110B #74120D #69140E
+54345
+42245
+21355
+33564
+45554
+
+pattern19
+#BF0603 #B40804 #AA0A06 #9F0B07 #940D09 #890F0A #7F110B #74120D #69140E
+65445
+52246
+31255
+32465
+45554
+
+pattern20
+black
+
+
+person40
+black
+
+person0
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.434.
+.224.
+31255
+.356.
+.5.5.
+
+person1
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.434.
+.224.
+21355
+.356.
+.5.5.
+
+person2
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.434.
+.124.
+21365
+.356.
+.5.5.
+
+person3
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.434.
+.125.
+21465
+.466.
+.5.5.
+
+person4
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.334.
+.125.
+22464
+.466.
+.5.5.
+
+person5
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.334.
+.135.
+22564
+.466.
+.5.5.
+
+person6
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.334.
+.135.
+22564
+.566.
+.5.4.
+
+person7
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.334.
+.135.
+23664
+.575.
+.5.4.
+
+person8
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.334.
+.145.
+23663
+.575.
+.5.4.
+
+person9
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.234.
+.245.
+24663
+.675.
+.5.4.
+
+person10
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.234.
+.245.
+24763
+.665.
+.5.4.
+
+person11
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.234.
+.255.
+25763
+.664.
+.5.4.
+
+person12
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.234.
+.355.
+35753
+.664.
+.4.3.
+
+person13
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.234.
+.355.
+36753
+.664.
+.4.3.
+
+person14
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.244.
+.465.
+36752
+.664.
+.4.3.
+
+person15
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.344.
+.465.
+46742
+.653.
+.4.3.
+
+person16
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.344.
+.465.
+47742
+.653.
+.4.3.
+
+person17
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.344.
+.565.
+47742
+.653.
+.4.3.
+
+person18
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.344.
+.565.
+57633
+.642.
+.3.3.
+
+person19
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.344.
+.664.
+57633
+.642.
+.3.3.
+
+person20
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.454.
+.664.
+57633
+.532.
+.3.3.
+
+person21
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.454.
+.664.
+67533
+.532.
+.3.3.
+
+person22
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.454.
+.764.
+67523
+.532.
+.3.3.
+
+person23
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.454.
+.763.
+67423
+.422.
+.3.3.
+
+person24
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.554.
+.763.
+66424
+.422.
+.3.3.
+
+person25
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.554.
+.753.
+66324
+.422.
+.3.3.
+
+person26
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.554.
+.753.
+66324
+.322.
+.3.4.
+
+person27
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.554.
+.753.
+65224
+.313.
+.3.4.
+
+person28
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.554.
+.743.
+65225
+.313.
+.3.4.
+
+person29
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.654.
+.643.
+64225
+.213.
+.3.4.
+
+person30
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.654.
+.643.
+64125
+.223.
+.3.4.
+
+person31
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.654.
+.633.
+63125
+.224.
+.3.4.
+
+person32
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.654.
+.533.
+53135
+.224.
+.4.5.
+
+person33
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.654.
+.533.
+52135
+.224.
+.4.5.
+
+person34
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.644.
+.423.
+52136
+.224.
+.4.5.
+
+person35
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.544.
+.423.
+42146
+.235.
+.4.5.
+
+person36
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.544.
+.423.
+41146
+.235.
+.4.5.
+
+person37
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.544.
+.323.
+41146
+.235.
+.4.5.
+
+person38
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.544.
+.323.
+31255
+.246.
+.5.5.
+
+person39
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.544.
+.224.
+31255
+.246.
+.5.5.
+
+
+1Trail0
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.....
+.135.
+.256.
+.566.
+.....
+
+1Trail1
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.....
+.35..
+.5.5.
+.664.
+.....
+
+1Trail2
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.....
+.66..
+...3.
+..42.
+.....
+
+1Trail3
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.....
+..5..
+.....
+..22.
+.....
+
+1Trail4
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.....
+..3..
+.....
+.....
+.....
+
+2Trail0
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.....
+.135.
+.256.
+.566.
+.....
+
+2Trail1
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.....
+...5.
+.575.
+.664.
+.....
+
+2Trail2
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.....
+...4.
+.763.
+..4..
+.....
+
+2Trail3
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.....
+...3.
+..3..
+..2..
+.....
+
+2Trail4
+#BF0603 #C21609 #C52710 #C73716 #CA481D #CD5823 #D06829 #D27930 #D58936
+.....
+.....
+.....
+..2..
+.....
+
+
+
+Human
+#000000 #EB6F31 #CFCFCF #4172B6 #BE2633
+.000.
+.111.
+22222
+.333.
+.3.3.
+
+DeadHuman
+#000000 #EB6F31 #CFCFCF #4172B6 #BE2633
+.....
+.....
+.043.
+42414
+24321
+
+TimerStart
+transparent
+
+NeedCrateOnForCinematic
+transparent
+
+SpawnHuman
+transparent
+
+DontLetHumanWin
+transparent
+
+
+=======
+LEGEND
+=======
+
+. = Background
+# = Wall
+% = SolidWall
+P = Person0
+Q = PersonInside and pattern0
+* = Crate
+@ = Crate and Target
+O = Target
+H = Human
+
+D = DontLetHumanWin
+Y = SpawnHuman
+Z = NeedCrateOnForCinematic and Target
+
+person = person0 or person1 or person2 or person3 or person4 or person5 or person6 or person7 or person8 or person9 or person10 or person11 or person12 or person13 or person14 or person15 or person16 or person17 or person18 or person19 or person20 or person21 or person22 or person23 or person24 or person25 or person26 or person27 or person28 or person29 or person30 or person31 or person32 or person33 or person34 or person35 or person36 or person37 or person38 or person39 or person40
+
+Collider = Crate or Wall or SolidWall or PersonInside
+
+Player = Person or PersonInside or Human
+
+pattern = pattern0 or pattern1 or pattern2 or pattern3 or pattern4 or pattern5 or pattern6 or pattern7 or pattern8 or pattern9 or pattern10 or pattern11 or pattern12 or pattern13 or pattern14 or pattern15 or pattern16 or pattern17 or pattern18 or pattern19 or pattern20
+
+
+1Trail = 1Trail0 or 1Trail1 or 1Trail2 or 1Trail3 or 1Trail4
+2Trail = 2Trail0 or 2Trail1 or 2Trail2 or 2Trail3 or 2Trail4
+trail0 = 1Trail0 or 2Trail0
+trail = 1Trail or 2Trail
+
+=======
+SOUNDS
+=======
+
+Crate MOVE 36772507
+
+Person MOVE 98574507 (92929507) (2845707) (60851507) (83645907)
+Human MOVE 2845707
+
+(enter blocks sound)
+PersonInside create 74438701 (25439302) (45627102) (70832702)(74438701)
+(exit bloxks sound)
+PersonInside destroy 82957503
+
+(no crate options sound)
+sfx0 90720904 (33509502) (62262506)  (97691709)
+
+(multiple crate options sound)
+cancel 9703504 (5206902) (12711101) (48573106) ()
+
+DeadHuman create 68529302
+DeadHuman create 37228708
+
+TimerStart create 23938708 (90890708) (39470708)  ()
+(TimerStart create 90890708)
+
+SpawnHuman destroy 56523708
+
+(trapped noise)
+sfx1 55243708 (71777708 )
+
+(walk into trapped person noise)
+sfx2 77067508 (22203708) (59306508)
+
+
+(laugh sound? 23938708
+free sound 44604308
+59830508
+90890708
+56771108
+
+52406108
+)
+
+================
+COLLISIONLAYERS
+================
+
+Background
+
+SpawnHuman
+NeedCrateOnForCinematic
+DontLetHumanWin
+
+pattern
+Target
+
+trail
+DeadHuman
+
+Human, Person, Wall, SolidWall, Crate
+PersonInside
+
+TempPersonExistsAlready
+TempCannotPushCrate
+TimerStart
+
+
+
+
+
+
+======
+RULES
+======
+
+
+
+[ stationary player ][ pattern19 ] -> [ stationary player ][ pattern20 ]
+[ stationary player ][ pattern18 ] -> [ stationary player ][ pattern19 ]
+[ stationary player ][ pattern17 ] -> [ stationary player ][ pattern18 ]
+[ stationary player ][ pattern16 ] -> [ stationary player ][ pattern17 ]
+[ stationary player ][ pattern15 ] -> [ stationary player ][ pattern16 ]
+[ stationary player ][ pattern14 ] -> [ stationary player ][ pattern15 ]
+[ stationary player ][ pattern13 ] -> [ stationary player ][ pattern14 ]
+[ stationary player ][ pattern12 ] -> [ stationary player ][ pattern13 ]
+[ stationary player ][ pattern11 ] -> [ stationary player ][ pattern12 ]
+[ stationary player ][ pattern10 ] -> [ stationary player ][ pattern11 ]
+[ stationary player ][ pattern9 ] -> [ stationary player ][ pattern10 ]
+[ stationary player ][ pattern8 ] -> [ stationary player ][ pattern9 ]
+[ stationary player ][ pattern7 ] -> [ stationary player ][ pattern8 ]
+[ stationary player ][ pattern6 ] -> [ stationary player ][ pattern7 ]
+[ stationary player ][ pattern5 ] -> [ stationary player ][ pattern6 ]
+[ stationary player ][ pattern4 ] -> [ stationary player ][ pattern5 ]
+[ stationary player ][ pattern3 ] -> [ stationary player ][ pattern4 ]
+[ stationary player ][ pattern2 ] -> [ stationary player ][ pattern3 ]
+[ stationary player ][ pattern1 ] -> [ stationary player ][ pattern2 ]
+[ stationary player ][ pattern0 ] -> [ stationary player ][ pattern1 ]
+[ stationary player ][ pattern20 ] -> [ stationary player ][ pattern0 ] (pattern 20 is never shown)
+
+
+[ stationary player ][ person39 ] -> [ stationary player ][ person40 ]
+[ stationary player ][ person38 ] -> [ stationary player ][ person39 ]
+[ stationary player ][ person37 ] -> [ stationary player ][ person38 ]
+[ stationary player ][ person36 ] -> [ stationary player ][ person37 ]
+[ stationary player ][ person35 ] -> [ stationary player ][ person36 ]
+[ stationary player ][ person34 ] -> [ stationary player ][ person35 ]
+[ stationary player ][ person33 ] -> [ stationary player ][ person34 ]
+[ stationary player ][ person32 ] -> [ stationary player ][ person33 ]
+[ stationary player ][ person31 ] -> [ stationary player ][ person32 ]
+[ stationary player ][ person30 ] -> [ stationary player ][ person31 ]
+[ stationary player ][ person29 ] -> [ stationary player ][ person30 ]
+[ stationary player ][ person28 ] -> [ stationary player ][ person29 ]
+[ stationary player ][ person27 ] -> [ stationary player ][ person28 ]
+[ stationary player ][ person26 ] -> [ stationary player ][ person27 ]
+[ stationary player ][ person25 ] -> [ stationary player ][ person26 ]
+[ stationary player ][ person24 ] -> [ stationary player ][ person25 ]
+[ stationary player ][ person23 ] -> [ stationary player ][ person24 ]
+[ stationary player ][ person22 ] -> [ stationary player ][ person23 ]
+[ stationary player ][ person21 ] -> [ stationary player ][ person22 ]
+[ stationary player ][ person20 ] -> [ stationary player ][ person21 ]
+[ stationary player ][ person19 ] -> [ stationary player ][ person20 ]
+[ stationary player ][ person18 ] -> [ stationary player ][ person19 ]
+[ stationary player ][ person17 ] -> [ stationary player ][ person18 ]
+[ stationary player ][ person16 ] -> [ stationary player ][ person17 ]
+[ stationary player ][ person15 ] -> [ stationary player ][ person16 ]
+[ stationary player ][ person14 ] -> [ stationary player ][ person15 ]
+[ stationary player ][ person13 ] -> [ stationary player ][ person14 ]
+[ stationary player ][ person12 ] -> [ stationary player ][ person13 ]
+[ stationary player ][ person11 ] -> [ stationary player ][ person12 ]
+[ stationary player ][ person10 ] -> [ stationary player ][ person11 ]
+[ stationary player ][ person9 ] -> [ stationary player ][ person10 ]
+[ stationary player ][ person8 ] -> [ stationary player ][ person9 ]
+[ stationary player ][ person7 ] -> [ stationary player ][ person8 ]
+[ stationary player ][ person6 ] -> [ stationary player ][ person7 ]
+[ stationary player ][ person5 ] -> [ stationary player ][ person6 ]
+[ stationary player ][ person4 ] -> [ stationary player ][ person5 ]
+[ stationary player ][ person3 ] -> [ stationary player ][ person4 ]
+[ stationary player ][ person2 ] -> [ stationary player ][ person3 ]
+[ stationary player ][ person1 ] -> [ stationary player ][ person2 ]
+[ stationary player ][ person0 ] -> [ stationary player ][ person1 ]
+[ stationary player ][ person40 ] -> [ stationary player ][ person0 ] (person40 is never shown)
+
+
+[ stationary player ][ 1Trail4 ] -> [ stationary player ][ ]
+[ stationary player ][ 1Trail3 ] -> [ stationary player ][ 1Trail4 ]
+[ stationary player ][ 1Trail2 ] -> [ stationary player ][ 1Trail3 ]
+[ stationary player ][ 1Trail1 ] -> [ stationary player ][ 1Trail2 ]
+[ stationary player ][ 1Trail0 ] -> [ stationary player ][ 1Trail1 ]
+
+[ stationary player ][ 2Trail4 ] -> [ stationary player ][  ]
+[ stationary player ][ 2Trail3 ] -> [ stationary player ][ 2Trail4 ]
+[ stationary player ][ 2Trail2 ] -> [ stationary player ][ 2Trail3 ]
+[ stationary player ][ 2Trail1 ] -> [ stationary player ][ 2Trail2 ]
+[ stationary player ][ 2Trail0 ] -> [ stationary player ][ 2Trail1 ]
+
+
+
+(-----------human stuff-----------)
+
+(ending stuff)
+
+(spawn human is crates on targets)
+[ SpawnHuman ][ PersonInside ] -> [ SpawnHuman Human ][ PersonInside ]
+[ SpawnHuman Human ][PersonInside | NeedCrateOnForCinematic ] -> [ SpawnHuman ][PersonInside | NeedCrateOnForCinematic ]
+[ SpawnHuman Human ][ NeedCrateOnForCinematic no crate] -> [ SpawnHuman ][ NeedCrateOnForCinematic no crate]
+[ Human SpawnHuman ] -> [ Human ]
+
+(move human to trap person)
+[ Human ][ NeedCrateOnForCinematic ] -> [ left Human ][ NeedCrateOnForCinematic ]
+left [ Human |  |Target ][ NeedCrateOnForCinematic ] -> [ down Human |  |Target ][ NeedCrateOnForCinematic ]
+left [ Human | PersonInside][ NeedCrateOnForCinematic ] -> [ down Human | PersonInside][ NeedCrateOnForCinematic ]
+[ Human | Crate | SolidWall ][ NeedCrateOnForCinematic ] -> [ Human | Crate | SolidWall ][] sfx1
+
+
+
+
+
+(stop personInsides from moving if there is a human moving)
+[ moving Human ][ moving PersonInside ] -> [ moving Human ][ stationary PersonInside ]
+(prevent humans from entering personInsides)
+[ >  Human | PersonInside ] -> [  stationary  Human | PersonInside  ] sfx2
+(if timer active, stop human from moving)
+[ moving Human][ TimerStart ] -> [stationary Human][ TimerStart ]
+
+(stop human from moving when next to crate on personInside)
+[ PersonInside | crate | human ] -> [  PersonInside  | Crate | stationary human ]
+(start human moving off wall if pattern0 exists and the timer has started)
+[ PersonInside pattern0 TimerStart | crate | human ] -> [ > PersonInside pattern0 TimerStart | Crate | > human ]
+(start the timer if pattern0 exists)
+[ PersonInside pattern0 | crate | stationary human ] -> [  PersonInside pattern0 TimerStart | Crate |  stationary human ]
+
+(prevent person from moving during person leaving animation)
+[ moving Person no PersonInside][ TimerStart ] -> [stationary Person][ TimerStart ]
+
+
+(kill human against collider)
+[ stationary Person | ... | crate | Human | Collider ][TimerStart][DontLetHumanWin] -> [ stationary Person | ... | | crate DeadHuman | Collider][][]
+[ stationary Person | ... | crate | Human | Collider ][TimerStart] -> [ stationary Person | ... | | crate DeadHuman | Collider][]
+(move human from person leaving animation)
+[ stationary Person | ... | crate | Human | no Collider ] -> [ stationary Person | ... | | crate | Human]
+
+(humans push crates)
+[ >  Human | Crate ] -> [  >  Human | > Crate  ]
+
+(----------------------)
+
+
+(trail)
+[ moving person ] -> [ moving person random trail0 ]
+late [ trail person ] -> [ person ]
+
+
+(push crates)
+[ >  Person | Crate ] -> [  >  Person | > Crate  ]
+
+
+(enter contiguous walls)
+(
+random [PersonInside pattern | Wall no PersonInside ] -> [PersonInside pattern | PersonInside pattern] again
+[> Person | Wall] -> [ | PersonInside pattern0] again
+slow growth - it would be possible to let players interrupt)
+
+
+[> Person | Wall] -> [ | PersonInside pattern0]
+[PersonInside | Wall no PersonInside] -> [PersonInside | PersonInside pattern0]
+
+
+
+(if there are no possible crates to push, play sound)
+	 [ moving PersonInside ] -> [  moving PersonInside TempCannotPushCrate ]
+late [ Person no PersonInside ][ TempCannotPushCrate ] -> [ Person ][]
+late [ TempCannotPushCrate ] -> [] sfx0
+
+
+(exit walls)
+[ > PersonInside | Crate ] -> [ PersonInside > Person0 | > Crate ]
+[ moving PersonInside] -> [stationary PersonInside]
+
+
+(stop crates against PersonInsides)
+[> Crate | PersonInside] -> [Crate | PersonInside]
+
+
+(delete people that can't move)
+late [Person PersonInside] -> [PersonInside]
+(reconvert PersonInsides to walls)
+late  [Person][PersonInside] -> [Person][Wall]
+
+
+(ensure only one player, without using random)
+late [Background] -> [Background TempPersonExistsAlready]
+late left [TempPersonExistsAlready | TempPersonExistsAlready] -> [TempPersonExistsAlready | ]
++late up [TempPersonExistsAlready | TempPersonExistsAlready] -> [TempPersonExistsAlready | ]
+
+late [Person][TempPersonExistsAlready no Person] -> [Person TempPersonExistsAlready][]
+late [Person no TempPersonExistsAlready] -> cancel
+
+late [TempPersonExistsAlready] -> []
+
+
+
+late [ pattern no PersonInside ] -> []
+
+
+
+(should it be that walls can walk around if not attached to anything?)
+(should it be that multiple blocks next to walls spawn multiple main characters?)
+
+==============
+WINCONDITIONS
+==============
+
+All Target on Crate
+(no 1trail4
+no 2trail4)
+no trail
+no DontLetHumanWin
+
+=======
+LEVELS
+=======
+
+(
+-A level showing crates on targets
+crate which releases is naturally last crate you set
+It's possible (easy?) to complete without entering blocks
+)
+LEVEL_SELECT_POINT
+%%%%%%%%%%%
+%##%qqq%##%
+%##oqqqo##%
+%##.qqq.##%
+%##..o..##%
+%#.......#%
+%#.*.h.*.#%
+%#.......#%
+%#.d.*...#%
+%#..%%%..#%
+%###%%%###%
+%%%%%%%%%%%
+
+(what other potential does this human killing mechanic have?
+is there a way that more humans can arrive? - reinforcements?
+)
+
+LEVEL_SELECT_POINT
+%%%%%%%%%%%%%%%%
+%%%%%%%####%%%%%
+%%%%%%%#%%#%%%%%
+%%###......##%%%
+%%#%%%%%%%.%#%%%
+%%#%%%%o...##%%%
+%%#%%%%%%%.%%%%%
+%%#%....%....#%%
+%%##.#*......#%%
+%%%%....%%.%%%%%
+%%%%%#%%%...%%%%
+%%%%%#%%%.p.%%%%
+%%%%%###%###%%%%
+%%%%%%%%%%%%%%%%
+
+(%%%%%%%%#%%%#%%#%%%%%%
+%%%%%#%#%##%##%%#%#%%%
+%%#%%%#%#.....##%#%%%%
+%%%%%%%%#%##%.%#%#%#%%
+%%%#%%###%#o..##%%%%%%
+%%%%%#%#%#%%%.%%#%%%%%
+%#%%%%#....%...%%%#%#%
+%%%%%%%.#*.....#%%%%%%
+%%#%#%%....%%.%%%#%%%%
+%%%%%%##%%%#...%%%%#%%
+%%%%%#%#%##%.p.%#%%%%%
+%%%#%%#%#%#%###%%#%%#%
+%%%%%#%%%#%%%%%%%#%%%%)
+
+LEVEL_SELECT_POINT
+%%%%%%%%%%%%%%%
+%%%%%%#%%%%%#%%
+%%%...#.....#%%
+%%%.*.#..*..#%%
+%%%...#.....#%%
+%%%%.%%%p%%%#%%
+%%.o......o.#%%
+%%...%%%%...#%%
+%%%%%%%%%%%%#%% (block as transport)
+
+LEVEL_SELECT_POINT
+%%%%%%%%%%%%%
+%.%.......%.%
+%.%.o...o.%.%
+%.%.*...*.%.%
+%%%%#%%%#%%%%
+%.%.*...*.%.%
+%.%.......%.%
+%.%.o.p.o.%.%
+%.%.......%.%
+%.%.......%.%
+%%%%%%%%%%%%%
+
+
+LEVEL_SELECT_POINT
+(maze of rooms with single wall connectors & crates)
+(checklist:
+end point you can deduce
+back tracking
+3-way junctions
+)
+%%%%%%%%%%%%%%%%%
+%%%...%...%...%%%
+%.%.p.#o.*#@..%.%
+%.%...%...%...%.%
+%.%...%%#%%...%.%
+%.%...%...%...%.%
+%.%.o*#*o.#@..%.%
+%%%...%...%...%%%
+%%%%%%%%%%%%%%%%% (good?)
+
+
+
+
+LEVEL_SELECT_POINT
+%%%%%%%%%%%%%
+%%%###%###%%%
+%%%###%###%%%
+%###########%
+%.o.........%
+%.*...*.%.o.%
+%###p###%###%
+%%%###%###%%%
+%%%%%%%%%%%%%  (gap or solid wall as removing crate option)
+
+
+LEVEL_SELECT_POINT
+%%%%%%%%%
+##.....##
+%#.....#%
+%#.....#%
+%#*.o..#%
+%#*.o..#%
+%#..o.*#%
+%#.....#%
+%#..p..#%
+##.....##
+%%%%%%%%% (crate as removing crate option) (have a double block to demonstrate that you cannot push 2 blocks?)
+
+LEVEL_SELECT_POINT
+%%%%%%%%%%%%%
+%%#########%%
+%##......*##%
+%%#*..p...#%%
+%##*.....o##%
+%%#*....oo#%%
+%##..*.oo@##%
+%%#########%%
+%%%%%%%%%%%%% (free three w/ two, free from corner)
+
+LEVEL_SELECT_POINT
+%%%%%%%%
+%######%
+%%#..#%%
+%%#o*#%%
+%######%
+%#o.*.#%
+%#o*.o#%
+%#*..p#%
+########
+%%%%%%%%  (plan ahead which side you have crates on in order to return, and avoid doubles)
+
+
+
+(end level where you get trapped then can choose to finish with the human or the spirit
+needs to be obvious that you were going to win when you get trapped
+)
+
+
+(
+#####
+#z*z#
+#zp*.
+#*z*#
+#####
+
+#####
+#p*z#
+#z**.
+#zz*#
+#####)
+LEVEL_SELECT_POINT
+%%%%%%%%%%%%%%%%%%%
+%%#####%%%o......y%
+%%#*zz#%%###..*..%%
+%%#zp*...###*.o..%%
+%%#**z#%%###..*..%%
+%%#####%%%o.......%
+%%%%%%%%%%%%%%%%%%%
+
+
+message THE END. Thanks For Playing!
+
+
+
+
+
+
+
+
+
+(minimal levels)
+(
+
+%%%%%%%%%
+%...#...%
+%.*.#.*.%
+%...#...%
+%..%%%..%
+%..opo..%
+%%%%%%%%%
+
+%%%%%%%%
+%######%
+%#oo.*#%
+%#op..#%
+%#....#%
+%#*..*#%
+%######%
+%%%%%%%%
+
+###########
+#..*.p.*..#
+#.........#
+#.ooo@ooo.#
+#.........#
+#.*.*.*.*.#
+###########
+
+)
+
+
+
+
+(computer levels)
+(
+#####
+#o*p#
+#**o#
+#*oo#
+##### (hard)
+
+######
+##..##
+##o*##
+######
+#o.*.#
+#o*.o#
+#*..p#
+###### (good)
+
+######
+##@o##
+##@*##
+######
+#**oo#
+#o*o*#
+#..*p#
+###### (insanely hard)
+)

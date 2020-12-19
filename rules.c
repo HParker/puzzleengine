@@ -3,102 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "puzzleData.h"
-
-char * directionName(Direction dir) {
-  char * directionNames[] = {
-                             "RIGHT",
-                             "UP",
-                             "LEFT",
-                             "DOWN",
-                             "HORIZONTAL",
-                             "VERTICAL",
-                             "STATIONARY",
-                             "RANDOMDIR",
-                             "RANDOM",
-                             "REL_UP",
-                             "REL_DOWN",
-                             "REL_LEFT",
-                             "REL_RIGHT",
-                             "USE",
-                             "NONE",
-                             "COND_NO",
-                             "QUIT",
-                             "RESTART",
-                             "UNDO",
-                             "UNSPECIFIED"
-  };
-  return directionNames[dir];
-}
-
-int onBoard(Runtime * rt, int x, int y) {
-  if (x < 0 || x >= rt->width) {
-    return 0;
-  }
-  if (y < 0 || y >= rt->height) {
-    return 0;
-  }
-  return 1;
-}
-
-int legendAt(Runtime * rt, int legendId, int x, int y) {
-  if (onBoard(rt, x, y)) {
-    int cellIndex;
-    for (int i = 0; i < layerCount(); i++) {
-      cellIndex = (i * rt->width * rt->height) + (y * rt->width) + x;
-      if (rt->map[cellIndex] != -1 &&
-          aliasLegendContains(legendId, rt->objects[rt->map[cellIndex]].objId) &&
-          rt->objects[rt->map[cellIndex]].deleted == 0 // TODO: audit places that use this that also check deleted
-          ) {
-        return 1;
-      }
-    }
-  }
-  return 0;
-}
-
-int legendObjIndex(Runtime * rt, int legendId, int x, int y) {
-  int cellIndex;
-  for (int i = 0; i < layerCount(); i++) {
-    cellIndex = (i * rt->width * rt->height) + (y * rt->width) + x;
-
-    if (rt->map[cellIndex] != -1 && aliasLegendContains(legendId, rt->objects[rt->map[cellIndex]].objId)) {
-      return rt->map[cellIndex];
-    }
-  }
-  /* fprintf(stderr, "err: missed %i is in %i\n", rt->objects[rt->map[cellIndex]].objId, legendId); */
-  return -1;
-}
-
-
-int isMoving(Runtime * rt, int objIndex, Direction direction) {
-  for (int i = 0; i < rt->toMoveCount; i++) {
-    if (rt->toMove[i].objIndex == objIndex && rt->toMove[i].direction == direction) {
-      return 1;
-    }
-  }
-  return 0;
-}
-
-int playerLocation(Runtime * rt) {
-  int legendId = aliasLegendId("Player");
-
-  for (int i = 0; i < rt->objectCount; i++) {
-    if (rt->objects[i].deleted == 0 && aliasLegendContains(legendId, rt->objects[i].objId)) {
-      return (rt->objects[i].x + rt->objects[i].y * rt->width);
-    }
-  }
-  /* fprintf(stderr, "Err: failed to find player location\n"); */
-  return -1;
-}
-
-Direction directionMoving(Runtime * rt, int objIndex) {
-  for (int i = 0; i < rt->toMoveCount; i++) {
-    if (rt->toMove[i].objIndex == objIndex) {
-      return rt->toMove[i].direction;
-    }
-  }
-  return NONE;
-}
+#include "debug.c"
 
 Direction absoluteDirection(Direction applicationDirection, Direction ruleDir) {
   switch (ruleDir) {
@@ -134,157 +39,30 @@ Direction absoluteDirection(Direction applicationDirection, Direction ruleDir) {
   }
 }
 
-int matchesDirection(Direction ruleDir, Direction applicationDir, Direction dir, int ignoreUnspec) {
-  if (dir == COND_NO || (ignoreUnspec && ruleDir == UNSPECIFIED)) {
-    return 1;
-  }
-  Direction absoluteDir = absoluteDirection(applicationDir, ruleDir);
-  if (absoluteDir == dir) {
-    return 1;
-  } else {
+int onBoard(Runtime * rt, int x, int y) {
+  if (x < 0 || x >= rt->width) {
     return 0;
   }
-}
-
-void addToMove(Runtime * rt, int objIndex, Direction direction) {
-  for (int i = 0; i < rt->toMoveCount; i++) {
-    if (rt->toMove[i].objIndex == objIndex) {
-      rt->toMove[i].direction = direction;
-      return;
-    }
-  }
-
-  if (rt->toMoveCount < rt->toMoveCapacity) {
-    rt->toMove[rt->toMoveCount].objIndex = objIndex;
-    rt->toMove[rt->toMoveCount].direction = direction;
-    rt->toMoveCount++;
-  } else {
-    rt->toMoveCapacity += 50;
-    rt->toMove = realloc(rt->toMove, sizeof(ToMove) * rt->toMoveCapacity);
-
-    rt->toMove[rt->toMoveCount].objIndex = objIndex;
-    rt->toMove[rt->toMoveCount].direction = direction;
-    rt->toMoveCount++;
-  }
-}
-
-void addObj(Runtime * rt, int objId, int x, int y) {
-  if (rt->objectCount + 1 >= rt->objectCapacity) {
-    rt->objectCapacity += 50;
-    rt->objects = realloc(rt->objects, sizeof(Obj) * rt->objectCapacity);
-  }
-  rt->objects[rt->objectCount].objId = objId;
-  rt->objects[rt->objectCount].x = x;
-  rt->objects[rt->objectCount].y = y;
-  rt->objects[rt->objectCount].deleted = 0;
-  rt->objectCount++;
-}
-
-void loadCell(Runtime * rt, char cell, int x, int y) {
-  int id = legendIdForGlyph(cell);
-  int count = glyphLegendObjectCount(id);
-  int backgroundId = aliasLegendObjectId(aliasLegendId("Background"), 0);
-  for (int i = 0; i < count; i++) {
-    int objId = glyphLegendObjectId(id, i);
-    if (backgroundId != objId && objId != -1) {
-      addObj(rt, objId, x, y);
-    }
-  }
-}
-
-void updateLevel(Runtime * rt) {
-  if (checkWinConditions(rt) == 1) {
-    nextLevel(rt);
-  }
-}
-
-void initGame(Runtime * rt) {
-  srand((unsigned)time(&rt->randomSeed));
-  rt->levelIndex = 0;
-  rt->gameWon = 0;
-  rt->prevHistoryCount = 0;
-
-  rt->objectCount = 0;
-  rt->objectCapacity = 250;
-  rt->objects = malloc(sizeof(Obj) * rt->objectCapacity);
-
-  rt->toMoveCount = 0;
-  rt->toMoveCapacity = 1000;
-  rt->toMove = malloc(sizeof(ToMove) * rt->toMoveCapacity);
-
-  rt->historyCount = 0;
-  rt->historyCapacity = 1000;
-  rt->history = malloc(sizeof(Direction) * rt->historyCapacity);
-
-  rt->statesCount = 0;
-  rt->statesCapacity = 1000;
-  rt->states = malloc(sizeof(State) * rt->statesCapacity);
-
-  rt->map = malloc(1);
-}
-
-void endGame(Runtime * rt) {
-  free(rt->objects);
-  free(rt->toMove);
-  free(rt->history);
-
-  for (int i = 0; i < rt->statesCount; i++) {
-    free(rt->states[i].objects);
-  }
-  free(rt->states);
-
-  free(rt->map);
-  freePuzzle();
-}
-
-
-void undo(Runtime * rt, int partial) {
-  rt->toMoveCount = 0;
-  if (partial == 0) {
-    free(rt->states[rt->statesCount].objects);
-  }
-
-  rt->objectCount = rt->states[rt->statesCount - 1].objectCount;
-  rt->objectCapacity = rt->states[rt->statesCount - 1].objectCapacity;
-  rt->objects = realloc(rt->objects, sizeof(Obj) * rt->states[rt->statesCount - 1].objectCapacity);
-
-  rt->levelIndex = rt->states[rt->statesCount - 1].levelIndex;
-  rt->levelType = levelType(rt->levelIndex);
-  rt->height = levelHeight(rt->levelIndex);
-  rt->width = levelWidth(rt->levelIndex);
-
-  memcpy(rt->objects, rt->states[rt->statesCount - 1].objects, sizeof(Obj) * rt->objectCapacity);
-
-  rt->statesCount--;
-  rt->historyCount--;
-}
-
-int isMovable(Runtime * rt, int x, int y, int layerIndex) {
-  // inbounds
-  if (x >= rt->width || x < 0 || y >= rt->height || y < 0) {
-    return 0;
-  }
-
-  int hasCollidable = 0;
-  for (int i = 0; i < rt->objectCount; i++) {
-    if (rt->objects[i].deleted == 0 && rt->objects[i].x == x && rt->objects[i].y == y && layerIncludes(layerIndex, rt->objects[i].objId)) {
-      hasCollidable = 1;
-    }
-  }
-  // TODO: this is dumb
-  if (hasCollidable == 1) {
-    return 0;
-  } else {
-    return 1;
-  }
-}
-
-int ruleApplies(Runtime * rt, int ruleIndex, ExecutionTime execTime) {
-  // TODO: this should check global direction constraints
-  if (rule(ruleIndex)->executionTime != execTime) {
+  if (y < 0 || y >= rt->height) {
     return 0;
   }
   return 1;
+}
+
+int legendAt(Runtime * rt, int legendId, int x, int y) {
+  if (onBoard(rt, x, y)) {
+    int cellIndex;
+    for (int i = 0; i < layerCount(); i++) {
+      cellIndex = (i * rt->width * rt->height) + (y * rt->width) + x;
+      if (rt->map[cellIndex] != -1 &&
+          aliasLegendContains(legendId, rt->objects[rt->map[cellIndex]].objId) &&
+          rt->objects[rt->map[cellIndex]].deleted == 0 // TODO: audit places that use this that also check deleted
+          ) {
+        return 1;
+      }
+    }
+  }
+  return 0;
 }
 
 int deltaX(Direction dir) {
@@ -325,6 +103,79 @@ int deltaY(Direction dir) {
   }
 }
 
+int ruleApplies(Runtime * rt, int ruleIndex, ExecutionTime execTime) {
+  // TODO: this should check global direction constraints
+  if (rule(ruleIndex)->executionTime != execTime) {
+    return 0;
+  }
+  return 1;
+}
+
+int isMovable(Runtime * rt, int x, int y, int layerIndex) {
+  // inbounds
+  if (x >= rt->width || x < 0 || y >= rt->height || y < 0) {
+    return 0;
+  }
+
+  int hasCollidable = 0;
+  for (int i = 0; i < rt->objectCount; i++) {
+    if (rt->objects[i].deleted == 0 && rt->objects[i].x == x && rt->objects[i].y == y && layerIncludes(layerIndex, rt->objects[i].objId)) {
+      hasCollidable = 1;
+    }
+  }
+  // TODO: this is dumb
+  if (hasCollidable == 1) {
+    return 0;
+  } else {
+    return 1;
+  }
+}
+
+int moveObjects(Runtime * rt) {
+  int playerMoved = 0;
+  int moveApplied[rt->toMoveCount];
+  for (int i = 0; i < rt->toMoveCount; i++) {
+    moveApplied[i] = 0;
+  }
+
+  int somethingApplied = 1;
+  while (somethingApplied == 1) {
+    somethingApplied = 0;
+    for (int i = 0; i < rt->toMoveCount; i++) {
+      int x = rt->objects[rt->toMove[i].objIndex].x;
+      int y = rt->objects[rt->toMove[i].objIndex].y;
+
+      int layerIndex = objectLayer(rt->objects[rt->toMove[i].objIndex].objId);
+      int movingToX = x + deltaX(rt->toMove[i].direction);
+      int movingToY = y + deltaY(rt->toMove[i].direction);
+
+      if (rt->objects[rt->toMove[i].objIndex].deleted == 0 && moveApplied[i] == 0 && isMovable(rt, movingToX, movingToY, layerIndex) == 1) {
+        rt->objects[rt->toMove[i].objIndex].x += deltaX(rt->toMove[i].direction);
+        rt->objects[rt->toMove[i].objIndex].y += deltaY(rt->toMove[i].direction);
+        if (aliasLegendContains(aliasLegendId("Player"), rt->objects[rt->toMove[i].objIndex].objId)) {
+          playerMoved = 1;
+        }
+        moveApplied[i] = 1;
+        somethingApplied = 1;
+      }
+    }
+  }
+  rt->toMoveCount = 0;
+  return playerMoved;
+}
+
+void addObj(Runtime * rt, int objId, int x, int y) {
+  if (rt->objectCount + 1 >= rt->objectCapacity) {
+    rt->objectCapacity += 50;
+    rt->objects = realloc(rt->objects, sizeof(Obj) * rt->objectCapacity);
+  }
+  rt->objects[rt->objectCount].objId = objId;
+  rt->objects[rt->objectCount].x = x;
+  rt->objects[rt->objectCount].y = y;
+  rt->objects[rt->objectCount].deleted = 0;
+  rt->objectCount++;
+}
+
 void updateMap(Runtime * rt) {
   if (rt->levelType == SQUARES) {
     int layerId, x, y, cellIndex;
@@ -349,6 +200,77 @@ void updateMap(Runtime * rt) {
     }
   }
 }
+
+void addToMove(Runtime * rt, int objIndex, Direction direction) {
+  for (int i = 0; i < rt->toMoveCount; i++) {
+    if (rt->toMove[i].objIndex == objIndex) {
+      rt->toMove[i].direction = direction;
+      return;
+    }
+  }
+
+  if (rt->toMoveCount < rt->toMoveCapacity) {
+    rt->toMove[rt->toMoveCount].objIndex = objIndex;
+    rt->toMove[rt->toMoveCount].direction = direction;
+    rt->toMoveCount++;
+  } else {
+    rt->toMoveCapacity += 50;
+    rt->toMove = realloc(rt->toMove, sizeof(ToMove) * rt->toMoveCapacity);
+
+    rt->toMove[rt->toMoveCount].objIndex = objIndex;
+    rt->toMove[rt->toMoveCount].direction = direction;
+    rt->toMoveCount++;
+  }
+}
+
+
+int legendObjIndex(Runtime * rt, int legendId, int x, int y) {
+  int cellIndex;
+  for (int i = 0; i < layerCount(); i++) {
+    cellIndex = (i * rt->width * rt->height) + (y * rt->width) + x;
+
+    if (rt->map[cellIndex] != -1 && aliasLegendContains(legendId, rt->objects[rt->map[cellIndex]].objId)) {
+      return rt->map[cellIndex];
+    }
+  }
+  /* fprintf(stderr, "err: missed %i is in %i\n", rt->objects[rt->map[cellIndex]].objId, legendId); */
+  return -1;
+}
+
+Direction directionMoving(Runtime * rt, int objIndex) {
+  for (int i = 0; i < rt->toMoveCount; i++) {
+    if (rt->toMove[i].objIndex == objIndex) {
+      return rt->toMove[i].direction;
+    }
+  }
+  return NONE;
+}
+
+void loadCell(Runtime * rt, char cell, int x, int y) {
+  int id = legendIdForGlyph(cell);
+  int count = glyphLegendObjectCount(id);
+  int backgroundId = aliasLegendObjectId(aliasLegendId("Background"), 0);
+  for (int i = 0; i < count; i++) {
+    int objId = glyphLegendObjectId(id, i);
+    if (backgroundId != objId && objId != -1) {
+      addObj(rt, objId, x, y);
+    }
+  }
+}
+
+
+int matchesDirection(Direction ruleDir, Direction applicationDir, Direction dir, int ignoreUnspec) {
+  if (dir == COND_NO || (ignoreUnspec && ruleDir == UNSPECIFIED)) {
+    return 1;
+  }
+  Direction absoluteDir = absoluteDirection(applicationDir, ruleDir);
+  if (absoluteDir == dir) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
 
 void applyMatch(Runtime * rt, Match * match) {
   if (verboseLogging()) {
@@ -494,7 +416,7 @@ int resultHasLegendId(int ruleId, int stateId, int partId, int legendId, int obj
   int resultLegendId;
   for (int i = 0; i < rule(ruleId)->resultStates[stateId].parts[partId].ruleIdentityCount; i++) {
     resultLegendId = rule(ruleId)->resultStates[stateId].parts[partId].ruleIdentity[i].legendId;
-    if (aliasLegendContains(resultLegendId, objId)) {
+    if (legendContains(resultLegendId, objId)) {
       return 1;
     }
   }
@@ -530,13 +452,12 @@ void replaceCell(Runtime * rt, int ruleId, int stateId, int partId, Direction ap
   for (int identId = 0; identId < matchIdentCount; identId++) {
     Direction ruleDir = rule(ruleId)->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
     int legendId = rule(ruleId)->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
-    int objIndex = legendObjIndex(rt, legendId, x, y);
-    int resultIncludesSelf = resultHasLegendId(ruleId, stateId, partId, legendId, rt->objects[objIndex].objId);
+    int resultIncludesSelf = resultHasLegendId(ruleId, stateId, partId, legendId);
     if (ruleDir != COND_NO &&
         legendId != emptyId &&
         resultIncludesSelf == 0
         ) {
-      /* int objIndex = legendObjIndex(rt, legendId, x, y); */
+      int objIndex = legendObjIndex(rt, legendId, x, y);
       match->parts[match->partCount].newObject = 0;
       match->parts[match->partCount].goalId = emptyId;
       match->parts[match->partCount].objIndex = objIndex;
@@ -569,14 +490,10 @@ void replaceCell(Runtime * rt, int ruleId, int stateId, int partId, Direction ap
           match->parts[match->partCount].goalDirection = absoluteDirection(appDir, ruleDir);
           match->partCount++;
         } else {
-          // TODO: I think this case should always be the above case now
           int objIndex = legendObjIndex(rt, legendId, x, y);
           if (ruleDir != UNSPECIFIED || matchDir != UNSPECIFIED) {
             match->parts[match->partCount].newObject = 0;
-            match->parts[match->partCount].goalId = -1; //aliasLegendObjectId(legendId, 0);
-            match->parts[match->partCount].goalX = x;
-            match->parts[match->partCount].goalY = y;
-
+            match->parts[match->partCount].goalId = -1; // Don't change the id
             match->parts[match->partCount].objIndex = objIndex;
             match->parts[match->partCount].goalDirection = absoluteDirection(appDir, ruleDir);
             match->partCount++;
@@ -649,6 +566,10 @@ int identitysAtDistance(Runtime * rt, int ruleId, int stateId, int partId, Direc
   return -1;
 }
 
+/* int completeMatchPart(Runtime * rt, int ruleId, int stateId, int partId, Direction appDir, int x, int y, Match * match) { */
+
+/* } */
+
 int completeMatch(Runtime * rt, int ruleId, int stateId, Direction appDir, int x, int y, Match * match) {
   int prevPartCount = match->partCount;
   int anyDistance = 0;
@@ -697,7 +618,6 @@ int completeMatch(Runtime * rt, int ruleId, int stateId, Direction appDir, int x
 
     if (success != 1) {
       // failed to find an object that matches the next part, fail
-      /* printf("resetting part count to %i\n", prevPartCount); */
       match->partCount = prevPartCount;
       match->cancel = 0;
       return 0;
@@ -709,46 +629,36 @@ int completeMatch(Runtime * rt, int ruleId, int stateId, Direction appDir, int x
 }
 
 int continueMatch(Runtime * rt, int ruleId, int stateId, int x, int y, Match * match) {
-  int matched = 0;
-  int prevMatchCount = match->partCount;
   Direction dirConstant = rule(ruleId)->directionConstraint;
 
   if (dirConstant == RIGHT || dirConstant == HORIZONTAL || dirConstant == NONE) {
-    if (match->partCount == prevMatchCount && completeMatch(rt, ruleId, stateId, RIGHT, x, y, match)) {
-      if (matched == 0) {
-        matched = 1;
-      }
+    if (completeMatch(rt, ruleId, stateId, RIGHT, x, y, match)) {
+      return 1;
     }
   }
 
   if (dirConstant == UP || dirConstant == VERTICAL || dirConstant == NONE) {
-    if (match->partCount == prevMatchCount && completeMatch(rt, ruleId, stateId, UP, x, y, match)) {
-      if (matched == 0) {
-        matched = 1;
-      }
+    if (completeMatch(rt, ruleId, stateId, UP, x, y, match)) {
+      return 1;
     }
   }
 
   if (dirConstant == LEFT || dirConstant == HORIZONTAL || dirConstant == NONE) {
-    if (match->partCount == prevMatchCount && completeMatch(rt, ruleId, stateId, LEFT, x, y, match)) {
-      if (matched == 0) {
-        matched = 1;
-      }
+    if (completeMatch(rt, ruleId, stateId, LEFT, x, y, match)) {
+      return 1;
     }
   }
 
   if (dirConstant == DOWN || dirConstant == VERTICAL || dirConstant == NONE) {
-    if (match->partCount == prevMatchCount && completeMatch(rt, ruleId, stateId, DOWN, x, y, match)) {
-      if (matched == 0) {
-        matched = 1;
-      }
+    if (completeMatch(rt, ruleId, stateId, DOWN, x, y, match)) {
+      return 1;
     }
   }
-
-  return matched;
+  return 0;
 }
 
 int cellMatch(Runtime * rt, int ruleId, int stateId, int x, int y, Match * match) {
+  int prevMatchCount = match->partCount;
   int legId, legAt;
   Direction dir;
 
@@ -761,6 +671,7 @@ int cellMatch(Runtime * rt, int ruleId, int stateId, int x, int y, Match * match
       if (continueMatch(rt, ruleId, stateId, x, y, match)) {
         return 1;
       } else {
+        match->partCount = prevMatchCount;
         return 0;
       }
     }
@@ -836,274 +747,4 @@ int applyRules(Runtime * rt, ExecutionTime execTime) {
     }
   }
   return cancel;
-}
-
-int moveObjects(Runtime * rt) {
-  int playerMoved = 0;
-  int moveApplied[rt->toMoveCount];
-  for (int i = 0; i < rt->toMoveCount; i++) {
-    moveApplied[i] = 0;
-  }
-
-  int somethingApplied = 1;
-  while (somethingApplied == 1) {
-    somethingApplied = 0;
-    for (int i = 0; i < rt->toMoveCount; i++) {
-      int x = rt->objects[rt->toMove[i].objIndex].x;
-      int y = rt->objects[rt->toMove[i].objIndex].y;
-
-      int layerIndex = objectLayer(rt->objects[rt->toMove[i].objIndex].objId);
-      int movingToX = x + deltaX(rt->toMove[i].direction);
-      int movingToY = y + deltaY(rt->toMove[i].direction);
-
-      if (rt->objects[rt->toMove[i].objIndex].deleted == 0 && moveApplied[i] == 0 && isMovable(rt, movingToX, movingToY, layerIndex) == 1) {
-        rt->objects[rt->toMove[i].objIndex].x += deltaX(rt->toMove[i].direction);
-        rt->objects[rt->toMove[i].objIndex].y += deltaY(rt->toMove[i].direction);
-        if (aliasLegendContains(aliasLegendId("Player"), rt->objects[rt->toMove[i].objIndex].objId)) {
-          playerMoved = 1;
-        }
-        moveApplied[i] = 1;
-        somethingApplied = 1;
-      }
-    }
-  }
-  rt->toMoveCount = 0;
-  return playerMoved;
-}
-
-void printHistory(Runtime * rt) {
-  for (int i = 0; i < rt->historyCount; i++) {
-    fprintf(stderr, "%s\n", directionName(rt->history[i]));
-  }
-}
-
-Direction handleInput(Runtime * rt, int input) {
-  // TODO: doesn't need rt
-  if (input == 'w') {
-    return UP;
-  } else if (input == 's') {
-    return DOWN;
-  } else if (input == 'a') {
-    return LEFT;
-  } else if (input == 'd') {
-    return RIGHT;
-  } else if (input == 'x' && noAction() == 0) {
-    return USE;
-  } else if (input == 'q') {
-    return QUIT;
-  } else if (input == 'r' && noRestart() == 0) {
-    return RESTART;
-  } else if (input == 'z' && noUndo() == 0) {
-    return UNDO;
-  } else {
-    // Is this none or something else?
-    return NONE;
-  }
-}
-
-void markPlayerAsMoving(Runtime * rt, Direction dir) {
-  int legendId = aliasLegendId("Player");
-
-  for (int i = 0; i < rt->objectCount; i++) {
-    if (aliasLegendContains(legendId, rt->objects[i].objId)) {
-      addToMove(rt, i, dir);
-    }
-  }
-}
-
-void addHistory(Runtime * rt, Direction dir) {
-  if (rt->historyCount == rt->historyCapacity) {
-    rt->historyCapacity += 50;
-    rt->history = realloc(rt->history, sizeof(Direction) * rt->historyCapacity);
-  }
-  rt->history[rt->historyCount] = dir;
-  rt->historyCount++;
-}
-
-void addState(Runtime * rt) {
-  // This seems weird, but I think we only have to copy objects at the time.
-  // Since history can continue where it was if you undo and `toMove`
-  // should always be empty.
-  if (rt->statesCount < rt->statesCapacity) {
-
-  } else {
-    rt->statesCapacity += 50;
-    rt->states = realloc(rt->states, sizeof(State) * rt->statesCapacity);
-  }
-
-  rt->states[rt->statesCount].levelIndex = rt->levelIndex;
-  rt->states[rt->statesCount].objectCount = rt->objectCount;
-  rt->states[rt->statesCount].objectCapacity = rt->objectCapacity;
-
-  rt->states[rt->statesCount].objects = malloc(sizeof(Obj) * rt->objectCapacity);
-  memcpy(rt->states[rt->statesCount].objects, rt->objects, sizeof(Obj) * rt->objectCapacity);
-
-  rt->statesCount++;
-}
-
-void loadLevel(Runtime * rt) {
-  rt->levelType = levelType(rt->levelIndex);
-  if (rt->levelType == SQUARES) {
-    rt->height = levelHeight(rt->levelIndex);
-    rt->width = levelWidth(rt->levelIndex);
-    rt->toMoveCount = 0;
-    rt->objectCount = 0;
-
-    int count = levelCellCount(rt->levelIndex);
-    for (int i = 0; i < count; i++) {
-      int x = i % rt->width;
-      int y = i / rt->width;
-      loadCell(rt, levelCell(rt->levelIndex, i), x, y);
-    }
-  }
-
-  // map
-  if (rt->levelType == SQUARES) {
-    free(rt->map);
-    rt->map = malloc((sizeof(int) * rt->height * rt->width * layerCount()));
-  }
-
-  if (rt->pd->runRulesOnLevelStart) {
-    applyRules(rt, NORMAL);
-    moveObjects(rt);
-    applyRules(rt, LATE);
-  }
-}
-
-void nextLevel(Runtime * rt) {
-  if (rt->levelIndex < levelCount() - 1) {
-    rt->prevHistoryCount = rt->historyCount;
-    rt->levelIndex++;
-    loadLevel(rt);
-  } else {
-    rt->gameWon = 1;
-  }
-}
-
-void startGame(Runtime * rt, FILE * file) {
-  initGame(rt);
-  rt->pd = parsePuzzle(file);
-  loadLevel(rt);
-}
-
-void update(Runtime * rt, Direction dir) {
-  int startingPlayerLocation = playerLocation(rt);
-  addHistory(rt, dir);
-  addState(rt);
-
-  if (dir == RESTART) {
-    rt->historyCount = rt->prevHistoryCount;
-    loadLevel(rt);
-    return;
-  }
-
-  // TODO: remove deleted objects?
-  if (rt->levelType == SQUARES) {
-    // mark player for moving
-    markPlayerAsMoving(rt, dir);
-
-    applyRules(rt, NORMAL);
-    moveObjects(rt);
-    applyRules(rt, LATE);
-
-    if (requirePlayerMovement() &&
-        (startingPlayerLocation == playerLocation(rt))) {
-      undo(rt, 1);
-      return;
-    }
-
-    updateLevel(rt);
-  } else {
-    if (dir == USE) {
-      nextLevel(rt);
-    }
-  }
-}
-
-int verifyOne(Runtime * rt, int thingId, int container, int hasOnQualifier) {
-  for (int i = 0; i < rt->objectCount; i++) {
-    if (rt->objects[i].deleted == 0 && aliasLegendContains(thingId, rt->objects[i].objId) == 1) {
-      if (hasOnQualifier == 0) {
-        return 1;
-      }
-      for (int j = 0; j < rt->objectCount; j++) {
-        if (rt->objects[j].objId == container && rt->objects[i].x == rt->objects[j].x && rt->objects[i].y == rt->objects[j].y) {
-          return 1;
-        }
-      }
-    }
-  }
-  return 0;
-}
-
-int verifyNone(Runtime * rt, int thingId, int containerId, int hasOnQualifier) {
-  for (int i = 0; i < rt->objectCount; i++) {
-    if (rt->objects[i].deleted == 0 && aliasLegendContains(thingId, rt->objects[i].objId) == 1) {
-      if (hasOnQualifier) {
-        for (int j = 0; j < rt->objectCount; j++) {
-          if (aliasLegendContains(containerId, rt->objects[j].objId) &&
-              rt->objects[i].x == rt->objects[j].x &&
-              rt->objects[i].y == rt->objects[j].y) {
-            return 0;
-          }
-        }
-      } else {
-        return 0;
-      }
-    }
-  }
-  return 1;
-}
-
-int verifyAll(Runtime * rt, int thingId, int containerId, int hasOnQualifier) {
-  int satisfied = 1;
-  for (int i = 0; i < rt->objectCount; i++) {
-    if (rt->objects[i].deleted == 0 && aliasLegendContains(thingId, rt->objects[i].objId) == 1) {
-      satisfied = 0;
-      for (int j = 0; j < rt->objectCount; j++) {
-        if (rt->objects[j].deleted == 0 &&
-            aliasLegendContains(containerId, rt->objects[j].objId) &&
-            rt->objects[i].x == rt->objects[j].x &&
-            rt->objects[i].y == rt->objects[j].y) {
-          satisfied = 1;
-        }
-      }
-      if (satisfied == 0) {
-        return 0;
-      }
-    }
-
-  }
-
-  return satisfied;
-}
-
-int checkWinCondition(Runtime * rt, int winConditionIndex) {
-  switch (winCondition(winConditionIndex)->winQualifier) {
-  case ALL:
-    return verifyAll(rt, winCondition(winConditionIndex)->winIdentifier, winCondition(winConditionIndex)->onIndentifier, winCondition(winConditionIndex)->hasOnQualifier);
-  case SOME:
-    return verifyOne(rt, winCondition(winConditionIndex)->winIdentifier, winCondition(winConditionIndex)->onIndentifier, winCondition(winConditionIndex)->hasOnQualifier);
-  case ANY:
-    return verifyOne(rt, winCondition(winConditionIndex)->winIdentifier, winCondition(winConditionIndex)->onIndentifier, winCondition(winConditionIndex)->hasOnQualifier);
-  case NO:
-    return verifyNone(rt, winCondition(winConditionIndex)->winIdentifier, winCondition(winConditionIndex)->onIndentifier, winCondition(winConditionIndex)->hasOnQualifier);
-  default:
-    fprintf(stderr, "err: unsupported win condition '%i'\n", winCondition(winConditionIndex)->winQualifier);
-    return 0;
-  }
-}
-
-int checkWinConditions(Runtime * rt) {
-  int satisfied = 0;
-  int count = winConditionCount();
-
-  for (int i = 0; i < count; i++) {
-    satisfied = checkWinCondition(rt, i);
-    if (satisfied == 0) {
-      return 0;
-    }
-  }
-
-  return satisfied;
 }
