@@ -755,6 +755,9 @@ int continueMatch(Runtime * rt, int ruleId, int stateId, int x, int y, Match * m
     }
   }
 
+  if (matched == 0) {
+    match->partCount = prevMatchCount;
+  }
   return matched;
 }
 
@@ -780,7 +783,7 @@ int cellMatch(Runtime * rt, int ruleId, int stateId, int x, int y, Match * match
 
 int applyState(Runtime * rt, int ruleId, int stateId, Match * match) {
   int applied, x, y;
-  int matchedOne = 0;
+  int matched = 0;
 
   int count = levelCellCount(rt->levelIndex);
   for (int i = 0; i < count; i++) {
@@ -790,10 +793,14 @@ int applyState(Runtime * rt, int ruleId, int stateId, Match * match) {
     applied = cellMatch(rt, ruleId, stateId, x, y, match);
     if (applied) {
       // TODO: can I early return here?
-      matchedOne = 1;
+      matched = 1;
+      if (match->partCount > 0) {
+        return 1;
+      }
+
     }
   }
-  return matchedOne;
+  return matched;
 }
 
 int applyRule(Runtime * rt, int ruleId, Match * match) {
@@ -810,8 +817,7 @@ int applyRule(Runtime * rt, int ruleId, Match * match) {
   return 1;
 }
 
-int applyRules(Runtime * rt, ExecutionTime execTime) {
-  int cancel = 0;
+void applyRules(Runtime * rt, ExecutionTime execTime) {
   int applied = 1;
   int maxAttempts = 100;
   int attempts = 0;
@@ -831,9 +837,6 @@ int applyRules(Runtime * rt, ExecutionTime execTime) {
         applied = applyRule(rt, ruleIndex, &match);
         /* fprintf(stderr, "applied (%i) && (match.partCount (%i) > 0 || match.cancel (%i))\n", applied, match.partCount, match.cancel); */
         if (applied && (match.partCount > 0 || match.cancel)) {
-          if (match.cancel) {
-            cancel = 1;
-          }
           applyMatch(rt, &match);
         } else {
           applied = 0;
@@ -845,7 +848,6 @@ int applyRules(Runtime * rt, ExecutionTime execTime) {
       fprintf(stderr, "warn: max attempts reached\n");
     }
   }
-  return cancel;
 }
 
 int moveObjects(Runtime * rt) {
