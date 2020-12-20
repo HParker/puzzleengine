@@ -238,6 +238,15 @@ START_TEST (test_runs_ihnmaimcboasofm)
 }
 END_TEST
 
+START_TEST (test_runs_stairways)
+{
+  Runtime rt;
+  test_solution_file(&rt, "./puzzles/stairways.puzz", "./solutions/stairways.solution");
+
+  ck_assert_int_eq(1, rt.gameWon);
+  endGame(&rt);
+}
+END_TEST
 
 
 Suite * puzzle_script_parser_suite(void)
@@ -273,6 +282,7 @@ Suite * puzzle_script_parser_suite(void)
   tcase_add_test(test_Runner, test_runs_watch_your_step);
   tcase_add_test(test_Runner, test_runs_block_crusher);
   tcase_add_test(test_Runner, test_runs_ihnmaimcboasofm);
+  tcase_add_test(test_Runner, test_runs_stairways);
 
   suite_add_tcase(s, test_Runner);
 

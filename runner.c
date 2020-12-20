@@ -327,10 +327,20 @@ int deltaY(Direction dir) {
 
 void updateMap(Runtime * rt) {
   if (rt->levelType == SQUARES) {
-    int layerId, x, y, cellIndex;
+    int layerId, x, y, cellIndex, backgroundlayer, backgroundId;
     for (int i = 0; i < layerCount() * rt->height * rt->width; i++) {
       rt->map[i] = -1;
     }
+    backgroundId = aliasLegendId("Background");
+    backgroundlayer = objectLayer(aliasLegendObjectId(backgroundId, 0));
+
+    for (int x = 0; x < rt->width; x++) {
+      for (int y = 0; y < rt->height; y++) {
+      cellIndex = (backgroundlayer * rt->width * rt->height) + (y * rt->width) + x;
+      rt->map[cellIndex] = backgroundId;
+      }
+    }
+
 
     for (int i = 0; i < rt->objectCount; i++) {
       if (rt->objects[i].deleted == 0) {
@@ -948,6 +958,14 @@ void loadLevel(Runtime * rt) {
     rt->width = levelWidth(rt->levelIndex);
     rt->toMoveCount = 0;
     rt->objectCount = 0;
+
+    int backgroundId = aliasLegendId("Background");
+    for (int x = 0; x < rt->width; x++) {
+      for (int y = 0; y < rt->height; y++) {
+        addObj(rt, backgroundId, x, y);
+      }
+    }
+
 
     int count = levelCellCount(rt->levelIndex);
     for (int i = 0; i < count; i++) {
