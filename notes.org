@@ -1,13 +1,18 @@
-make BISON=/usr/local/opt/bison/bin/bison FLEX=/usr/local/opt/flex/bin/flex CC=/usr/local/Cellar/gcc/10.2.0/bin/gcc-10 && make check
+make BISON=/usr/local/opt/bison/bin/bison FLEX=/usr/local/opt/flex/bin/flex
 
 TODO:
+- smooth movement for a new demo
+- We need to do rule expansion after parsing. handling relative directions where not that difficult, but `moving` is challenging.
+  Since [ > this ] only applies to one thing, it is easy to implement directly, however
+  [ moving this ] [ that ] -> [ moving this ] [ moving that] moving always has to be the same.
+  We don't currently maintain any kind of state between []s and I don't want to start.
 - should `ObjectGlyph` be ncurses renderer specific?
   seems unlikely we would need to show the character in any other context.
 - validate object names used in rules exist or are `...`
 - validate has background
 - make sure all objects are in a layer
 - sounds
-- "levels must be rectangular" We don't have to do this, but can.
+- validate "levels must be rectangular" We don't have to do this, but can.
 - There are some helpful errors we can add like direction in `late` rules will never match.
 - When applying directions, the last rule that applies the direction always wins. This can be confusing and could give a warning. It might be hard to warn about because it has to be proved that the match is identical
 
