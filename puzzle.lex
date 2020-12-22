@@ -23,7 +23,7 @@ int inMode = 0;
 %s WINCONDITIONS
 %s LEVELS
 
-glyph [\+\-\!\?:\"\{\}\[\];\.0-9a-zA-Z\*#,@`\'~\%&\/\|_\>]
+glyph [\+\-\!\?:\"\{\}\[\];\.0-9a-zA-Z\*#,@`\'~\%&\/\|_\>\$]
 hexcode #([a-fA-F0-9]{6}|[a-fA-F0-9]{3})
 
 name ([a-zA-Z0-9_#]*[a-zA-Z][a-zA-Z0-9_]*){2,}
@@ -157,11 +157,11 @@ color (color|colour)
   return LEGEND_GLYPH;
 }
 
-<LEGEND>[ ]=[ ] { return EQUALS; }
+<LEGEND>[ \t]=[ \t] { return EQUALS; }
 
-<LEGEND>[ ]and[ ] { return LEGEND_AND; }
+<LEGEND>[ \t]and[ \t] { return LEGEND_AND; }
 
-<LEGEND>[ ]or[ ] { return LEGEND_OR; }
+<LEGEND>[ \t]or[ \t] { return LEGEND_OR; }
 
 <LEGEND>[\n] { return END_LEGEND_LINE; }
 
@@ -337,7 +337,7 @@ message[ ]+ {
   return GLYPH;
 }
 
-[ \n]
+[ \t\n]
 
 \( {
   commentNestingLevel++;
