@@ -404,9 +404,10 @@ extern void incObject();
 extern void incAliasLegend();
 extern void incGlyphLegend();
 extern void incAliasLegendObject(int legendId);
+extern void addObjectsToAliasLegend(char * name);
 extern void incGlyphLegendObject(int legendId);
 extern void incLayer();
-extern void incLayerWidth(int layerId);
+extern void addObjectsToLayer(char * name);
 
 extern void incRule();
 extern void incRuleMatchState(int ruleId);

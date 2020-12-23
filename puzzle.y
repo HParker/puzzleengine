@@ -35,21 +35,6 @@ int glyphLegendId(char glyph) {
     return -1;
 }
 
-void addObjectsToLayer(char * name) {
-    int legId = aliasLegendId(name);
-    for (int i = 0; i < pd.aliasLegend[legId].objectCount; i++) {
-        pd.layers[pd.layerCount].objectIds[pd.layers[pd.layerCount].width] = pd.aliasLegend[legId].objects[i].id;
-        incLayerWidth(pd.layerCount);
-    }
-}
-
-void addObjectsToAliasLegend(char * name) {
-    int legId = aliasLegendId(name);
-    for (int i = 0; i < pd.aliasLegend[legId].objectCount; i++) {
-        pd.aliasLegend[pd.aliasLegendCount].objects[pd.aliasLegend[pd.aliasLegendCount].objectCount].id = pd.aliasLegend[legId].objects[i].id;
-        incAliasLegendObject(pd.aliasLegendCount);
-    }
-}
 
 void addObjectsToGlyphLegend(char * name) {
     int legId = aliasLegendId(name);
