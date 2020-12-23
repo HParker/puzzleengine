@@ -411,12 +411,11 @@ extern void incLayerWidth(int layerId);
 extern void incRule();
 extern void incRuleMatchState(int ruleId);
 extern void incRuleResultState(int ruleId);
+extern void incRulePart(RuleState * ruleState);
+extern void incRuleIdent(RuleStatePart * part);
 
 extern int ruleCommandCount(int ruleId);
 extern int ruleCommandContains(int ruleId, Command cmd);
-
-extern void incMatchPart(int ruleId, int stateId);
-extern void incResultPart(int ruleId, int stateId);
 
 extern void incWinCondition();
 extern void incLevel();

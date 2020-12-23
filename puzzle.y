@@ -211,9 +211,6 @@ object_definition: any_object_eol object_name some_object_eol colors some_object
     incObject();
 }
                  | any_object_eol object_name some_object_eol colors some_object_eol {
-  for (int i = 0; i < 25; i++) {
-      pd.objects[pd.objectCount].sprite[i] = '0';
-  }
   incObject();
 }
 
@@ -417,7 +414,11 @@ match_state_internals: match_state_internals VERTICAL_PIPE match_state_part
                 |      match_state_part
 
 
-match_state_part: match_on_square { incMatchPart(pd.ruleCount, pd.rules[pd.ruleCount].matchStateCount); }
+match_state_part: match_on_square {
+  Rule * r = &pd.rules[pd.ruleCount];
+  RuleState * rs = &r->matchStates[r->matchStateCount];
+  incRulePart(rs);
+}
                 | %empty {
   Rule * r = &pd.rules[pd.ruleCount];
   RuleState * rs = &r->matchStates[r->matchStateCount];
@@ -426,8 +427,8 @@ match_state_part: match_on_square { incMatchPart(pd.ruleCount, pd.rules[pd.ruleC
   rsp->ruleIdentity[rsp->ruleIdentityCount].direction = UNSPECIFIED;
   rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId("_EMPTY_");
 
-  rsp->ruleIdentityCount++;
-  incMatchPart(pd.ruleCount, r->matchStateCount);
+  incRuleIdent(rsp);
+  incRulePart(rs);
 }
 
 
@@ -442,7 +443,7 @@ match_object_part: OBJID {
     rid->direction = UNSPECIFIED;
     rid->legendId = aliasLegendId($1);
     free($1);
-    rsp->ruleIdentityCount++;
+    incRuleIdent(rsp);
 }
                  | DIRECTION OBJID {
     Rule * r = &pd.rules[pd.ruleCount];
@@ -453,7 +454,7 @@ match_object_part: OBJID {
     rid->direction = $1;
     rid->legendId = aliasLegendId($2);
     free($2);
-    rsp->ruleIdentityCount++;
+    incRuleIdent(rsp);
 }
 
 result_states:   result_states result_state | result_state;
@@ -464,7 +465,12 @@ result_state_internals: result_state_internals VERTICAL_PIPE result_state_part
                 |      result_state_part
 
 
-result_state_part: result_on_square { incResultPart(pd.ruleCount, pd.rules[pd.ruleCount].resultStateCount); }
+result_state_part: result_on_square {
+  Rule * r = &pd.rules[pd.ruleCount];
+  RuleState * rs = &r->resultStates[r->resultStateCount];
+
+  incRulePart(rs);
+}
         |       %empty {
   Rule * r = &pd.rules[pd.ruleCount];
   RuleState * rs = &r->resultStates[r->resultStateCount];
@@ -473,10 +479,9 @@ result_state_part: result_on_square { incResultPart(pd.ruleCount, pd.rules[pd.ru
   rsp->ruleIdentity[rsp->ruleIdentityCount].direction = UNSPECIFIED;
   rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId("_EMPTY_");
 
-  rsp->ruleIdentityCount++;
-  incResultPart(pd.ruleCount, r->resultStateCount);
+  incRuleIdent(rsp);
+  incRulePart(rs);
 }
-
 
 result_on_square: result_on_square result_object_part | result_object_part;
 
@@ -489,7 +494,7 @@ result_object_part: OBJID {
     rid->direction = UNSPECIFIED;
     rid->legendId = aliasLegendId($1);
     free($1);
-    rsp->ruleIdentityCount++;
+    incRuleIdent(rsp);
 }
                  | DIRECTION OBJID {
     Rule * r = &pd.rules[pd.ruleCount];
@@ -500,7 +505,7 @@ result_object_part: OBJID {
     rid->direction = $1;
     rid->legendId = aliasLegendId($2);
     free($2);
-    rsp->ruleIdentityCount++;
+    incRuleIdent(rsp);
 }
 
 winconditions: winconditions wincondition | %empty;
