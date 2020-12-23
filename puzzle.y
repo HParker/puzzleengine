@@ -207,7 +207,9 @@ any_object_eol: some_object_eol | %empty;
 object_definitions: object_definition object_definitions
                   | object_definition
 
-object_definition: any_object_eol object_name some_object_eol colors some_object_eol sprite some_object_eol { incObject(); }
+object_definition: any_object_eol object_name some_object_eol colors some_object_eol sprite some_object_eol {
+    incObject();
+}
                  | any_object_eol object_name some_object_eol colors some_object_eol {
   for (int i = 0; i < 25; i++) {
       pd.objects[pd.objectCount].sprite[i] = '0';
@@ -216,28 +218,28 @@ object_definition: any_object_eol object_name some_object_eol colors some_object
 }
 
 object_name: OBJID GLYPH {
-                 pd.objects[pd.objectCount].name = $1;
+    pd.objects[pd.objectCount].name = $1;
 
-                 pd.aliasLegend[pd.aliasLegendCount].key = strdup($1);
-                 pd.aliasLegend[pd.aliasLegendCount].objects[0].id = pd.objectCount;
+    pd.aliasLegend[pd.aliasLegendCount].key = strdup($1);
+    pd.aliasLegend[pd.aliasLegendCount].objects[0].id = pd.objectCount;
 
-                 incAliasLegendObject(pd.aliasLegendCount);
-                 incAliasLegend();
-                 // single char key
-                 // They only reference AliasLegend names that have the actual object ID
-                 pd.glyphLegend[pd.glyphLegendCount].key = $2;
-                 pd.glyphLegend[pd.glyphLegendCount].objects[0].id = pd.objectCount;
+    incAliasLegendObject(pd.aliasLegendCount);
+    incAliasLegend();
+    // single char key
+    // They only reference AliasLegend names that have the actual object ID
+    pd.glyphLegend[pd.glyphLegendCount].key = $2;
+    pd.glyphLegend[pd.glyphLegendCount].objects[0].id = pd.objectCount;
 
-                 incGlyphLegendObject(pd.glyphLegendCount);
-                 incGlyphLegend();
+    incGlyphLegendObject(pd.glyphLegendCount);
+    incGlyphLegend();
 }
            | OBJID {
-               pd.objects[pd.objectCount].name = $1;
+    pd.objects[pd.objectCount].name = $1;
 
-               pd.aliasLegend[pd.aliasLegendCount].key = strdup($1);
-               pd.aliasLegend[pd.aliasLegendCount].objects[0].id = pd.objectCount;
-               incAliasLegendObject(pd.aliasLegendCount);
-               incAliasLegend();
+    pd.aliasLegend[pd.aliasLegendCount].key = strdup($1);
+    pd.aliasLegend[pd.aliasLegendCount].objects[0].id = pd.objectCount;
+    incAliasLegendObject(pd.aliasLegendCount);
+    incAliasLegend();
 }
 
 colors: colors color | color;

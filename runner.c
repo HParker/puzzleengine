@@ -261,6 +261,7 @@ void undo(Runtime * rt, int partial) {
 
 int isMovable(Runtime * rt, int x, int y, int layerIndex) {
   // inbounds
+  // TODO: use onboard?
   if (x >= rt->width || x < 0 || y >= rt->height || y < 0) {
     return 0;
   }
