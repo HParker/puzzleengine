@@ -324,6 +324,18 @@ void updateMap(Runtime * rt) {
   }
 }
 
+int specificLegendId(Runtime * rt, int legendId, Match * match) {
+  int objId;
+  for (int i = 0; i < match->partCount; i++) {
+    objId = rt->objects[match->parts[i].objIndex].objId;
+    if (aliasLegendContains(legendId, objId)) {
+      return objId;
+    }
+  }
+  return aliasLegendObjectId(legendId, 0);
+}
+
+
 void applyMatch(Runtime * rt, Match * match) {
   if (verboseLogging()) {
     if (match->cancel == 0) {
@@ -370,7 +382,7 @@ void applyMatch(Runtime * rt, Match * match) {
 
   for (int i = 0; i < match->partCount; i++) {
     if (match->parts[i].newObject && match->parts[i].goalId != emptyId) {
-      addObj(rt, match->parts[i].goalId, match->parts[i].goalX, match->parts[i].goalY);
+      addObj(rt, specificLegendId(rt, match->parts[i].goalId, match), match->parts[i].goalX, match->parts[i].goalY);
       if (match->parts[i].goalDirection != -1 || match->parts[i].goalDirection != UNSPECIFIED) {
         addToMove(rt, rt->objectCount - 1,  match->parts[i].goalDirection);
       }
@@ -490,17 +502,6 @@ int alreadyResult(Runtime * rt, int ruleId, int stateId, int partId, Direction a
   return 1;
 }
 
-int specificLegendId(Runtime * rt, int legendId, Match * match) {
-  int objId;
-  for (int i = 0; i < match->partCount; i++) {
-    objId = rt->objects[match->parts[i].objIndex].objId;
-    if (aliasLegendContains(legendId, objId)) {
-      return objId;
-    }
-  }
-  return aliasLegendObjectId(legendId, 0);
-}
-
 void replaceCell(Runtime * rt, int ruleId, int stateId, int partId, Direction appDir, int x, int y, Match * match) {
   match->ruleIndex = ruleId;
   if (ruleCommandContains(ruleId, CANCEL)) {
@@ -548,7 +549,7 @@ void replaceCell(Runtime * rt, int ruleId, int stateId, int partId, Direction ap
         if (legendAt(rt, legendId, x, y) == 0) {
           match->parts[match->partCount].newObject = 1;
           // TODO: this should be ok all the time, but feels wrong.
-          match->parts[match->partCount].goalId = specificLegendId(rt, legendId, match);
+          match->parts[match->partCount].goalId = legendId; // specificLegendId(rt, legendId, match);
           match->parts[match->partCount].goalX = x;
           match->parts[match->partCount].goalY = y;
 

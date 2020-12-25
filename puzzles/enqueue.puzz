@@ -5,8 +5,6 @@ homepage www.pushthegame.com
 norepeat_action
 run_rules_on_level_start
 
-verbose_logging
-
 ========
 OBJECTS
 ========
