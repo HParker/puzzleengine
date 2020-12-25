@@ -193,6 +193,7 @@ object_definitions: object_definition object_definitions
                   | object_definition
 
 object_definition: any_object_eol object_name some_object_eol colors some_object_eol sprite some_object_eol {
+
     incObject();
 }
                  | any_object_eol object_name some_object_eol colors some_object_eol {
@@ -207,6 +208,7 @@ object_name: OBJID GLYPH {
 
     incAliasLegendObject(pd.aliasLegendCount);
     incAliasLegend();
+
     // single char key
     // They only reference AliasLegend names that have the actual object ID
     pd.glyphLegend[pd.glyphLegendCount].key = $2;
@@ -315,7 +317,10 @@ rules: rules rule_line
      | rule_line
      ;
 
-rule_line: any_eor rule some_eor { incRule(); }
+rule_line: any_eor rule some_eor {
+    pd.rules[pd.ruleCount].lineNo = yylineno;
+    incRule();
+}
 
 some_eor: some_eor END_OF_RULE | END_OF_RULE;
 any_eor: some_eor | %empty;
@@ -393,7 +398,7 @@ rule_postfix: OBJID {
 
 match_states:   match_states match_state | match_state;
 
-match_state:    OPEN_SQUARE match_state_internals CLOSE_SQUARE { incRuleMatchState(pd.ruleCount); }
+match_state:    OPEN_SQUARE match_state_internals CLOSE_SQUARE { incRuleMatchState(&pd.rules[pd.ruleCount]); }
 
 match_state_internals: match_state_internals VERTICAL_PIPE match_state_part
                 |      match_state_part
@@ -444,7 +449,7 @@ match_object_part: OBJID {
 
 result_states:   result_states result_state | result_state;
 
-result_state:    OPEN_SQUARE result_state_internals CLOSE_SQUARE { incRuleResultState(pd.ruleCount); }
+result_state:    OPEN_SQUARE result_state_internals CLOSE_SQUARE { incRuleResultState(&pd.rules[pd.ruleCount]); }
 
 result_state_internals: result_state_internals VERTICAL_PIPE result_state_part
                 |      result_state_part

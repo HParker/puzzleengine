@@ -195,13 +195,15 @@ void drawObj(Runtime * rt, int objIndex) {
 
   // TODO: for now app sprites are 25 long, but we can make this more generic
   for (int i = 0; i < 25; i++) {
-    Color cellColor = colorFromSprite(rt, objectId, i);
-    if (cellColor.a != 0) {
-      int x = (rt->objects[objIndex].x * pixelSize * width) + ((i % 5) * pixelSize);
-      int y = (rt->objects[objIndex].y * pixelSize * height) + ((i / 5) * pixelSize);
-      int w = pixelSize;
-      int h = pixelSize;
-      DrawRectangle(x, y , w, h, cellColor);
+    if (objectId != 2) {
+      Color cellColor = colorFromSprite(rt, objectId, i);
+      if (cellColor.a != 0) {
+        int x = (rt->objects[objIndex].x * pixelSize * width) + ((i % 5) * pixelSize);
+        int y = (rt->objects[objIndex].y * pixelSize * height) + ((i / 5) * pixelSize);
+        int w = pixelSize;
+        int h = pixelSize;
+        DrawRectangle(x, y , w, h, cellColor);
+      }
     }
   }
 }

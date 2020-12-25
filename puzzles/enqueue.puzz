@@ -5,6 +5,8 @@ homepage www.pushthegame.com
 norepeat_action
 run_rules_on_level_start
 
+verbose_logging
+
 ========
 OBJECTS
 ========
@@ -223,7 +225,7 @@ vertical [ > Player ] -> [ Player ]
 [ > Player | ... | Head ] -> [ | ... | Player Head ]
 [ > Player | ... | No Head ] -> [ Player | ... | ]
 
-[SendModePerm][ action Player ][ Selector Block ][ Filler ] -> [SendModePerm][ action Player ][ Wall Selector ][ RIGHT Filler Block ]
+[SendModePerm][ action Player ][ Selector Block ][ Filler ] ->  [SendModePerm][ action Player ][ Wall Selector ][ RIGHT Filler Block ]
 
 [ReceiveModePerm][ action Player ][ Selector ][ Taker Block ] -> [ReceiveModePerm][ action Player ][ Selector Block ][ RIGHT Taker Wall ]
 

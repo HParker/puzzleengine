@@ -9,7 +9,6 @@ START_TEST (test_parses_basic)
   PuzzleData * pz = parsePuzzle(file);
   ck_assert_str_eq(pz->title, "Simple Block Pushing Game");
   ck_assert_int_eq(pz->layerCount, 3);
-  ck_assert_int_eq(pz->ruleCount, 1);
   ck_assert_int_eq(pz->levelCount, 2);
 }
 END_TEST
@@ -21,7 +20,6 @@ START_TEST (test_parses_block_faker)
   PuzzleData * pz = parsePuzzle(file);
   ck_assert_str_eq(pz->title, "Block Faker");
   ck_assert_int_eq(pz->layerCount, 4);
-  ck_assert_int_eq(pz->ruleCount, 7);
   ck_assert_int_eq(pz->levelCount, 10);
 }
 END_TEST
@@ -33,7 +31,6 @@ START_TEST (test_parses_by_your_side)
   PuzzleData * pz = parsePuzzle(file);
   ck_assert_str_eq(pz->title, "By Your Side");
   ck_assert_int_eq(pz->layerCount, 4);
-  ck_assert_int_eq(pz->ruleCount, 6);
   ck_assert_int_eq(pz->levelCount, 12);
 }
 END_TEST

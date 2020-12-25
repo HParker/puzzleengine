@@ -33,6 +33,33 @@ int verboseLogging() {
   return pd.verboseLogging;
 }
 
+// TODO: util this
+char * dirName(Direction dir) {
+  char * directionNames[] = {
+                             "RIGHT",
+                             "UP",
+                             "LEFT",
+                             "DOWN",
+                             "HORIZONTAL",
+                             "VERTICAL",
+                             "STATIONARY",
+                             "RANDOMDIR",
+                             "RANDOM",
+                             "REL_UP",
+                             "REL_DOWN",
+                             "REL_LEFT",
+                             "REL_RIGHT",
+                             "USE",
+                             "NONE",
+                             "COND_NO",
+                             "QUIT",
+                             "RESTART",
+                             "UNDO",
+                             "UNSPECIFIED"
+  };
+  return directionNames[dir];
+}
+
 
 int colorPaletteId(char * name) {
   if (strcasecmp(name, "mastersystem") == 0) {
@@ -165,6 +192,50 @@ void addObjectsToLayer(char * name) {
   }
 }
 
+void printRules() {
+  for (int ruleId = 0; ruleId < pd.ruleCount; ruleId++) {
+    printf("Rule: %i ", ruleId);
+    printf("%s ", dirName(pd.rules[ruleId].directionConstraint));
+    for (int stateId = 0; stateId < pd.rules[ruleId].matchStateCount; stateId++) {
+      printf(" [ ");
+      for (int partId = 0; partId < pd.rules[ruleId].matchStates[stateId].partCount; partId++) {
+        for (int identId = 0; identId < pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCount; identId++) {
+          Direction ruleDir = pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
+          int legendId = pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+          printf(" %s %s ", dirName(ruleDir), aliasLegendKey(legendId));
+          if (partId + 1 < pd.rules[ruleId].matchStates[stateId].partCount) {
+            printf(" | ");
+          }
+        }
+      }
+      printf(" ] ");
+    }
+
+    printf("->");
+
+    for (int stateId = 0; stateId < pd.rules[ruleId].resultStateCount; stateId++) {
+      printf(" [ ");
+      for (int partId = 0; partId < pd.rules[ruleId].resultStates[stateId].partCount; partId++) {
+        for (int identId = 0; identId < pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCount; identId++) {
+          Direction ruleDir = pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity[identId].direction;
+          int legendId = pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+          if (ruleDir != UNSPECIFIED) {
+            printf(" %s %s ", dirName(ruleDir), aliasLegendKey(legendId));
+          } else {
+            printf(" %s ", aliasLegendKey(legendId));
+          }
+
+          if (partId + 1 < pd.rules[ruleId].resultStates[stateId].partCount) {
+            printf(" | ");
+          }
+        }
+      }
+      printf(" ] ");
+    }
+    printf("\n");
+  }
+}
+
 void initRuleIdentity(RuleIdentity * ruleIdent) {
   ruleIdent->direction = NONE; // TODO: should this be unspecified?
   ruleIdent->legendId = 1; // TODO: this is empty, but that isn't clear
@@ -207,11 +278,16 @@ void initRule(Rule * rule) {
   }
 }
 
+Rule * reallocRule(Rule * rules, int newSize) {
+  return realloc(rules, sizeof(Rule) * newSize);
+}
+
 void incRule() {
   if (pd.ruleCount + 1 >= pd.ruleCapacity) {
     fprintf(stderr, "RULE REALLOC\n");
     pd.ruleCapacity += PUZZLE_MALLOC_INC;
-    pd.rules = realloc(pd.rules, sizeof(Rule) * pd.ruleCapacity);
+    pd.rules = reallocRule(pd.rules, pd.ruleCapacity);
+    printf("rc: %i rcap: %i\n", pd.ruleCount, pd.ruleCapacity);
     for (int ruleId = pd.ruleCount + 1; ruleId < pd.ruleCapacity; ruleId++) {
       initRule(&pd.rules[ruleId]);
     }
@@ -219,27 +295,27 @@ void incRule() {
   pd.ruleCount++;
 }
 
-void incRuleMatchState(int ruleId) {
-  if (pd.rules[ruleId].matchStateCount + 1 >= pd.rules[ruleId].matchStateCapacity) {
-    pd.rules[ruleId].matchStateCapacity += PUZZLE_MALLOC_INC;
-    pd.rules[ruleId].matchStates = realloc(pd.rules[ruleId].matchStates, sizeof(RuleState) * pd.rules[ruleId].matchStateCapacity);
-    for (int stateId = pd.rules[ruleId].matchStateCount + 1; stateId < pd.rules[ruleId].matchStateCapacity; stateId++) {
-      initState(&pd.rules[ruleId].matchStates[stateId]);
+void incRuleMatchState(Rule * rule) {
+  if (rule->matchStateCount + 1 >= rule->matchStateCapacity) {
+    rule->matchStateCapacity += PUZZLE_MALLOC_INC;
+    rule->matchStates = realloc(rule->matchStates, sizeof(RuleState) * rule->matchStateCapacity);
+    for (int stateId = rule->matchStateCount + 1; stateId < rule->matchStateCapacity; stateId++) {
+      initState(&rule->matchStates[stateId]);
     }
   }
-  pd.rules[ruleId].matchStateCount++;
+  rule->matchStateCount++;
 }
 
-void incRuleResultState(int ruleId) {
-  if (pd.rules[ruleId].resultStateCount + 1 >= pd.rules[ruleId].resultStateCapacity) {
-    pd.rules[ruleId].resultStateCapacity += PUZZLE_MALLOC_INC;
-    pd.rules[ruleId].resultStates = realloc(pd.rules[ruleId].resultStates, sizeof(RuleState) * pd.rules[ruleId].resultStateCapacity);
+void incRuleResultState(Rule * rule) {
+  if (rule->resultStateCount + 1 >= rule->resultStateCapacity) {
+    rule->resultStateCapacity += PUZZLE_MALLOC_INC;
+    rule->resultStates = realloc(rule->resultStates, sizeof(RuleState) * rule->resultStateCapacity);
 
-    for (int stateId = pd.rules[ruleId].resultStateCount + 1; stateId < pd.rules[ruleId].resultStateCapacity; stateId++) {
-      initState(&pd.rules[ruleId].resultStates[stateId]);
+    for (int stateId = rule->resultStateCount + 1; stateId < rule->resultStateCapacity; stateId++) {
+      initState(&rule->resultStates[stateId]);
     }
   }
-  pd.rules[ruleId].resultStateCount++;
+  rule->resultStateCount++;
 }
 
 void incRulePart(RuleState * ruleState) {
@@ -343,8 +419,8 @@ void initPuzzleData() {
     pd.objects[i].colorCount = 0;
     pd.objects[i].height = 0;
     pd.objects[i].width = 0;
-    for (int i = 0; i < 25; i++) {
-      pd.objects[pd.objectCount].sprite[i] = '0';
+    for (int j = 0; j < 25; j++) {
+      pd.objects[i].sprite[j] = '0';
     }
   }
 
@@ -402,10 +478,157 @@ void initPuzzleData() {
   initStarterObjects();
 }
 
+Direction realDirection(Direction applicationDirection, Direction ruleDir) {
+  switch (ruleDir) {
+  case UP:
+  case DOWN:
+  case LEFT:
+  case RIGHT:
+  case USE:
+  case RANDOMDIR:
+  case STATIONARY:
+  case UNSPECIFIED:
+  case COND_NO:
+  case NONE:
+  case RANDOM:
+    return ruleDir;
+  case HORIZONTAL:
+  case VERTICAL:
+    return applicationDirection;
+  case MOVING:
+    return applicationDirection;
+  case REL_RIGHT:
+    return (Direction)((applicationDirection + 0) % 4);
+  case REL_UP:
+    return (Direction)((applicationDirection + 1) % 4);
+  case REL_LEFT:
+    return (Direction)((applicationDirection + 2) % 4);
+  case REL_DOWN:
+    return (Direction)((applicationDirection + 3) % 4);
+  default:
+    fprintf(stderr, "err: (realDirection) unsupported direction (ad: %i rd: %i)\n", applicationDirection, ruleDir);
+    return NONE;
+  }
+}
+
+int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule * sourceRule) {
+  if (sourceRule->directionConstraint == NONE || sourceRule->directionConstraint == appDir || sourceRule->directionConstraint == dirCategory) {
+    targetRule->directionConstraint = appDir;
+    targetRule->executionTime = sourceRule->executionTime;
+    targetRule->lineNo = sourceRule->lineNo;
+
+    targetRule->commandCount = sourceRule->commandCount;
+    for (int commandId = 0; commandId < sourceRule->commandCount; commandId++) {
+      targetRule->commands[commandId] = sourceRule->commands[commandId];
+    }
+    targetRule->directionConstraint = appDir;
+    targetRule->executionTime = sourceRule->executionTime;
+
+    for (int stateId = 0; stateId < sourceRule->matchStateCount; stateId++) {
+      for (int partId = 0; partId < sourceRule->matchStates[stateId].partCount; partId++) {
+        for (int identId = 0; identId < sourceRule->matchStates[stateId].parts[partId].ruleIdentityCount; identId++) {
+          Direction ruleDir = sourceRule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
+          int legendId = sourceRule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+            targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction = realDirection(appDir, ruleDir);
+            targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId = legendId;
+            incRuleIdent(&targetRule->matchStates[stateId].parts[partId]);
+        }
+        incRulePart(&targetRule->matchStates[stateId]);
+      }
+      incRuleMatchState(targetRule);
+    }
+
+    for (int stateId = 0; stateId < sourceRule->resultStateCount; stateId++) {
+      for (int partId = 0; partId < sourceRule->resultStates[stateId].partCount; partId++) {
+        for (int identId = 0; identId < sourceRule->resultStates[stateId].parts[partId].ruleIdentityCount; identId++) {
+          Direction ruleDir = sourceRule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction;
+          int legendId = sourceRule->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+            targetRule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction = realDirection(appDir, ruleDir);
+            targetRule->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId = legendId;
+            incRuleIdent(&targetRule->resultStates[stateId].parts[partId]);
+        }
+        incRulePart(&targetRule->resultStates[stateId]);
+      }
+      incRuleResultState(targetRule);
+    }
+    return 1;
+  }
+  return 0;
+}
+
+void freeRules() {
+  for (int ruleId = 0; ruleId < pd.ruleCapacity; ruleId++) {
+    for (int stateId = 0; stateId < pd.rules[ruleId].matchStateCapacity; stateId++) {
+      for (int partId = 0; partId < pd.rules[ruleId].matchStates[stateId].partCapacity; partId++) {
+        free(pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity);
+      }
+      free(pd.rules[ruleId].matchStates[stateId].parts);
+    }
+    free(pd.rules[ruleId].matchStates);
+
+    for (int stateId = 0; stateId < pd.rules[ruleId].resultStateCapacity; stateId++) {
+      for (int partId = 0; partId < pd.rules[ruleId].resultStates[stateId].partCapacity; partId++) {
+        free(pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity);
+      }
+        free(pd.rules[ruleId].resultStates[stateId].parts);
+    }
+    free(pd.rules[ruleId].resultStates);
+  }
+  free(pd.rules);
+}
+
+void expandRules() {
+  int ruleCount = 0;
+  int ruleCapacity = 200;
+  Rule * rules = malloc(sizeof(Rule) * ruleCapacity);
+  for (int ruleId = 0; ruleId < ruleCapacity; ruleId++) {
+    initRule(&rules[ruleId]);
+  }
+
+  for (int ruleId = 0; ruleId < pd.ruleCount; ruleId++) {
+    if (buildRule(UP, VERTICAL, &rules[ruleCount], &pd.rules[ruleId])) {
+      if (ruleCount + 1 >= ruleCapacity) {
+        ruleCapacity += PUZZLE_MALLOC_INC;
+        rules = reallocRule(rules, ruleCapacity);
+      }
+      ruleCount++;
+    }
+    if (buildRule(DOWN, VERTICAL, &rules[ruleCount], &pd.rules[ruleId])) {
+      if (ruleCount + 1 >= ruleCapacity) {
+        ruleCapacity += PUZZLE_MALLOC_INC;
+        rules = reallocRule(rules, ruleCapacity);
+      }
+      ruleCount++;
+    }
+    if (buildRule(LEFT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId])) {
+      if (ruleCount + 1 >= ruleCapacity) {
+        ruleCapacity += PUZZLE_MALLOC_INC;
+        rules = reallocRule(rules, ruleCapacity);
+      }
+      ruleCount++;
+    }
+    if (buildRule(RIGHT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId])) {
+      if (ruleCount + 1 >= ruleCapacity) {
+        ruleCapacity += PUZZLE_MALLOC_INC;
+        rules = reallocRule(rules, ruleCapacity);
+      }
+      ruleCount++;
+    }
+  }
+  // TODO: This leaks memory for all the rules.
+  freeRules();
+  pd.ruleCount = ruleCount;
+  pd.ruleCapacity = ruleCapacity;
+  pd.rules = rules;
+
+}
+
 PuzzleData * parsePuzzle(FILE * file) {
   initPuzzleData();
   yyin = file;
   yyparse();
+
+  expandRules();
 
   return &pd;
 }
@@ -435,25 +658,7 @@ void freePuzzle() {
   }
   free(pd.layers);
 
-  for (int ruleId = 0; ruleId < pd.ruleCapacity; ruleId++) {
-    for (int stateId = 0; stateId < pd.rules[ruleId].matchStateCapacity; stateId++) {
-      for (int partId = 0; partId < pd.rules[ruleId].matchStates[stateId].partCapacity; partId++) {
-        free(pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity);
-      }
-      free(pd.rules[ruleId].matchStates[stateId].parts);
-    }
-    free(pd.rules[ruleId].matchStates);
-
-    for (int stateId = 0; stateId < pd.rules[ruleId].resultStateCapacity; stateId++) {
-      for (int partId = 0; partId < pd.rules[ruleId].resultStates[stateId].partCapacity; partId++) {
-        free(pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity);
-      }
-        free(pd.rules[ruleId].resultStates[stateId].parts);
-    }
-    free(pd.rules[ruleId].resultStates);
-  }
-
-  free(pd.rules);
+  freeRules();
 
   for (int i = 0; i < pd.levelCapacity; i++) {
     free(pd.levels[i].cells);

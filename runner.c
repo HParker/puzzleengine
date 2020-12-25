@@ -4,32 +4,6 @@
 #include <time.h>
 #include "puzzleData.h"
 
-char * directionName(Direction dir) {
-  char * directionNames[] = {
-                             "RIGHT",
-                             "UP",
-                             "LEFT",
-                             "DOWN",
-                             "HORIZONTAL",
-                             "VERTICAL",
-                             "STATIONARY",
-                             "RANDOMDIR",
-                             "RANDOM",
-                             "REL_UP",
-                             "REL_DOWN",
-                             "REL_LEFT",
-                             "REL_RIGHT",
-                             "USE",
-                             "NONE",
-                             "COND_NO",
-                             "QUIT",
-                             "RESTART",
-                             "UNDO",
-                             "UNSPECIFIED"
-  };
-  return directionNames[dir];
-}
-
 int onBoard(Runtime * rt, int x, int y) {
   if (x < 0 || x >= rt->width) {
     return 0;
@@ -127,7 +101,6 @@ Direction absoluteDirection(Direction applicationDirection, Direction ruleDir) {
     return NONE;
   case RANDOMDIR:
     return (Direction)rand() % 4;
-
   default:
     fprintf(stderr, "err: (absoluteDirection) unsupported direction (ad: %i rd: %i)\n", applicationDirection, ruleDir);
     return NONE;
@@ -357,14 +330,15 @@ void applyMatch(Runtime * rt, Match * match) {
       fprintf(stderr, "applying count %i\n", match->partCount);
       for (int i = 0; i < match->partCount; i++) {
         if (match->parts[i].newObject == 1) {
-          fprintf(stderr, "Applying rule: %i new: %i id: '%s' (%i) location (%i, %i) goalMovment: %s\n",
+          fprintf(stderr, "Applying rule (%i): %i new: %i id: '%s' (%i) location (%i, %i) goalMovment: %s\n",
+                 rule(match->ruleIndex)->lineNo,
                  match->ruleIndex,
                  match->parts[i].newObject,
                  objectName(match->parts[i].goalId),
                  match->parts[i].goalId,
                  match->parts[i].goalX,
                  match->parts[i].goalY,
-                 directionName(match->parts[i].goalDirection)
+                 dirName(match->parts[i].goalDirection)
                  );
         } else {
           fprintf(stderr, "Applying rule: %i new: %i, objIndex: %i, (%i) id: '%s' (%i) -> '%s' (%i) location: (%i, %i) -> (%i, %i) goalMovment: %s\n",
@@ -380,7 +354,7 @@ void applyMatch(Runtime * rt, Match * match) {
                  rt->objects[match->parts[i].objIndex].y,
                  match->parts[i].goalX,
                  match->parts[i].goalY,
-                 directionName(match->parts[i].goalDirection));
+                 dirName(match->parts[i].goalDirection));
         }
       }
     } else {
@@ -516,6 +490,17 @@ int alreadyResult(Runtime * rt, int ruleId, int stateId, int partId, Direction a
   return 1;
 }
 
+int specificLegendId(Runtime * rt, int legendId, Match * match) {
+  int objId;
+  for (int i = 0; i < match->partCount; i++) {
+    objId = rt->objects[match->parts[i].objIndex].objId;
+    if (aliasLegendContains(legendId, objId)) {
+      return objId;
+    }
+  }
+  return aliasLegendObjectId(legendId, 0);
+}
+
 void replaceCell(Runtime * rt, int ruleId, int stateId, int partId, Direction appDir, int x, int y, Match * match) {
   match->ruleIndex = ruleId;
   if (ruleCommandContains(ruleId, CANCEL)) {
@@ -563,7 +548,7 @@ void replaceCell(Runtime * rt, int ruleId, int stateId, int partId, Direction ap
         if (legendAt(rt, legendId, x, y) == 0) {
           match->parts[match->partCount].newObject = 1;
           // TODO: this should be ok all the time, but feels wrong.
-          match->parts[match->partCount].goalId = aliasLegendObjectId(legendId, 0);
+          match->parts[match->partCount].goalId = specificLegendId(rt, legendId, match);
           match->parts[match->partCount].goalX = x;
           match->parts[match->partCount].goalY = y;
 
@@ -618,10 +603,10 @@ int partIdentitys(Runtime * rt, int ruleId, int stateId, int partId, Direction a
   for (int i = 0; i < rule(ruleId)->matchStates[stateId].parts[partId].ruleIdentityCount; i++) {
     success = partIdentity(rt, ruleId, stateId, partId, i, appDir, x, y, match);
     if (success == 0) {
-      /* fprintf(stderr, "X -- FAILED rule: %i state: %i part: %i ident: %i, appDir: %s (%i, %i)\n", ruleId, stateId, partId, i, directionName(appDir), x, y); */
+      /* fprintf(stderr, "X -- FAILED rule: %i state: %i part: %i ident: %i, appDir: %s (%i, %i)\n", ruleId, stateId, partId, i, dirName(appDir), x, y); */
       return 0;
     } else {
-      /* fprintf(stderr, "V --- Matched rule: %i state: %i part: %i ident: %i, appDir: %s (%i, %i)\n", ruleId, stateId, partId, i, directionName(appDir), x, y); */
+      /* fprintf(stderr, "V --- Matched rule: %i state: %i part: %i ident: %i, appDir: %s (%i, %i)\n", ruleId, stateId, partId, i, dirName(appDir), x, y); */
     }
   }
   /* fprintf(stderr, "> --- Identity Success\n"); */
@@ -876,7 +861,7 @@ int moveObjects(Runtime * rt) {
 
 void printHistory(Runtime * rt) {
   for (int i = 0; i < rt->historyCount; i++) {
-    fprintf(stderr, "%s\n", directionName(rt->history[i]));
+    fprintf(stderr, "%s\n", dirName(rt->history[i]));
   }
 }
 
@@ -995,6 +980,11 @@ void startGame(Runtime * rt, FILE * file) {
   initGame(rt);
   rt->pd = parsePuzzle(file);
   loadLevel(rt);
+
+  if (debug()) {
+    printRules();
+  }
+
 }
 
 void update(Runtime * rt, Direction dir) {

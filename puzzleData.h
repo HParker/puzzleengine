@@ -134,6 +134,7 @@ typedef struct RuleState {
 } RuleState;
 
 typedef struct Rule {
+  int lineNo;
   int commandCount;
   Command commands[10];
 
@@ -384,7 +385,9 @@ extern Direction handleInput(Runtime * rt, int input);
 extern void update(Runtime * rt, Direction dir);
 
 // Debug
-void printHistory(Runtime * rt);
+extern void printHistory(Runtime * rt);
+extern void printRules();
+extern char * dirName(Direction dir);
 
 // Win Condition
 extern int winConditionCount();
@@ -410,8 +413,8 @@ extern void incLayer();
 extern void addObjectsToLayer(char * name);
 
 extern void incRule();
-extern void incRuleMatchState(int ruleId);
-extern void incRuleResultState(int ruleId);
+extern void incRuleMatchState(Rule * rule);
+extern void incRuleResultState(Rule * rule);
 extern void incRulePart(RuleState * ruleState);
 extern void incRuleIdent(RuleStatePart * part);
 
