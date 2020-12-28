@@ -39,7 +39,7 @@ int legendObjIndex(Runtime * rt, int legendId, int x, int y) {
       return rt->map[cellIndex];
     }
   }
-  /* fprintf(stderr, "err: missed %i is in %i\n", rt->objects[rt->map[cellIndex]].objId, legendId); */
+  /* fprintf(stderr, "err: missed (cell: %i, objid: %i) is from %i\n", rt->map[cellIndex], rt->objects[rt->map[cellIndex]].objId, legendId); */
   return -1;
 }
 
@@ -327,9 +327,11 @@ void updateMap(Runtime * rt) {
 int specificLegendId(Runtime * rt, int legendId, Match * match) {
   int objId;
   for (int i = 0; i < match->partCount; i++) {
-    objId = rt->objects[match->parts[i].objIndex].objId;
-    if (aliasLegendContains(legendId, objId)) {
-      return objId;
+    if (match->parts[i].newObject == 0) {
+      objId = rt->objects[match->parts[i].objIndex].objId;
+      if (aliasLegendContains(legendId, objId)) {
+        return objId;
+      }
     }
   }
   return aliasLegendObjectId(legendId, 0);
@@ -517,20 +519,22 @@ void replaceCell(Runtime * rt, int ruleId, int stateId, int partId, Direction ap
   for (int identId = 0; identId < matchIdentCount; identId++) {
     Direction ruleDir = rule(ruleId)->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
     int legendId = rule(ruleId)->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+
     int objIndex = legendObjIndex(rt, legendId, x, y);
-    int resultIncludesSelf = resultHasLegendId(ruleId, stateId, partId, legendId, rt->objects[objIndex].objId);
-    if (ruleDir != COND_NO &&
-        legendId != emptyId &&
-        resultIncludesSelf == 0
-        ) {
-      /* int objIndex = legendObjIndex(rt, legendId, x, y); */
-      match->parts[match->partCount].newObject = 0;
-      match->parts[match->partCount].goalId = emptyId;
-      match->parts[match->partCount].objIndex = objIndex;
-      match->parts[match->partCount].goalX = rt->objects[objIndex].x;
-      match->parts[match->partCount].goalY = rt->objects[objIndex].y;
-      match->parts[match->partCount].goalDirection = UNSPECIFIED;
-      match->partCount++;
+    if (objIndex != -1) {
+      int resultIncludesSelf = resultHasLegendId(ruleId, stateId, partId, legendId, rt->objects[objIndex].objId);
+      if (ruleDir != COND_NO &&
+          legendId != emptyId &&
+          resultIncludesSelf == 0
+          ) {
+        match->parts[match->partCount].newObject = 0;
+        match->parts[match->partCount].goalId = emptyId;
+        match->parts[match->partCount].objIndex = objIndex;
+        match->parts[match->partCount].goalX = rt->objects[objIndex].x;
+        match->parts[match->partCount].goalY = rt->objects[objIndex].y;
+        match->parts[match->partCount].goalDirection = UNSPECIFIED;
+        match->partCount++;
+      }
     }
   }
 

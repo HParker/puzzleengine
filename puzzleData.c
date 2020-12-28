@@ -262,9 +262,9 @@ void initState(RuleState * ruleState) {
 void initRule(Rule * rule) {
   rule->directionConstraint = NONE;
   rule->executionTime = NORMAL;
-
   rule->matchStateCount = 0;
   rule->matchStateCapacity = 1;
+  rule->commandCount = 0;
   rule->matchStates = malloc(sizeof(RuleState) * rule->matchStateCapacity);
   for (int stateId = 0; stateId < rule->matchStateCapacity; stateId++) {
     initState(&rule->matchStates[stateId]);
@@ -388,17 +388,17 @@ void incCellIndex(int levelId) {
 }
 
 void initStarterObjects() {
-  pd.aliasLegend[pd.aliasLegendCount].key = strdup("...");
+  pd.aliasLegend[pd.aliasLegendCount].key = "...";
   pd.aliasLegend[pd.aliasLegendCount].objectCount = 1;
   pd.aliasLegend[pd.aliasLegendCount].objects[0].id = pd.objectCount;
-  pd.objects[pd.objectCount].name = strdup("_Spread_");
+  pd.objects[pd.objectCount].name = "_Spread_";
   incObject();
   incAliasLegend();
 
-  pd.aliasLegend[pd.aliasLegendCount].key = strdup("_EMPTY_");
+  pd.aliasLegend[pd.aliasLegendCount].key = "_EMPTY_";
   pd.aliasLegend[pd.aliasLegendCount].objectCount = 1;
   pd.aliasLegend[pd.aliasLegendCount].objects[0].id = pd.objectCount;
-  pd.objects[pd.objectCount].name = strdup("_Empty_");
+  pd.objects[pd.objectCount].name = "_Empty_";
   incObject();
   incAliasLegend();
 }
@@ -634,7 +634,9 @@ PuzzleData * parsePuzzle(FILE * file) {
 }
 
 void freePuzzle() {
-  for (int i = 0; i < pd.objectCount; i++) {
+  // TODO: we start at 2 because the first two objects are "static" basic objects.
+  // We can make that explicit
+  for (int i = 2; i < pd.objectCount; i++) {
     free(pd.objects[i].name);
   }
   free(pd.objects);
