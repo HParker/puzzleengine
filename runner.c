@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "puzzleData.h"
+#include "render.h"
 
 int onBoard(Runtime * rt, int x, int y) {
   if (x < 0 || x >= rt->width) {
@@ -212,7 +213,6 @@ void endGame(Runtime * rt) {
 
 
 void undo(Runtime * rt, int partial) {
-  rt->toMoveCount = 0;
   if (partial == 0) {
     free(rt->states[rt->statesCount].objects);
   }
@@ -378,7 +378,10 @@ void applyMatch(Runtime * rt, Match * match) {
 
   int emptyId = aliasLegendId("_EMPTY_");
   if (match->cancel) {
-    undo(rt, 1);
+    rt->toMoveCount = 0;
+    if (match->partCount > 0) {
+      undo(rt, 1);
+    }
     return;
   }
 
@@ -694,6 +697,10 @@ int completeMatch(Runtime * rt, int ruleId, int stateId, Direction appDir, int x
       return 0;
     }
     distance++;
+  }
+
+  if (verboseLogging()) {
+    debugRender(rt, match);
   }
 
   return 1;

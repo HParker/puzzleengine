@@ -77,6 +77,10 @@ void render(Runtime * rt) {
   }
 }
 
+void debugRender(Runtime * rt) {
+  render(rt);
+}
+
 void initRenderer() {
   initscr();
   cbreak();

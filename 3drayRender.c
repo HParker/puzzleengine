@@ -206,7 +206,7 @@ void drawObj(Runtime * rt, int objIndex) {
       Vector3 cubePosition;
       cubePosition.x = -(rt->objects[objIndex].x * pixelSize * width) + ((i % 5) * pixelSize);
       cubePosition.y = (rt->objects[objIndex].y * pixelSize * height) + ((i / 5) * pixelSize);
-      cubePosition.z = 2.5f;
+      cubePosition.z = objectLayer(objectId) * 2.5f;
       int w = pixelSize;
       int h = pixelSize;
       float l = pixelSize * 2.5f;
@@ -259,6 +259,10 @@ void render(Runtime * rt) {
     break;
   }
   EndDrawing();
+}
+
+void debugRender(Runtime * rt) {
+  render(rt);
 }
 
 char input() {

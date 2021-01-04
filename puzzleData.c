@@ -672,6 +672,10 @@ int requirePlayerMovement() {
   return pd.requirePlayerMovement;
 }
 
+Object * object(int id) {
+  return &pd.objects[id];
+}
+
 char * objectName(int id) {
   return pd.objects[id].name;
 }

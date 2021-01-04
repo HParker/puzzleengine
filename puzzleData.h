@@ -314,6 +314,7 @@ typedef struct Runtime {
 extern PuzzleData * parsePuzzle(FILE * file);
 extern void freePuzzle();
 extern char objectGlyph(int objId);
+extern Object * object(int id);
 extern char * objectName(int id);
 extern int objectSpriteCell(int id, int index);
 extern char * objectColor(int id, int colorIndex);

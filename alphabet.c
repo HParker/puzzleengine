@@ -309,6 +309,22 @@ char LZ[25] = {
                '.','0','0','0','0'
 };
 
+char L_COMMA[25] = {
+               '.','.','.','.','.',
+               '.','.','.','.','.',
+               '.','.','0','.','.',
+               '.','.','0','.','.',
+               '.','0','.','.','.'
+};
+
+char L_PERIOD[25] = {
+               '.','.','.','.','.',
+               '.','.','.','.','.',
+               '.','.','.','.','.',
+               '.','.','.','.','.',
+               '.','0','.','.','.'
+};
+
 char * charSprite(char c) {
   switch (c) {
   case '0':
@@ -411,6 +427,10 @@ char * charSprite(char c) {
     return LZ;
   case ' ':
     return L_SPACE;
+  case ',':
+    return L_COMMA;
+  case '.':
+    return L_PERIOD;
   }
   fprintf(stderr, "Error unsupported character '%c'\n", c);
   return L_SPACE;

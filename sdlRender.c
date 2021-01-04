@@ -152,6 +152,10 @@ void render(Runtime * rt) {
   SDL_RenderPresent(renderer);
 }
 
+void debugRender(Runtime * rt) {
+  render(rt);
+}
+
 char input() {
   // block on input for now. I don't think we have to do this forever.
   char c = '-';
