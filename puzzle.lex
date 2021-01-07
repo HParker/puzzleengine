@@ -356,4 +356,9 @@ message[ ]+ {
     }
   }
 }
+
+<<EOF>> {
+  BEGIN INITIAL;
+  return END_OF_FILE;
+}
 %%

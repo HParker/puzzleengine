@@ -627,7 +627,6 @@ PuzzleData * parsePuzzle(FILE * file) {
   initPuzzleData();
   yyin = file;
   yyparse();
-
   expandRules();
 
   return &pd;
