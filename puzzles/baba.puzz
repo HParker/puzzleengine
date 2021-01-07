@@ -1,0 +1,479 @@
+title Baba Is You - PuzzleScript Demake
+author galactical
+
+background_color #15181F
+
+run_rules_on_level_start
+
+========
+OBJECTS
+========
+
+Background
+#080808
+
+Player
+Transparent
+
+Wall
+#293141 #13171E
+00010
+11111
+01000
+11111
+00010
+
+Rock
+#C29E46 #423618
+.000.
+00000
+01000
+00100
+.000.
+
+Baba
+#FFFFFF #080808
+.....
+00000
+00101
+00000
+0...0
+
+Flag
+#ede285 #69653d
+.100.
+.1000
+.100.
+.1...
+.1...
+
+W
+#737373
+0.0.0
+0.0.0
+0.0.0
+0.0.0
+00000
+
+R
+#8a633c
+.00..
+.0.0.
+.00..
+.0.0.
+.0.0.
+
+B
+#d9396a
+.00..
+.0.0.
+.00..
+.0.0.
+.00..
+
+F
+#ede285
+.000.
+.0...
+.000.
+.0...
+.0...
+
+S
+#4b5c1c
+0...0
+0.000
+0...0
+000.0
+0...0
+
+P
+#90673e
+0..00
+0.0.0
+0..00
+0.000
+0.000
+
+Y
+#d9396a
+0.0.0
+0.0.0
+00.00
+00.00
+00.00
+
+Z
+#ede285
+00000
+.0.0.
+.0.0.
+0.0.0
+00000
+
+I
+#FFFFFF
+0.000
+0.0..
+0.000
+0...0
+0.000
+
+LetterX
+#c45a98
+0...0
+.0.0.
+..0..
+.0.0.
+0...0
+
+Valid
+Transparent
+
+IsPush
+Transparent
+
+IsWin
+Transparent
+
+IsLocked
+Transparent
+
+StopWall
+Transparent
+
+StopRock
+Transparent
+
+StopBaba
+Transparent
+
+StopFlag
+Transparent
+
+MarkWall
+Transparent
+
+MarkRock
+Transparent
+
+MarkBaba
+Transparent
+
+MarkFlag
+Transparent
+
+StopText
+Transparent
+
+NoYou
+Transparent
+
+=======
+LEGEND
+=======
+
+. = Background
+# = Wall
+O = Rock
++ = Baba
+T = flag
+
+Obj = Wall or Rock or Baba or Flag
+
+Noun = W or R or B or F
+Adj = S or P or Y or Z
+SorPorY = S or P or Y
+NounorAdj = Noun or Adj
+Text = NounOrAdj or I
+TextorObj = Text or Obj
+
+Marks = MarkWall or MarkRock or MarkBaba or MarkFlag
+
+Walls = Wall or MarkWall
+Rocks = Rock or MarkRock
+Babas = Baba or MarkBaba
+Flags = Flag or MarkFlag
+
+Stops = StopWall or StopRock or StopBaba or StopFlag or StopText
+StopsNoWall =  StopRock or StopBaba or StopFlag or StopText
+StopsNoRock = StopWall or  StopBaba or StopFlag or StopText
+StopsNoBaba = StopWall or StopRock or StopFlag or StopText
+StopsNoFlag = StopWall or StopRock or StopBaba  or StopText
+StopsNoText = StopWall or StopRock or StopBaba or StopFlag
+
+=======
+SOUNDS
+=======
+
+startgame 35082500
+endlevel 8180300
+
+undo 56844907
+restart 58801508
+
+sfx0 97798507
+sfx1 18485307
+sfx2 46119308
+
+================
+COLLISIONLAYERS
+================
+
+Background
+Player
+Valid
+IsPush
+IsWin
+IsLocked
+NoYou
+
+Wall StopWall
+Rock StopRock
+Baba StopBaba
+Flag StopFlag
+
+MarkWall
+MarkRock
+MarkBaba
+MarkFlag
+
+I Noun Adj StopText
+LetterX
+
+======
+RULES
+======
+
+(Player occupies all spaces)
+[] -> [Player]
+
+(Checks if a phrase is valid)
+late [Valid] -> []
+late right [Noun | I | NounOrAdj] -> [Noun Valid | I Valid | NounOrAdj Valid]
+late down  [Noun | I | NounOrAdj] -> [Noun Valid | I Valid | NounOrAdj Valid]
+
+(Checks if object is locked)
+late [Islocked] -> []
+late [W  | I | W] -> [W  IsLocked | I | W]
+late [R  | I | R] -> [R  IsLocked | I | R]
+late [B  | I | B] -> [B  IsLocked | I | B]
+late [F  | I | F] -> [F  IsLocked | I | F]
+
+(Prevents locked objects from being changed into other objects)
+
+late [LetterX] -> []
+late [W  IsLocked] [W  | I | noun no W] -> [W  IsLocked] [W LetterX | I LetterX | noun LetterX]
+late [R  IsLocked] [R  | I | noun no R] -> [R  IsLocked] [R LetterX | I LetterX | noun LetterX]
+late [B  IsLocked] [B  | I | noun no B] -> [B  IsLocked] [B LetterX | I LetterX | noun LetterX]
+late [F  IsLocked] [F  | I | noun no F] -> [F  IsLocked] [F LetterX | I LetterX | noun LetterX]
+
+(Changes object into another object)
+late [Marks] -> []
+
+late right down [ W no LetterX | I | R] [Walls] -> [ W | I | R] [MarkWall Rock]
+late right down [ W no LetterX | I | B] [Walls] -> [ W | I | B] [MarkWall Baba]
+late right down [ W no LetterX | I | F] [Walls] -> [ W | I | F] [MarkWall Flag]
+
+late right down [ R no LetterX | I | W] [Rocks] -> [ R | I | W] [MarkRock Wall]
+late right down [ R no LetterX | I | B] [Rocks] -> [ R | I | B] [MarkRock Baba]
+late right down [ R no LetterX | I | F] [Rocks] -> [ R | I | F] [MarkRock Flag]
+
+late right down [ B no LetterX | I | W] [Babas] -> [ B | I | W] [MarkBaba Wall]
+late right down [ B no LetterX | I | R] [Babas] -> [ B | I | R] [MarkBaba Rock]
+late right down [ B no LetterX | I | F] [Babas] -> [ B | I | F] [MarkBaba Flag]
+
+late right down [ F no LetterX | I | W] [Flags] -> [ F | I | W] [MarkFlag Wall]
+late right down [ F no LetterX | I | R] [Flags] -> [ F | I | R] [MarkFlag Rock]
+late right down [ F no LetterX | I | B] [Flags] -> [ F | I | B] [MarkFlag Baba]
+
+(Determines which objects are you)
+[Valid W | I Valid | Y Valid] [Wall] [moving Player] -> [Valid W | I Valid | Y Valid] [moving Wall] [moving Player]
+[Valid R | I Valid | Y Valid] [Rock] [moving Player] -> [Valid R | I Valid | Y Valid] [moving Rock] [moving Player]
+[Valid B | I Valid | Y Valid] [Baba] [moving Player] -> [Valid B | I Valid | Y Valid] [moving Baba] [moving Player]
+[Valid F | I Valid | Y Valid] [Flag] [moving Player] -> [Valid F | I Valid | Y Valid] [moving Flag] [moving Player]
+
+(Adds appropriate collision objects to text)
+[Text no Wall] -> [Text StopWall]
+[Text no Rock] -> [Text StopRock]
+[Text no Baba] -> [Text StopBaba]
+[Text no Flag] -> [Text StopFlag]
+
+(Text can be pushed)
+[IsPush] -> []
+startloop
+[> TextOrObj | Text] -> [> TextOrObj | > Text] sfx1
+
+(Determines which objects are push)
+[Valid Noun | Valid I | Valid P] -> [Valid IsPush Noun | Valid I | Valid P]
+
+[Valid IsPush W] [> TextOrObj | Wall] -> [Valid IsPush W] [> TextOrObj | > Wall] sfx1
+[Valid IsPush R] [> TextOrObj | Rock] -> [Valid IsPush R] [> TextOrObj | > Rock] sfx1
+[Valid IsPush B] [> TextOrObj | Baba] -> [Valid IsPush B] [> TextOrObj | > Baba] sfx1
+[Valid IsPush F] [> TextOrObj | Flag] -> [Valid IsPush F] [> TextOrObj | > Flag] sfx1
+endloop
+
+(Determines which objects are stop)
+[Stops] -> []
+
+[Valid W | Valid I | Valid SorPorY] [Wall no Rock] -> [Valid W | Valid I | Valid SorPorY] [Wall StopRock]
+[Valid W | Valid I | Valid SorPorY] [Wall no Baba] -> [Valid W | Valid I | Valid SorPorY] [Wall StopBaba]
+[Valid W | Valid I | Valid SorPorY] [Wall no Flag] -> [Valid W | Valid I | Valid SorPorY] [Wall StopFlag]
+[Valid W | Valid I | Valid SorPorY] [Wall no Text] -> [Valid W | Valid I | Valid SorPorY] [Wall StopText]
+
+[Valid R | Valid I | Valid SorPorY] [Rock no Wall] -> [Valid R | Valid I | Valid SorPorY] [Rock StopWall]
+[Valid R | Valid I | Valid SorPorY] [Rock no Baba] -> [Valid R | Valid I | Valid SorPorY] [Rock StopBaba]
+[Valid R | Valid I | Valid SorPorY] [Rock no Flag] -> [Valid R | Valid I | Valid SorPorY] [Rock StopFlag]
+[Valid R | Valid I | Valid SorPorY] [Rock no Text] -> [Valid R | Valid I | Valid SorPorY] [Rock StopText]
+
+[Valid B | Valid I | Valid SorPorY] [Baba no Rock] -> [Valid B | Valid I | Valid SorPorY] [Baba StopRock]
+[Valid B | Valid I | Valid SorPorY] [Baba no Wall] -> [Valid B | Valid I | Valid SorPorY] [Baba StopWall]
+[Valid B | Valid I | Valid SorPorY] [Baba no Flag] -> [Valid B | Valid I | Valid SorPorY] [Baba StopFlag]
+[Valid B | Valid I | Valid SorPorY] [Baba no Text] -> [Valid B | Valid I | Valid SorPorY] [Baba StopText]
+
+[Valid F | Valid I | Valid SorPorY] [Flag no Rock] -> [Valid F | Valid I | Valid SorPorY] [Flag StopRock]
+[Valid F | Valid I | Valid SorPorY] [Flag no Baba] -> [Valid F | Valid I | Valid SorPorY] [Flag StopBaba]
+[Valid F | Valid I | Valid SorPorY] [Flag no Wall] -> [Valid F | Valid I | Valid SorPorY] [Flag StopWall]
+[Valid F | Valid I | Valid SorPorY] [Flag no Text] -> [Valid F | Valid I | Valid SorPorY] [Flag StopText]
+
+[Text no Wall] -> [Text StopWall]
+[Text no Rock] -> [Text StopRock]
+[Text no Baba] -> [Text StopBaba]
+[Text no Flag] -> [Text StopFlag]
+
+(Prevents objects inside of stop from being pushed)
+[W Valid IsPush] [R Valid | Valid I | Valid S] [Wall Rock] -> [W Valid IsPush] [R Valid | Valid I | Valid S] [stationary Wall Rock]
+[W Valid IsPush] [B Valid | Valid I | Valid S] [Wall Baba] -> [W Valid IsPush] [B Valid | Valid I | Valid S] [stationary Wall Baba]
+[W Valid IsPush] [F Valid | Valid I | Valid S] [Wall Flag] -> [W Valid IsPush] [F Valid | Valid I | Valid S] [stationary Wall Flag]
+
+[R Valid IsPush] [W Valid | Valid I | Valid S] [Rock Wall] -> [R Valid IsPush] [W Valid | Valid I | Valid S] [stationary Rock Wall]
+[R Valid IsPush] [B Valid | Valid I | Valid S] [Rock Baba] -> [R Valid IsPush] [B Valid | Valid I | Valid S] [stationary Rock Baba]
+[R Valid IsPush] [F Valid | Valid I | Valid S] [Rock Flag] -> [R Valid IsPush] [F Valid | Valid I | Valid S] [stationary Rock Flag]
+
+[B Valid IsPush] [W Valid | Valid I | Valid S] [Baba Wall] -> [B Valid IsPush] [W Valid | Valid I | Valid S] [stationary Baba Wall]
+[B Valid IsPush] [R Valid | Valid I | Valid S] [Baba Rock] -> [B Valid IsPush] [R Valid | Valid I | Valid S] [stationary Baba Rock]
+[B Valid IsPush] [F Valid | Valid I | Valid S] [Baba Flag] -> [B Valid IsPush] [F Valid | Valid I | Valid S] [stationary Baba Flag]
+
+[F Valid IsPush] [W Valid | Valid I | Valid S] [Flag Wall] -> [F Valid IsPush] [W Valid | Valid I | Valid S] [stationary Flag Wall]
+[F Valid IsPush] [R Valid | Valid I | Valid S] [Flag Rock] -> [F Valid IsPush] [R Valid | Valid I | Valid S] [stationary Flag Rock]
+[F Valid IsPush] [B Valid | Valid I | Valid S] [Flag Baba] -> [F Valid IsPush] [B Valid | Valid I | Valid S] [stationary Flag Baba]
+
+(Prevents text inside of stop from being pushed)
+[W Valid | Valid I | Valid S] [Text Wall] -> [W Valid | Valid I | Valid S] [stationary Text Wall]
+[R Valid | Valid I | Valid S] [Text Rock] -> [R Valid | Valid I | Valid S] [stationary Text Rock]
+[B Valid | Valid I | Valid S] [Text Baba] -> [B Valid | Valid I | Valid S] [stationary Text Baba]
+[F Valid | Valid I | Valid S] [Text Flag] -> [F Valid | Valid I | Valid S] [stationary Text Flag]
+
+(Moves collision object with it's corresponding object)
+[moving Wall StopsNoWall] -> [moving Wall moving StopsNoWall]
+[moving Rock StopsNoRock] -> [moving Rock moving StopsNoRock]
+[moving Baba StopsNoBaba] -> [moving Baba moving StopsNoBaba]
+[moving Flag StopsNoFlag] -> [moving Flag moving StopsNoFlag]
+[moving Text StopsNoText] -> [moving Text moving StopsNoText]
+
+(Determines if object is win)
+[IsWin] -> []
+late [Valid Noun | Valid I | Valid Z] -> [Valid IsWin Noun | Valid I | Valid Z]
+
+(Determines if object is player and win and exists)
+late [Valid IsWin W] [Valid W | Valid I | Valid Y] [Wall] -> win
+late [Valid IsWin R] [Valid R | Valid I | Valid Y] [Rock] -> win
+late [Valid IsWin B] [Valid B | Valid I | Valid Y] [Baba] -> win
+late [Valid IsWin F] [Valid F | Valid I | Valid Y] [Flag] -> win
+
+(Determines if win object and player object overlap)
+late [Valid IsWin W] [Valid R | Valid I | Valid Y] [Wall Rock] -> win
+late [Valid IsWin W] [Valid B | Valid I | Valid Y] [Wall Baba] -> win
+late [Valid IsWin W] [Valid F | Valid I | Valid Y] [Wall Flag] -> win
+
+late [Valid IsWin R] [Valid W | Valid I | Valid Y] [Rock Wall] -> win
+late [Valid IsWin R] [Valid B | Valid I | Valid Y] [Rock Baba] -> win
+late [Valid IsWin R] [Valid F | Valid I | Valid Y] [Rock Flag] -> win
+
+late [Valid IsWin B] [Valid W | Valid I | Valid Y] [Baba Wall] -> win
+late [Valid IsWin B] [Valid R | Valid I | Valid Y] [Baba Rock] -> win
+late [Valid IsWin B] [Valid F | Valid I | Valid Y] [Baba Flag] -> win
+
+late [Valid IsWin F] [Valid W | Valid I | Valid Y] [Flag Wall] -> win
+late [Valid IsWin F] [Valid R | Valid I | Valid Y] [Flag Rock] -> win
+late [Valid IsWin F] [Valid B | Valid I | Valid Y] [Flag Baba] -> win
+
+(Cancels the turn if no objects are you; this is to prevent null moves being added to the undo stack)
+late [] -> [NoYou]
+late [Valid Noun | Valid I | Valid Y] [NoYou] -> [Valid Noun | Valid I | Valid Y] []
+late [NoYou] -> sfx2
+[NoYou] [moving Player] -> cancel
+
+(Sound effects)
+[moving Obj] -> sfx0
+
+==============
+WINCONDITIONS
+==============
+
+=======
+LEVELS
+=======
+
+
+...............
+....biy.fiz....
+....#######....
+.......o.......
+.....+.o.t.....
+.......o.......
+....#######....
+....wis.rip....
+...............
+
+..........
+...######.
+.###...i#.
+.#.f....#.
+.#..t.z.#.
+.########.
+...#....#.
+.b.#.w.+#.
+.i.#.i..#.
+.y.#.s..#.
+...######.
+..........
+
+..........
+...tttttt.
+.ttt...it.
+.t.b....t.
+.t....z.t.
+.tttttttt.
+...t....t.
+.w.t.f.#t.
+.i.t.i..t.
+.y.t.s..t.
+...tttttt.
+..........
+
+..........
+.....#####
+.biy.#...w
++....#.t.i
+.fiz.#...s
+.....#####
+..........
+
+...###..
+.o.rir..
+.......w
++.r.if.i
+.......s
+########
+biy##fiz
+
+........#....#
+.r.+.fip#....w
+........t.#..i
+#biy....#....s
+#########....#
+.r...........#
+.i.o.....fis.#
+.z...........#
+#####fif######

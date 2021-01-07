@@ -141,7 +141,7 @@ void initRenderer() {
   camera.position = (Vector3){ 0.0f, 0.0f, 40.0f };  // Camera position
   camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
   camera.up = (Vector3){ 0.0f, -1.0f, 0.0f };          // Camera up vector (rotation towards target)
-  camera.fovy = 40.0f;                                // Camera field-of-view Y
+  camera.fovy = 50.0f;                                // Camera field-of-view Y
   camera.type = CAMERA_PERSPECTIVE;                   // Camera mode type
 }
 
@@ -245,7 +245,7 @@ void render(Runtime * rt) {
   camera.target.y = ((rt->height * 5) / 2);
 
   camera.position.x = -(((rt->width * 5) / 2) - 5);
-  camera.position.y = ((rt->height * 5) / 2) + 35;
+  camera.position.y = ((rt->height * 5) / 2) + 55;
 
 
   switch (rt->levelType) {

@@ -8,7 +8,6 @@
 
 #define WINDOW_SIZE 840
 
-int shouldQuit = 0;
 int delta = 0;
 SDL_Window * window;
 SDL_Renderer * renderer;
@@ -68,19 +67,16 @@ void drawObj(Runtime * rt, int objIndex) {
 void initRenderer() {
   if (SDL_Init(SDL_INIT_VIDEO) != 0){
     fprintf(stderr, "ERROR Initializing SDL2\n");
-    shouldQuit = 1;
   }
 
   window = SDL_CreateWindow("Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_SIZE, WINDOW_SIZE, SDL_WINDOW_SHOWN);
   if (window == NULL) {
     fprintf(stderr, "ERROR making window\n");
-    shouldQuit = 1;
   }
 
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
   if (renderer == NULL) {
     fprintf(stderr, "ERROR making renderer\n");
-    shouldQuit = 1;
   }
 }
 void renderBackground(Runtime * rt) {
@@ -161,7 +157,6 @@ char input() {
   char c = '-';
   while (SDL_PollEvent(&e) || c == '-') {
     if (e.type == SDL_QUIT) {
-      shouldQuit = 1;
     } else if (e.type == SDL_KEYDOWN) {
       switch (e.key.keysym.sym) {
       case SDLK_q:
@@ -189,7 +184,6 @@ char input() {
         break;
       }
     }
-    SDL_Delay(10);
   }
   return c;
 }

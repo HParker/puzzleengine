@@ -6,7 +6,6 @@
 void test_solution_file(Runtime * rt, char * puzzleFileName, char * solutionFileName) {
   FILE * puzzleFile = fopen(puzzleFileName, "r");
   FILE * solutionFile = fopen(solutionFileName, "r");
-  initRenderer();
 
   startGame(rt, puzzleFile);
 
@@ -45,27 +44,7 @@ void test_solution_file(Runtime * rt, char * puzzleFileName, char * solutionFile
   /*   fprintf(stderr, "Game incomplete %i/%i\n", rt->levelIndex, rt->pd->levelCount); */
   /* } */
   printf(".\n");
-  closeRenderer();
-}
-
-
-void test_solution(Runtime * rt, int moveCount, int moves[]) {
-  fprintf(stderr, "%s: ", rt->pd->title);
-  int currentLevel = 0;
-  for (int i = 0; i < moveCount; i++) {
-    if (rt->gameWon == 0) {
-      update(rt, moves[i]);
-      if (rt->levelIndex > currentLevel) {
-        currentLevel = rt->levelIndex;
-        fprintf(stderr, ".");
-      }
-
-    }
-  }
-  /* if (rt->gameWon == 0) { */
-  /*   fprintf(stderr, "Game incomplete %i/%i\n", rt->levelIndex, rt->pd->levelCount); */
-  /* } */
-  fprintf(stderr, ".\n");
+  /* endGame(rt); */
 }
 
 START_TEST (test_runs_stumper)
@@ -307,12 +286,16 @@ int main(void)
   Suite *s;
   SRunner *sr;
 
+  initRenderer();
+
   s = puzzle_script_parser_suite();
   sr = srunner_create(s);
 
   srunner_run_all(sr, CK_NORMAL);
   number_failed = srunner_ntests_failed(sr);
   srunner_free(sr);
+
+  closeRenderer();
 
   return (number_failed == 0) ? 0 : 1;
 }

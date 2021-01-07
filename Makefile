@@ -14,7 +14,7 @@ graphics_tests: parser
 	${CC} -g -o ./bin/sdlRunnerTest puzzle.tab.c sdlRender.c puzzleData.c runner.c test/runnerTest.c `pkg-config --cflags --libs check sdl2`
 
 check_graphics: graphics_tests
-	./bin/rayRunnerTest && ./bin/3drayRunnerTest && ./bin/sdlRunnerTest
+	CK_FORK=no ./bin/rayRunnerTest && CK_FORK=no ./bin/3drayRunnerTest && CK_FORK=no ./bin/sdlRunnerTest
 
 parser:
 	${BISON} -d puzzle.y
@@ -27,9 +27,6 @@ sdl: parser
 check: default
 	./bin/parseTest && ./bin/runnerTest
 
-check_renderers: graphics_tests
-	./bin/rayRunnerTest && ./bin/3drayRunnerTest && ./bin/sdlRunnerTest
-
 debug: parser
 	${CC} -o ./bin/debugpuzzlescript puzzle.tab.c debugRender.c runner.c puzzleData.c main.c
 
@@ -39,10 +36,10 @@ nc: parser
 ray: parser
 	${CC} -o ./bin/raypuzzlescript puzzle.tab.c rayRender.c runner.c puzzleData.c main.c `pkg-config --cflags --libs raylib`
 
-ray3d: parser
+3dray: parser
 	${CC} -o ./bin/3draypuzzlescript puzzle.tab.c 3drayRender.c runner.c puzzleData.c main.c `pkg-config --cflags --libs raylib`
 
-all: default sdl debug nc ray graphics_tests
+all: default sdl debug nc ray 3dray graphics_tests
 
 clean:
 	rm puzzle.tab.h puzzle.tab.c

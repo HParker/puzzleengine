@@ -235,13 +235,11 @@ int pixelSize(Runtime * rt) {
 }
 
 int leftMargin(Runtime * rt) {
-  return 0;
-  /* return ((WINDOW_SIZE - (rt->width * pixelSize(rt) * SPRITE_WIDTH)) / 2); */
+  return ((WINDOW_SIZE - (rt->width * pixelSize(rt) * SPRITE_WIDTH)) / 2);
 }
 
 int topMargin(Runtime * rt) {
-  return 0;
-  /* return ((WINDOW_SIZE - (rt->height * pixelSize(rt) * SPRITE_WIDTH)) / 2); */
+  return ((WINDOW_SIZE - (rt->height * pixelSize(rt) * SPRITE_WIDTH)) / 2);
 }
 
 
@@ -251,8 +249,8 @@ void drawSprite(Runtime * rt, int sprite[25], char * colors[10], int x, int y) {
   for (int i = 0; i < 25; i++) {
     Color cellColor = colorFromList(colors, sprite[i]);
     if (cellColor.a != 0) {
-      int realX = /* leftMargin(rt) + */ (x * pixelSize(rt) * SPRITE_WIDTH) + ((i % SPRITE_WIDTH) * pixelSize(rt));
-      int realY = /* topMargin(rt) + */ (y * pixelSize(rt) * SPRITE_WIDTH) + ((i / SPRITE_WIDTH) * pixelSize(rt));
+      int realX = leftMargin(rt) + (x * pixelSize(rt) * SPRITE_WIDTH) + ((i % SPRITE_WIDTH) * pixelSize(rt));
+      int realY = topMargin(rt) + (y * pixelSize(rt) * SPRITE_WIDTH) + ((i / SPRITE_WIDTH) * pixelSize(rt));
       DrawRectangle(realX, realY, pixelSize(rt), pixelSize(rt), cellColor);
     }
   }
@@ -335,37 +333,37 @@ void drawMatch(Runtime * rt, Match * match) {
 }
 
 void debugRender(Runtime * rt, Match * match) {
-  if (match->partCount > 0) {
-    int pressed = 0;
-    while (pressed == 0) {
-      if (IsKeyPressed(KEY_PERIOD)) {
-        pressed = 1;
-      }
-      BeginDrawing();
-      ClearBackground(PINK);
-      switch (rt->levelType) {
-      case SQUARES:
-        renderLevel(rt);
-        break;
-      case MESSAGE_TEXT:
-        renderMessage(rt);
-        break;
-      }
+  /* if (match->partCount > 0) { */
+  /*   int pressed = 0; */
+  /*   while (pressed == 0) { */
+  /*     if (IsKeyPressed(KEY_PERIOD)) { */
+  /*       pressed = 1; */
+  /*     } */
+  /*     BeginDrawing(); */
+  /*     ClearBackground(PINK); */
+  /*     switch (rt->levelType) { */
+  /*     case SQUARES: */
+  /*       renderLevel(rt); */
+  /*       break; */
+  /*     case MESSAGE_TEXT: */
+  /*       renderMessage(rt); */
+  /*       break; */
+  /*     } */
 
-      // TODO: give this a new prelude tag
-      if (verboseLogging()) {
-        drawMatch(rt, match);
-      }
+  /*     // TODO: give this a new prelude tag */
+  /*     if (verboseLogging()) { */
+  /*       drawMatch(rt, match); */
+  /*     } */
 
-      EndDrawing();
-    }
-  }
+  /*     EndDrawing(); */
+  /*   } */
+  /* } */
 }
 
 
 void render(Runtime * rt) {
   BeginDrawing();
-  ClearBackground(MAROON);
+  ClearBackground(BLACK);
 
   switch (rt->levelType) {
   case SQUARES:
@@ -375,7 +373,6 @@ void render(Runtime * rt) {
     renderMessage(rt);
     break;
   }
-  DrawRectangle(0, 0, 10, 10, BLACK);
   EndDrawing();
 }
 

@@ -59,6 +59,11 @@ void render(Runtime * rt) {
   }
 }
 
+void debugRender(Runtime * rt) {
+  render(rt);
+}
+
+
 void initRenderer() {
     fprintf(stderr, "OBJECTS\n");
   for (int i = 0; i < objectCount(); i++) {

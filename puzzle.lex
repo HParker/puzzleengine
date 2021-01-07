@@ -6,10 +6,14 @@
 int modeToEnter = -1;
 int commentNestingLevel = 0;
 int inMode = 0;
-#define yyterminate() return END_OF_FILE
+
+
+int yywrap() {
+  return -1;
+}
 %}
 
-%option noyywrap caseless yylineno
+%option caseless yylineno
 
 %s MODE
 %s IDENTIFIER
@@ -359,6 +363,10 @@ message[ ]+ {
 
 <<EOF>> {
   BEGIN INITIAL;
+  modeToEnter = -1;
+  commentNestingLevel = 0;
+  inMode = 0;
+
   return END_OF_FILE;
 }
 %%

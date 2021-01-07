@@ -325,6 +325,30 @@ char L_PERIOD[25] = {
                '.','0','.','.','.'
 };
 
+char L_BANG[25] = {
+               '.','.','.','0','.',
+               '.','.','.','0','.',
+               '.','.','.','0','.',
+               '.','.','.','.','.',
+               '.','.','.','0','.'
+};
+
+char L_COLON[25] = {
+               '.','.','.','.','.',
+               '.','.','.','0','.',
+               '.','.','.','.','.',
+               '.','.','.','.','.',
+               '.','.','.','0','.'
+};
+
+char L_SQUOTE[25] = {
+               '.','.','.','0','.',
+               '.','.','.','0','.',
+               '.','.','.','.','.',
+               '.','.','.','.','.',
+               '.','.','.','.','.'
+};
+
 char * charSprite(char c) {
   switch (c) {
   case '0':
@@ -431,6 +455,12 @@ char * charSprite(char c) {
     return L_COMMA;
   case '.':
     return L_PERIOD;
+  case '!':
+    return L_BANG;
+  case ':':
+    return L_COLON;
+  case '\'':
+    return L_COLON;
   }
   fprintf(stderr, "Error unsupported character '%c'\n", c);
   return L_SPACE;
