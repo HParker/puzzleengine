@@ -192,47 +192,70 @@ void addObjectsToLayer(char * name) {
   }
 }
 
+char * ruleString(int ruleId) {
+  /* int ruleStringSize = sizeof(char) * 1024; */
+  char * ruleStr = malloc(sizeof(char) * 1024);
+
+  strcpy(ruleStr, dirName(pd.rules[ruleId].directionConstraint));
+
+  for (int stateId = 0; stateId < pd.rules[ruleId].matchStateCount; stateId++) {
+    strcat(ruleStr, " [ ");
+    for (int partId = 0; partId < pd.rules[ruleId].matchStates[stateId].partCount; partId++) {
+      for (int identId = 0; identId < pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCount; identId++) {
+        Direction ruleDir = pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
+        int legendId = pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+        strcat(ruleStr, " ");
+        if (ruleDir != UNSPECIFIED) {
+          strcat(ruleStr, dirName(ruleDir));
+          strcat(ruleStr, " ");
+        }
+        strcat(ruleStr, aliasLegendKey(legendId));
+        strcat(ruleStr, " ");
+
+        if (partId + 1 < pd.rules[ruleId].matchStates[stateId].partCount) {
+          strcat(ruleStr, " | ");
+        }
+      }
+    }
+    strcat(ruleStr, " ] ");
+  }
+
+  strcat(ruleStr, "->");
+
+  for (int stateId = 0; stateId < pd.rules[ruleId].resultStateCount; stateId++) {
+    strcat(ruleStr, " [ ");
+    for (int partId = 0; partId < pd.rules[ruleId].resultStates[stateId].partCount; partId++) {
+      for (int identId = 0; identId < pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCount; identId++) {
+        Direction ruleDir = pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity[identId].direction;
+        int legendId = pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+        if (ruleDir != UNSPECIFIED) {
+          strcat(ruleStr, " ");
+          if (ruleDir != UNSPECIFIED) {
+            strcat(ruleStr, dirName(ruleDir));
+            strcat(ruleStr, " ");
+          }
+          strcat(ruleStr, aliasLegendKey(legendId));
+          strcat(ruleStr, " ");
+        } else {
+          strcat(ruleStr, " ");
+          strcat(ruleStr, aliasLegendKey(legendId));
+          strcat(ruleStr, " ");
+        }
+
+        if (partId + 1 < pd.rules[ruleId].resultStates[stateId].partCount) {
+          strcat(ruleStr, " | ");
+        }
+      }
+    }
+    strcat(ruleStr, " ] ");
+  }
+  strcat(ruleStr, "\n");
+  return ruleStr;
+}
+
 void printRules() {
   for (int ruleId = 0; ruleId < pd.ruleCount; ruleId++) {
-    printf("Rule: %i ", ruleId);
-    printf("%s ", dirName(pd.rules[ruleId].directionConstraint));
-    for (int stateId = 0; stateId < pd.rules[ruleId].matchStateCount; stateId++) {
-      printf(" [ ");
-      for (int partId = 0; partId < pd.rules[ruleId].matchStates[stateId].partCount; partId++) {
-        for (int identId = 0; identId < pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCount; identId++) {
-          Direction ruleDir = pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
-          int legendId = pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
-          printf(" %s %s ", dirName(ruleDir), aliasLegendKey(legendId));
-          if (partId + 1 < pd.rules[ruleId].matchStates[stateId].partCount) {
-            printf(" | ");
-          }
-        }
-      }
-      printf(" ] ");
-    }
-
-    printf("->");
-
-    for (int stateId = 0; stateId < pd.rules[ruleId].resultStateCount; stateId++) {
-      printf(" [ ");
-      for (int partId = 0; partId < pd.rules[ruleId].resultStates[stateId].partCount; partId++) {
-        for (int identId = 0; identId < pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCount; identId++) {
-          Direction ruleDir = pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity[identId].direction;
-          int legendId = pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity[identId].legendId;
-          if (ruleDir != UNSPECIFIED) {
-            printf(" %s %s ", dirName(ruleDir), aliasLegendKey(legendId));
-          } else {
-            printf(" %s ", aliasLegendKey(legendId));
-          }
-
-          if (partId + 1 < pd.rules[ruleId].resultStates[stateId].partCount) {
-            printf(" | ");
-          }
-        }
-      }
-      printf(" ] ");
-    }
-    printf("\n");
+    printf("%s\n", ruleString(ruleId));
   }
 }
 

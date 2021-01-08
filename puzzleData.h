@@ -388,6 +388,7 @@ extern void update(Runtime * rt, Direction dir);
 // Debug
 extern void printHistory(Runtime * rt);
 extern void printRules();
+extern char * ruleString(int ruleId);
 extern char * dirName(Direction dir);
 
 // Win Condition

@@ -225,21 +225,32 @@ Color colorFromList(char * colors[10], char cell) {
   return PINK;
 }
 
+int windowSize() {
+  if (verboseLogging()) {
+    return WINDOW_SIZE/2;
+  } else {
+    return WINDOW_SIZE;
+  }
+}
+
 int pixelSize(Runtime * rt) {
   if (rt->width > rt->height) {
-    return (WINDOW_SIZE / (rt->width * SPRITE_WIDTH));
+    return (windowSize() / (rt->width * SPRITE_WIDTH));
   } else {
-    return (WINDOW_SIZE / (rt->height * SPRITE_WIDTH));
+    return (windowSize() / (rt->height * SPRITE_WIDTH));
   }
-
 }
 
 int leftMargin(Runtime * rt) {
-  return ((WINDOW_SIZE - (rt->width * pixelSize(rt) * SPRITE_WIDTH)) / 2);
+  if (verboseLogging()) {
+    return WINDOW_SIZE / 2 + ((windowSize() - (rt->width * pixelSize(rt) * SPRITE_WIDTH)) / 2);
+  } else {
+    return ((windowSize() - (rt->width * pixelSize(rt) * SPRITE_WIDTH)) / 2);
+  }
 }
 
 int topMargin(Runtime * rt) {
-  return ((WINDOW_SIZE - (rt->height * pixelSize(rt) * SPRITE_WIDTH)) / 2);
+    return ((windowSize() - (rt->height * pixelSize(rt) * SPRITE_WIDTH)) / 2);
 }
 
 
@@ -300,19 +311,20 @@ void renderMessage(Runtime * rt) {
   char * message = levelMessage(rt->levelIndex);
   int textLength = MeasureText(message, 20);
 
-  DrawText(message, WINDOW_SIZE / 2 - textLength / 2, WINDOW_SIZE / 2, 20, WHITE);
+  DrawText(message, windowSize() / 2 - textLength / 2, windowSize() / 2, 14, WHITE);
 }
 
 void drawMatch(Runtime * rt, Match * match) {
-  printf("Drawing match %i\n", match->partCount);
   for (int i = 0; i < match->partCount; i++) {
 
-    int x = (match->parts[i].goalX * pixelSize(rt) * SPRITE_WIDTH);
-    int y = (match->parts[i].goalY * pixelSize(rt) * SPRITE_WIDTH);
+    int x = leftMargin(rt) + (match->parts[i].goalX * pixelSize(rt) * SPRITE_WIDTH) + ((i % SPRITE_WIDTH) * pixelSize(rt));
+    int y = topMargin(rt) + (match->parts[i].goalY * pixelSize(rt) * SPRITE_WIDTH) + ((i / SPRITE_WIDTH) * pixelSize(rt));
+
+    /* int x = (match->parts[i].goalX * pixelSize(rt) * SPRITE_WIDTH); */
+    /* int y = (match->parts[i].goalY * pixelSize(rt) * SPRITE_WIDTH); */
     int w = pixelSize(rt) * SPRITE_WIDTH;
     int h = pixelSize(rt) * SPRITE_WIDTH;
     Rectangle rect = { x, y, w, h };
-    printf("Drawing match (%i, %i)\n", x, y);
     DrawRectangleLinesEx(rect, pixelSize(rt)/5, RED);
 
     switch (match->parts[i].goalDirection) {
@@ -332,32 +344,36 @@ void drawMatch(Runtime * rt, Match * match) {
   }
 }
 
+void renderRule(Match * match) {
+  DrawText(ruleString(match->ruleIndex), 10, 10, 20, WHITE);
+}
+
 void debugRender(Runtime * rt, Match * match) {
-  /* if (match->partCount > 0) { */
-  /*   int pressed = 0; */
-  /*   while (pressed == 0) { */
-  /*     if (IsKeyPressed(KEY_PERIOD)) { */
-  /*       pressed = 1; */
-  /*     } */
-  /*     BeginDrawing(); */
-  /*     ClearBackground(PINK); */
-  /*     switch (rt->levelType) { */
-  /*     case SQUARES: */
-  /*       renderLevel(rt); */
-  /*       break; */
-  /*     case MESSAGE_TEXT: */
-  /*       renderMessage(rt); */
-  /*       break; */
-  /*     } */
+  if (match->partCount > 0) {
+    int pressed = 0;
+    while (pressed == 0) {
+      if (IsKeyPressed(KEY_PERIOD)) {
+        pressed = 1;
+      }
+      BeginDrawing();
+      ClearBackground(BLACK);
+      switch (rt->levelType) {
+      case SQUARES:
+        renderLevel(rt);
+        break;
+      case MESSAGE_TEXT:
+        renderMessage(rt);
+        break;
+      }
 
-  /*     // TODO: give this a new prelude tag */
-  /*     if (verboseLogging()) { */
-  /*       drawMatch(rt, match); */
-  /*     } */
-
-  /*     EndDrawing(); */
-  /*   } */
-  /* } */
+      // TODO: give this a new prelude tag
+      if (verboseLogging()) {
+        drawMatch(rt, match);
+      }
+      renderRule(match);
+      EndDrawing();
+    }
+  }
 }
 
 

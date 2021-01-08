@@ -379,9 +379,7 @@ void applyMatch(Runtime * rt, Match * match) {
   int emptyId = aliasLegendId("_EMPTY_");
   if (match->cancel) {
     rt->toMoveCount = 0;
-    if (match->partCount > 0) {
-      undo(rt, 1);
-    }
+    undo(rt, 1);
     return;
   }
 
