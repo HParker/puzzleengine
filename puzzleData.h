@@ -168,6 +168,10 @@ typedef struct Match {
   int cancel;
   int ruleIndex;
   int partCount;
+  int cursorX;
+  int cursorY;
+  int targetX;
+  int targetY;
   Direction appliedDirection;
   MatchData parts[1000];
 } Match;

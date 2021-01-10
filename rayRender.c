@@ -178,7 +178,7 @@ Color colorFromSprite(Runtime * rt, int objId, int cellIndex) {
 
 void initRenderer() {
   InitWindow(WINDOW_SIZE, WINDOW_SIZE, "My Puzzle");
-  SetTargetFPS(60);
+  SetTargetFPS(160);
 }
 
 void closeRenderer() {
@@ -226,11 +226,7 @@ Color colorFromList(char * colors[10], char cell) {
 }
 
 int windowSize() {
-  if (verboseLogging()) {
-    return WINDOW_SIZE/2;
-  } else {
-    return WINDOW_SIZE;
-  }
+  return WINDOW_SIZE;
 }
 
 int pixelSize(Runtime * rt) {
@@ -242,15 +238,11 @@ int pixelSize(Runtime * rt) {
 }
 
 int leftMargin(Runtime * rt) {
-  if (verboseLogging()) {
-    return WINDOW_SIZE / 2 + ((windowSize() - (rt->width * pixelSize(rt) * SPRITE_WIDTH)) / 2);
-  } else {
-    return ((windowSize() - (rt->width * pixelSize(rt) * SPRITE_WIDTH)) / 2);
-  }
+  return ((windowSize() - (rt->width * pixelSize(rt) * SPRITE_WIDTH)) / 2);
 }
 
 int topMargin(Runtime * rt) {
-    return ((windowSize() - (rt->height * pixelSize(rt) * SPRITE_WIDTH)) / 2);
+  return ((windowSize() - (rt->height * pixelSize(rt) * SPRITE_WIDTH)) / 2);
 }
 
 
@@ -344,34 +336,73 @@ void drawMatch(Runtime * rt, Match * match) {
   }
 }
 
+void drawCursors(Runtime * rt, Match * match) {
+  Rectangle rect;
+  // cursor
+  rect.x = leftMargin(rt) + (match->cursorX * pixelSize(rt) * SPRITE_WIDTH);
+  rect.y = topMargin(rt) + (match->cursorY * pixelSize(rt) * SPRITE_WIDTH);
+  rect.width = pixelSize(rt) * SPRITE_WIDTH;
+  rect.height = pixelSize(rt) * SPRITE_WIDTH;
+  DrawRectangleLinesEx(rect, pixelSize(rt)/5, GREEN);
+
+  rect.x = leftMargin(rt) + (match->targetX * pixelSize(rt) * SPRITE_WIDTH);
+  rect.y = topMargin(rt) + (match->targetY * pixelSize(rt) * SPRITE_WIDTH);
+  rect.width = pixelSize(rt) * SPRITE_WIDTH;
+  rect.height = pixelSize(rt) * SPRITE_WIDTH;
+  DrawRectangleLinesEx(rect, pixelSize(rt)/5, RED);
+}
+
 void renderRule(Match * match) {
-  DrawText(ruleString(match->ruleIndex), 10, 10, 20, WHITE);
+  Color transparentBlack = { 0, 0, 0, 140 };
+  DrawRectangle(0, 0, WINDOW_SIZE, 50, transparentBlack);
+  char * rstr = ruleString(match->ruleIndex);
+  DrawText(rstr, 10, 10, 14, WHITE);
+  free(rstr);
 }
 
 void debugRender(Runtime * rt, Match * match) {
-  if (match->partCount > 0) {
-    int pressed = 0;
-    while (pressed == 0) {
-      if (IsKeyPressed(KEY_PERIOD)) {
-        pressed = 1;
-      }
-      BeginDrawing();
-      ClearBackground(BLACK);
-      switch (rt->levelType) {
-      case SQUARES:
-        renderLevel(rt);
-        break;
-      case MESSAGE_TEXT:
-        renderMessage(rt);
-        break;
-      }
+  int awaitInput = 0;
+  int frameCounter = 0;
+  int frameDelay = 1;
+  int pressed = 0;
+  if (match->partCount > 0 || 1) {
+    awaitInput = 1;
+  }
 
-      // TODO: give this a new prelude tag
-      if (verboseLogging()) {
+  if (rt->levelType == SQUARES && verboseLogging()) {
+    if (awaitInput) {
+      while (pressed == 0) {
+        if (IsKeyPressed(KEY_PERIOD)) {
+          pressed = 1;
+        }
+        BeginDrawing();
+
+        ClearBackground(BLACK);
+
+        renderLevel(rt);
+        drawCursors(rt, match);
         drawMatch(rt, match);
+        renderRule(match);
+
+        EndDrawing();
       }
-      renderRule(match);
-      EndDrawing();
+    } else {
+      while (frameCounter < frameDelay) {
+        if (IsKeyPressed(KEY_PERIOD)) {
+          pressed = 1;
+        }
+        BeginDrawing();
+
+        ClearBackground(BLACK);
+
+        renderLevel(rt);
+        drawCursors(rt, match);
+        drawMatch(rt, match);
+        renderRule(match);
+
+        EndDrawing();
+        frameCounter++;
+      }
     }
   }
 }

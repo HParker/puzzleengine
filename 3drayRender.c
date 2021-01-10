@@ -275,7 +275,7 @@ void render(Runtime * rt) {
 }
 
 void debugRender(Runtime * rt) {
-  render(rt);
+  /* render(rt); */
 }
 
 char input() {

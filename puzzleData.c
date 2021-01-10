@@ -254,8 +254,11 @@ char * ruleString(int ruleId) {
 }
 
 void printRules() {
+  char * rstr;
   for (int ruleId = 0; ruleId < pd.ruleCount; ruleId++) {
-    printf("%s\n", ruleString(ruleId));
+    rstr = ruleString(ruleId);
+    printf("%s\n", rstr);
+    free(rstr);
   }
 }
 
@@ -345,7 +348,7 @@ void incRulePart(RuleState * ruleState) {
   if (ruleState->partCount + 1 >= ruleState->partCapacity) {
     ruleState->partCapacity += PUZZLE_MALLOC_INC;
     ruleState->parts = realloc(ruleState->parts, sizeof(RuleStatePart) * ruleState->partCapacity);
-    for (int partId = ruleState->partCount + 1 ; partId < ruleState->partCapacity; partId++) {
+    for (int partId = ruleState->partCount + 1; partId < ruleState->partCapacity; partId++) {
       initPart(&ruleState->parts[partId]);
     }
   }
@@ -514,10 +517,9 @@ Direction realDirection(Direction applicationDirection, Direction ruleDir) {
   case COND_NO:
   case NONE:
   case RANDOM:
-    return ruleDir;
   case HORIZONTAL:
   case VERTICAL:
-    return applicationDirection;
+    return ruleDir;
   case MOVING:
     return applicationDirection;
   case REL_RIGHT:
@@ -535,7 +537,9 @@ Direction realDirection(Direction applicationDirection, Direction ruleDir) {
 }
 
 int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule * sourceRule) {
-  if (sourceRule->directionConstraint == NONE || sourceRule->directionConstraint == appDir || sourceRule->directionConstraint == dirCategory) {
+  if (sourceRule->directionConstraint == NONE ||
+      sourceRule->directionConstraint == appDir ||
+      sourceRule->directionConstraint == dirCategory) {
     targetRule->directionConstraint = appDir;
     targetRule->executionTime = sourceRule->executionTime;
     targetRule->lineNo = sourceRule->lineNo;
@@ -552,13 +556,17 @@ int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule *
         for (int identId = 0; identId < sourceRule->matchStates[stateId].parts[partId].ruleIdentityCount; identId++) {
           Direction ruleDir = sourceRule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
           int legendId = sourceRule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
-            targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction = realDirection(appDir, ruleDir);
-            targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId = legendId;
-            incRuleIdent(&targetRule->matchStates[stateId].parts[partId]);
+          targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction = realDirection(appDir, ruleDir);
+          targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId = legendId;
+          incRuleIdent(&targetRule->matchStates[stateId].parts[partId]);
         }
         incRulePart(&targetRule->matchStates[stateId]);
       }
       incRuleMatchState(targetRule);
+    }
+
+    if (sourceRule->resultStateCount == 0) {
+      return 1;
     }
 
     for (int stateId = 0; stateId < sourceRule->resultStateCount; stateId++) {
@@ -566,9 +574,9 @@ int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule *
         for (int identId = 0; identId < sourceRule->resultStates[stateId].parts[partId].ruleIdentityCount; identId++) {
           Direction ruleDir = sourceRule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction;
           int legendId = sourceRule->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId;
-            targetRule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction = realDirection(appDir, ruleDir);
-            targetRule->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId = legendId;
-            incRuleIdent(&targetRule->resultStates[stateId].parts[partId]);
+          targetRule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction = realDirection(appDir, ruleDir);
+          targetRule->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId = legendId;
+          incRuleIdent(&targetRule->resultStates[stateId].parts[partId]);
         }
         incRulePart(&targetRule->resultStates[stateId]);
       }
@@ -616,26 +624,35 @@ void expandRules() {
       }
       ruleCount++;
     }
+
     if (buildRule(DOWN, VERTICAL, &rules[ruleCount], &pd.rules[ruleId])) {
       if (ruleCount + 1 >= ruleCapacity) {
         ruleCapacity += PUZZLE_MALLOC_INC;
         rules = reallocRule(rules, ruleCapacity);
       }
       ruleCount++;
+    } else {
+      initRule(&rules[ruleCount]);
     }
+
     if (buildRule(LEFT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId])) {
       if (ruleCount + 1 >= ruleCapacity) {
         ruleCapacity += PUZZLE_MALLOC_INC;
         rules = reallocRule(rules, ruleCapacity);
       }
       ruleCount++;
+    } else {
+      initRule(&rules[ruleCount]);
     }
+
     if (buildRule(RIGHT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId])) {
       if (ruleCount + 1 >= ruleCapacity) {
         ruleCapacity += PUZZLE_MALLOC_INC;
         rules = reallocRule(rules, ruleCapacity);
       }
       ruleCount++;
+    } else {
+      initRule(&rules[ruleCount]);
     }
   }
   // TODO: This leaks memory for all the rules.
@@ -650,7 +667,16 @@ PuzzleData * parsePuzzle(FILE * file) {
   initPuzzleData();
   yyin = file;
   yyparse();
+
+  /* printf("PREEXPAND RULES\n"); */
+  /* printRules(); */
+  /* printf("PREEXPAND RULES\n"); */
+
   expandRules();
+
+  /* printf("POSTEXPAND RULES\n"); */
+  /* printRules(); */
+  /* printf("POSTEXPAND RULES\n"); */
 
   return &pd;
 }

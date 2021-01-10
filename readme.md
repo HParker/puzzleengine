@@ -6,8 +6,6 @@ But if this project is interesting to you, consider contributing! Making a new i
 
 ## Puzzles known to work
 
-- Stumper test puzzle
-- Simple Block Pushing Game
 - EYE EYE EYE
 - Match 3 Block Push
 - Block Faker
@@ -22,6 +20,11 @@ But if this project is interesting to you, consider contributing! Making a new i
 - Zen Puzzle Garden
 - Soliquid
 - Watch Your Step
+- Simple Block Crushing Game
+- I Have No Mouth, And I Must  Create Blocks On All Sides Of Me
+- Stairways
+- Enqueue
+- 🍡 -ooo- 🍡
 
 ## Contributing puzzle tests
 

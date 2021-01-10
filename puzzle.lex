@@ -7,13 +7,9 @@ int modeToEnter = -1;
 int commentNestingLevel = 0;
 int inMode = 0;
 
-
-int yywrap() {
-  return -1;
-}
 %}
 
-%option caseless yylineno
+%option noyywrap caseless yylineno
 
 %s MODE
 %s IDENTIFIER
