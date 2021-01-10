@@ -25,6 +25,7 @@ But if this project is interesting to you, consider contributing! Making a new i
 - Stairways
 - Enqueue
 - 🍡 -ooo- 🍡
+- Path lines
 
 ## Contributing puzzle tests
 

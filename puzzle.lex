@@ -152,12 +152,12 @@ color (color|colour)
   return LEGEND_ID;
 }
 
-<LEGEND>^{glyph}/[ ] {
+<LEGEND>^{glyph} {
   yylval.cell = yytext[0];
   return LEGEND_GLYPH;
 }
 
-<LEGEND>[ \t]=[ \t] { return EQUALS; }
+<LEGEND>= { return EQUALS; }
 
 <LEGEND>[ \t]and[ \t] { return LEGEND_AND; }
 
