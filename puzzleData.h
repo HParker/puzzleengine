@@ -406,7 +406,7 @@ extern int noUndo();
 extern int noRepeatAction();
 extern int debug();
 extern int verboseLogging();
-
+extern void verboseLoggingOn();
 extern int colorPaletteId(char * name);
 extern int legendId(char * name);
 extern void incObject();

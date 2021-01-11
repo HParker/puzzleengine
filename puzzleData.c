@@ -33,6 +33,11 @@ int verboseLogging() {
   return pd.verboseLogging;
 }
 
+void verboseLoggingOn() {
+  pd.verboseLogging = 1;
+}
+
+
 // TODO: util this
 char * dirName(Direction dir) {
   char * directionNames[] = {
@@ -45,17 +50,17 @@ char * dirName(Direction dir) {
                              "STATIONARY",
                              "RANDOMDIR",
                              "RANDOM",
-                             "REL_UP",
-                             "REL_DOWN",
-                             "REL_LEFT",
-                             "REL_RIGHT",
+                             "^",
+                             "v",
+                             "<",
+                             ">",
                              "USE",
-                             "NONE",
-                             "COND_NO",
+                             "",
+                             "NO",
                              "QUIT",
                              "RESTART",
                              "UNDO",
-                             "UNSPECIFIED"
+                             "" // UNSPECIFIED
   };
   return directionNames[dir];
 }
@@ -193,64 +198,52 @@ void addObjectsToLayer(char * name) {
 }
 
 char * ruleString(int ruleId) {
-  /* int ruleStringSize = sizeof(char) * 1024; */
-  char * ruleStr = malloc(sizeof(char) * 1024);
+  char * ruleStr = malloc(sizeof(char) * 4096);
 
   strcpy(ruleStr, dirName(pd.rules[ruleId].directionConstraint));
 
   for (int stateId = 0; stateId < pd.rules[ruleId].matchStateCount; stateId++) {
-    strcat(ruleStr, " [ ");
+    strcat(ruleStr, "[");
     for (int partId = 0; partId < pd.rules[ruleId].matchStates[stateId].partCount; partId++) {
       for (int identId = 0; identId < pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCount; identId++) {
         Direction ruleDir = pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
         int legendId = pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
-        strcat(ruleStr, " ");
         if (ruleDir != UNSPECIFIED) {
           strcat(ruleStr, dirName(ruleDir));
           strcat(ruleStr, " ");
         }
         strcat(ruleStr, aliasLegendKey(legendId));
-        strcat(ruleStr, " ");
 
         if (partId + 1 < pd.rules[ruleId].matchStates[stateId].partCount) {
-          strcat(ruleStr, " | ");
+          strcat(ruleStr, "|");
         }
       }
     }
-    strcat(ruleStr, " ] ");
+    strcat(ruleStr, "]");
   }
 
-  strcat(ruleStr, "->");
+  strcat(ruleStr, " -> ");
 
   for (int stateId = 0; stateId < pd.rules[ruleId].resultStateCount; stateId++) {
-    strcat(ruleStr, " [ ");
+    strcat(ruleStr, "[");
     for (int partId = 0; partId < pd.rules[ruleId].resultStates[stateId].partCount; partId++) {
       for (int identId = 0; identId < pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCount; identId++) {
         Direction ruleDir = pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity[identId].direction;
         int legendId = pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity[identId].legendId;
         if (ruleDir != UNSPECIFIED) {
-          strcat(ruleStr, " ");
-          if (ruleDir != UNSPECIFIED) {
-            strcat(ruleStr, dirName(ruleDir));
-            strcat(ruleStr, " ");
-          }
-          strcat(ruleStr, aliasLegendKey(legendId));
-          strcat(ruleStr, " ");
-        } else {
-          strcat(ruleStr, " ");
-          strcat(ruleStr, aliasLegendKey(legendId));
+          strcat(ruleStr, dirName(ruleDir));
           strcat(ruleStr, " ");
         }
+        strcat(ruleStr, aliasLegendKey(legendId));
 
         if (partId + 1 < pd.rules[ruleId].resultStates[stateId].partCount) {
-          strcat(ruleStr, " | ");
+          strcat(ruleStr, "|");
         }
       }
+      strcat(ruleStr, "]");
     }
-    strcat(ruleStr, " ] ");
+    return ruleStr;
   }
-  strcat(ruleStr, "\n");
-  return ruleStr;
 }
 
 void printRules() {
@@ -668,15 +661,11 @@ PuzzleData * parsePuzzle(FILE * file) {
   yyin = file;
   yyparse();
 
-  /* printf("PREEXPAND RULES\n"); */
-  /* printRules(); */
-  /* printf("PREEXPAND RULES\n"); */
-
   expandRules();
 
-  /* printf("POSTEXPAND RULES\n"); */
-  /* printRules(); */
-  /* printf("POSTEXPAND RULES\n"); */
+  if (debug()) {
+    printRules();
+  }
 
   return &pd;
 }
@@ -897,6 +886,9 @@ int glyphLegendCount() {
 }
 
 char * aliasLegendKey(int id) {
+  if (id == 1) {
+    return "";
+  }
   return pd.aliasLegend[id].key;
 }
 

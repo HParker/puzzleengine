@@ -37,13 +37,13 @@ A C implementation of the PuzzleScript language and runtime
 
 It has a number of renders you can use:
 
-## 3d
-
-![3d Puzzle](./img/3d_puzzle_demo.gif)
-
 ## 2d
 
 ![2d Puzzle](./img/2d_puzzlescript.gif)
+
+## 3d
+
+![3d Puzzle](./img/3d_puzzle_demo.gif)
 
 # Text Only
 

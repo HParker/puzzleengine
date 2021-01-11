@@ -9,6 +9,16 @@
 #define TRANSPARENT CLITERAL(Color){ 0, 0, 0, 0 }           // Blank (Transparent)
 
 char * CHEVRON_COLORS[10] = {"red", "", "", "", "", "", "", "", "", ""};
+char * PURPLE_COLORS[10] = {"purple", "", "", "", "", "", "", "", "", ""};
+
+int SQUARE[25] = {
+                       '0','0','0','0','0',
+                       '0','.','.','.','0',
+                       '0','.','.','.','0',
+                       '0','.','.','.','0',
+                       '0','0','0','0','0'
+};
+
 
 int CHEVRON_UP[25] = {
                        '.','.','.','.','.',
@@ -259,6 +269,20 @@ void drawSprite(Runtime * rt, int sprite[25], char * colors[10], int x, int y) {
   }
 }
 
+void debugDrawSprite(Runtime * rt, int sprite[25], char * colors[10], int x, int y) {
+  // TODO: for now app sprites are 25 long, but we can make this more generic
+  for (int i = 0; i < 25; i++) {
+    Color cellColor = colorFromList(colors, sprite[i]);
+    if (cellColor.a != 0) {
+      cellColor.a = 200;
+      int realX = leftMargin(rt) + pixelSize(rt) / 4 + (x * pixelSize(rt) * SPRITE_WIDTH) + ((i % SPRITE_WIDTH) * pixelSize(rt));
+      int realY = topMargin(rt)  + pixelSize(rt) / 4 + (y * pixelSize(rt) * SPRITE_WIDTH) + ((i / SPRITE_WIDTH) * pixelSize(rt));
+      DrawRectangle(realX, realY, pixelSize(rt)/2, pixelSize(rt)/2, cellColor);
+    }
+  }
+}
+
+
 void drawObject(Runtime * rt, int objId, int x, int y) {
   drawSprite(rt,
              object(objId)->sprite,
@@ -306,51 +330,53 @@ void renderMessage(Runtime * rt) {
   DrawText(message, windowSize() / 2 - textLength / 2, windowSize() / 2, 14, WHITE);
 }
 
+void drawMovement(Runtime * rt, int x, int y, Direction dir, char * colors[10]) {
+  debugDrawSprite(rt, SQUARE, colors, x, y);
+  switch (dir) {
+  case LEFT:
+    debugDrawSprite(rt, CHEVRON_LEFT, colors, x, y);
+    break;
+  case RIGHT:
+    debugDrawSprite(rt, CHEVRON_RIGHT, colors, x, y);
+    break;
+  case UP:
+    debugDrawSprite(rt, CHEVRON_UP, colors, x, y);
+    break;
+  case DOWN:
+    debugDrawSprite(rt, CHEVRON_DOWN, colors, x, y);
+    break;
+  default:
+    printf("err: tried to draw a direction I can't draw!\n");
+    break;
+  }
+}
+
 void drawMatch(Runtime * rt, Match * match) {
   for (int i = 0; i < match->partCount; i++) {
 
     int x = leftMargin(rt) + (match->parts[i].goalX * pixelSize(rt) * SPRITE_WIDTH) + ((i % SPRITE_WIDTH) * pixelSize(rt));
     int y = topMargin(rt) + (match->parts[i].goalY * pixelSize(rt) * SPRITE_WIDTH) + ((i / SPRITE_WIDTH) * pixelSize(rt));
 
-    /* int x = (match->parts[i].goalX * pixelSize(rt) * SPRITE_WIDTH); */
-    /* int y = (match->parts[i].goalY * pixelSize(rt) * SPRITE_WIDTH); */
-    int w = pixelSize(rt) * SPRITE_WIDTH;
-    int h = pixelSize(rt) * SPRITE_WIDTH;
-    Rectangle rect = { x, y, w, h };
-    DrawRectangleLinesEx(rect, pixelSize(rt)/5, RED);
-
-    switch (match->parts[i].goalDirection) {
-    case LEFT:
-      drawSprite(rt, CHEVRON_LEFT, CHEVRON_COLORS, match->parts[i].goalX, match->parts[i].goalY);
-      break;
-    case RIGHT:
-      drawSprite(rt, CHEVRON_RIGHT, CHEVRON_COLORS, match->parts[i].goalX, match->parts[i].goalY);
-      break;
-    case UP:
-      drawSprite(rt, CHEVRON_UP, CHEVRON_COLORS, match->parts[i].goalX, match->parts[i].goalY);
-      break;
-    case DOWN:
-      drawSprite(rt, CHEVRON_DOWN, CHEVRON_COLORS, match->parts[i].goalX, match->parts[i].goalY);
-      break;
-    }
+    drawMovement(rt, match->parts[i].goalX, match->parts[i].goalY, match->parts[i].goalDirection, CHEVRON_COLORS);
   }
 }
 
 void drawCursors(Runtime * rt, Match * match) {
   Rectangle rect;
   // cursor
-  rect.x = leftMargin(rt) + (match->cursorX * pixelSize(rt) * SPRITE_WIDTH);
-  rect.y = topMargin(rt) + (match->cursorY * pixelSize(rt) * SPRITE_WIDTH);
-  rect.width = pixelSize(rt) * SPRITE_WIDTH;
-  rect.height = pixelSize(rt) * SPRITE_WIDTH;
-  DrawRectangleLinesEx(rect, pixelSize(rt)/5, GREEN);
-
-  rect.x = leftMargin(rt) + (match->targetX * pixelSize(rt) * SPRITE_WIDTH);
-  rect.y = topMargin(rt) + (match->targetY * pixelSize(rt) * SPRITE_WIDTH);
-  rect.width = pixelSize(rt) * SPRITE_WIDTH;
-  rect.height = pixelSize(rt) * SPRITE_WIDTH;
-  DrawRectangleLinesEx(rect, pixelSize(rt)/5, RED);
+  debugDrawSprite(rt, SQUARE, CHEVRON_COLORS, match->cursorX, match->cursorY);
+  debugDrawSprite(rt, SQUARE, CHEVRON_COLORS, match->targetX, match->targetY);
 }
+
+void drawToMove(Runtime * rt) {
+  for (int i = 0; i < rt->toMoveCount; i++) {
+    int x = rt->objects[rt->toMove[i].objIndex].x;
+    int y = rt->objects[rt->toMove[i].objIndex].y;
+    drawMovement(rt, x, y, rt->toMove[i].direction, PURPLE_COLORS);
+  }
+}
+
+
 
 void renderRule(Match * match) {
   Color transparentBlack = { 0, 0, 0, 140 };
@@ -382,6 +408,7 @@ void debugRender(Runtime * rt, Match * match) {
         renderLevel(rt);
         drawCursors(rt, match);
         drawMatch(rt, match);
+        drawToMove(rt);
         renderRule(match);
 
         EndDrawing();
@@ -446,8 +473,12 @@ char input() {
   if (IsKeyPressed(KEY_Z)) {
     returnKey = 'z';
   }
-  if (IsKeyPressed(KEY_X)) {
+  if (IsKeyPressed(KEY_X) || IsKeyPressed(KEY_SPACE)) {
     returnKey = 'x';
+  }
+
+  if (IsKeyPressed(KEY_TAB)) {
+    returnKey = '`';
   }
   return returnKey;
 }

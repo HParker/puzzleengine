@@ -814,6 +814,10 @@ int applyState(Runtime * rt, int ruleId, int stateId, Match * match) {
       }
     }
   }
+  match->cursorX = -1;
+  match->cursorY = -1;
+  match->targetX = -1;
+  match->targetY = -1;
   return matched;
 }
 
@@ -924,6 +928,9 @@ Direction handleInput(Runtime * rt, int input) {
     return RESTART;
   } else if (input == 'z' && noUndo() == 0) {
     return UNDO;
+  } else if (input == '`') {
+    verboseLoggingOn();
+    return NONE;
   } else {
     // Is this none or something else?
     return NONE;
