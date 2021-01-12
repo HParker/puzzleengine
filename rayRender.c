@@ -408,11 +408,12 @@ void renderRule(Match * match) {
 }
 
 void debugRender(Runtime * rt, Match * match) {
+  return;
   int awaitInput = 0;
   int frameCounter = 0;
   int frameDelay = 1;
   int pressed = 0;
-  if (match->partCount > 0 || 1) {
+  if (match->partCount > 0) {
     awaitInput = 1;
   }
 
@@ -456,8 +457,9 @@ void debugRender(Runtime * rt, Match * match) {
 
 void render(Runtime * rt) {
   BeginDrawing();
-  ClearBackground(bkColor());
 
+  ClearBackground(bkColor());
+  DrawFPS(0,0);
   switch (rt->levelType) {
   case SQUARES:
     renderLevel(rt);

@@ -236,6 +236,7 @@ void endGame(Runtime * rt) {
 
 
 void undo(Runtime * rt, int partial) {
+  // TODO: can we free these?
   /* free(rt->states[rt->statesCount].objects); */
 
   rt->objectCount = rt->states[rt->statesCount - 1].objectCount;
@@ -635,14 +636,16 @@ int partIdentity(Runtime * rt, int ruleId, int stateId, int partId, int identId,
 
 int partIdentitys(Runtime * rt, int ruleId, int stateId, int partId, Direction appDir, Match * match) {
   int success = 0;
-
+  int ruleLine = 0;
   for (int i = 0; i < rule(ruleId)->matchStates[stateId].parts[partId].ruleIdentityCount; i++) {
     success = partIdentity(rt, ruleId, stateId, partId, i, appDir, match);
+    ruleLine = rule(ruleId)->lineNo;
+
     if (success == 0) {
-      /* fprintf(stderr, "X -- FAILED rule: %i state: %i part: %i ident: %i, appDir: %s (%i, %i)\n", ruleId, stateId, partId, i, dirName(appDir), match->targetX, match->targetY); */
+      /* fprintf(stderr, "X -- FAILED rule: %i state: %i part: %i ident: %i, appDir: %s (%i, %i)\n", ruleLine, stateId, partId, i, dirName(appDir), match->targetX, match->targetY); */
       return 0;
     } else {
-      /* fprintf(stderr, "V --- Matched rule: %i state: %i part: %i ident: %i, appDir: %s (%i, %i)\n", ruleId, stateId, partId, i, dirName(appDir), match->targetX, match->targetY); */
+      /* fprintf(stderr, "V --- Matched rule: %i state: %i part: %i ident: %i, appDir: %s (%i, %i)\n", ruleLine, stateId, partId, i, dirName(appDir), match->targetX, match->targetY); */
     }
   }
   /* fprintf(stderr, "> --- Identity Success\n"); */
@@ -842,7 +845,7 @@ int applyRule(Runtime * rt, int ruleId, Match * match) {
 
 void applyRules(Runtime * rt, ExecutionTime execTime) {
   int applied = 1;
-  int maxAttempts = 100;
+  int maxAttempts = 10000;
   int attempts = 0;
 
   Match match;
@@ -977,6 +980,7 @@ void addState(Runtime * rt) {
   rt->states[rt->statesCount].objectCount = rt->objectCount;
   rt->states[rt->statesCount].objectCapacity = rt->objectCapacity;
 
+  free(rt->states[rt->statesCount].objects);
   rt->states[rt->statesCount].objects = malloc(sizeof(Obj) * rt->objectCapacity);
   memcpy(rt->states[rt->statesCount].objects, rt->objects, sizeof(Obj) * rt->objectCapacity);
 
@@ -1039,6 +1043,11 @@ void startGame(Runtime * rt, FILE * file) {
     printRules();
   }
 
+}
+
+void tick(Runtime * rt) {
+  applyRules(rt, NORMAL);
+  moveObjects(rt);
 }
 
 void update(Runtime * rt, Direction dir) {

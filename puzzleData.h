@@ -21,17 +21,12 @@ typedef enum LegendRelation
    LEGEND_RELATION_OR = 2
   } LegendRelation;
 
-// TODO: remove legend value. this is silly
-typedef struct LegendValue {
-  int id;
-} LegendValue;
-
 typedef struct GlyphLegend {
   char key;
   LegendRelation objectRelation;
   int objectCount;
   int objectCapacity;
-  LegendValue * objects;
+  int * objects;
 } GlyphLegend;
 
 typedef struct AliasLegend {
@@ -39,7 +34,7 @@ typedef struct AliasLegend {
   LegendRelation objectRelation;
   int objectCount;
   int objectCapacity;
-  LegendValue * objects;
+  int * objects;
 } AliasLegend;
 
 typedef struct Layer {
@@ -326,18 +321,21 @@ extern int debug();
 extern int requirePlayerMovement();
 extern int objectCount();
 
+// prelude
+extern float realTimeInterval();
+
 // legend
 extern int legendCount();
 extern int legendIdForGlyph(char glyph);
 extern int legendObjectCount(int id);
-int aliasLegendObjectCount(int id);
-int glyphLegendObjectCount(int id);
-int aliasLegendObjectId(int legendId, int objectIndex);
-int glyphLegendObjectId(int legendId, int objectIndex);
+extern int aliasLegendObjectCount(int id);
+extern int glyphLegendObjectCount(int id);
+extern int aliasLegendObjectId(int legendId, int objectIndex);
+extern int glyphLegendObjectId(int legendId, int objectIndex);
 
-extern LegendValue legendObject(int legendId, int objectIndex);
-extern LegendValue aliasLegendObject(int legendId, int objectIndex);
-extern LegendValue glyphLegendObject(int legendId, int objectIndex);
+extern int legendObject(int legendId, int objectIndex);
+extern int aliasLegendObject(int legendId, int objectIndex);
+extern int glyphLegendObject(int legendId, int objectIndex);
 extern int aliasLegendObjectId(int legendId, int objectIndex);
 extern int glyphLgendObjectId(int legendId, int objectIndex);
 extern int aliasLegendObjectIsLegend(int legendId, int objectIndex);
@@ -388,6 +386,7 @@ extern int checkWinConditions(Runtime * rt);
 // Update
 extern Direction handleInput(Runtime * rt, int input);
 extern void update(Runtime * rt, Direction dir);
+extern void tick(Runtime * rt);
 
 // Debug
 extern void printHistory(Runtime * rt);

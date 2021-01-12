@@ -135,7 +135,7 @@ void incAliasLegend() {
     for (int i = pd.aliasLegendCount + 1; i < pd.aliasLegendCapacity; i++) {
       pd.aliasLegend[i].objectCount = 0;
       pd.aliasLegend[i].objectCapacity = 10;
-      pd.aliasLegend[i].objects = malloc(sizeof(LegendValue) * pd.aliasLegend[i].objectCapacity);
+      pd.aliasLegend[i].objects = malloc(sizeof(int) * pd.aliasLegend[i].objectCapacity);
     }
   }
   pd.aliasLegendCount++;
@@ -149,7 +149,7 @@ void incGlyphLegend() {
     for (int i = pd.glyphLegendCount + 1; i < pd.glyphLegendCapacity; i++) {
       pd.glyphLegend[i].objectCount = 0;
       pd.glyphLegend[i].objectCapacity = 10;
-      pd.glyphLegend[i].objects = malloc(sizeof(LegendValue) * pd.glyphLegend[i].objectCapacity);
+      pd.glyphLegend[i].objects = malloc(sizeof(int) * pd.glyphLegend[i].objectCapacity);
     }
   }
   pd.glyphLegendCount++;
@@ -158,7 +158,7 @@ void incGlyphLegend() {
 void incAliasLegendObject(int legendId) {
   if (pd.aliasLegend[legendId].objectCount + 1 >= pd.aliasLegend[legendId].objectCapacity) {
     pd.aliasLegend[legendId].objectCapacity += PUZZLE_MALLOC_INC;
-    pd.aliasLegend[legendId].objects = realloc(pd.aliasLegend[legendId].objects, sizeof(LegendValue) * pd.aliasLegend[legendId].objectCapacity);
+    pd.aliasLegend[legendId].objects = realloc(pd.aliasLegend[legendId].objects, sizeof(int) * pd.aliasLegend[legendId].objectCapacity);
   }
 
   pd.aliasLegend[legendId].objectCount++;
@@ -167,7 +167,7 @@ void incAliasLegendObject(int legendId) {
 void addObjectsToAliasLegend(char * name) {
   int legId = aliasLegendId(name);
   for (int i = 0; i < pd.aliasLegend[legId].objectCount; i++) {
-    pd.aliasLegend[pd.aliasLegendCount].objects[pd.aliasLegend[pd.aliasLegendCount].objectCount].id = pd.aliasLegend[legId].objects[i].id;
+    pd.aliasLegend[pd.aliasLegendCount].objects[pd.aliasLegend[pd.aliasLegendCount].objectCount] = pd.aliasLegend[legId].objects[i];
     incAliasLegendObject(pd.aliasLegendCount);
   }
 }
@@ -175,7 +175,7 @@ void addObjectsToAliasLegend(char * name) {
 void incGlyphLegendObject(int legendId) {
   if (pd.glyphLegend[legendId].objectCount + 1 >= pd.glyphLegend[legendId].objectCapacity) {
     pd.glyphLegend[legendId].objectCapacity += PUZZLE_MALLOC_INC;
-    pd.glyphLegend[legendId].objects = realloc(pd.glyphLegend[legendId].objects, sizeof(LegendValue) * pd.glyphLegend[legendId].objectCapacity);
+    pd.glyphLegend[legendId].objects = realloc(pd.glyphLegend[legendId].objects, sizeof(int) * pd.glyphLegend[legendId].objectCapacity);
   }
 
   pd.glyphLegend[legendId].objectCount++;
@@ -204,7 +204,7 @@ void addObjectsToLayer(char * name) {
 
   int legId = aliasLegendId(name);
   for (int i = 0; i < pd.aliasLegend[legId].objectCount; i++) {
-    pd.layers[pd.layerCount].objectIds[pd.layers[pd.layerCount].width] = pd.aliasLegend[legId].objects[i].id;
+    pd.layers[pd.layerCount].objectIds[pd.layers[pd.layerCount].width] = pd.aliasLegend[legId].objects[i];
     pd.layers[pd.layerCount].width++;
   }
 }
@@ -272,7 +272,7 @@ void printRules() {
 }
 
 void initRuleIdentity(RuleIdentity * ruleIdent) {
-  ruleIdent->direction = NONE; // TODO: should this be unspecified?
+  ruleIdent->direction = UNSPECIFIED;
   ruleIdent->legendId = 1; // TODO: this is empty, but that isn't clear
 }
 
@@ -425,14 +425,14 @@ void incCellIndex(int levelId) {
 void initStarterObjects() {
   pd.aliasLegend[pd.aliasLegendCount].key = "...";
   pd.aliasLegend[pd.aliasLegendCount].objectCount = 1;
-  pd.aliasLegend[pd.aliasLegendCount].objects[0].id = pd.objectCount;
+  pd.aliasLegend[pd.aliasLegendCount].objects[0] = pd.objectCount;
   pd.objects[pd.objectCount].name = "_Spread_";
   incObject();
   incAliasLegend();
 
   pd.aliasLegend[pd.aliasLegendCount].key = "_EMPTY_";
   pd.aliasLegend[pd.aliasLegendCount].objectCount = 1;
-  pd.aliasLegend[pd.aliasLegendCount].objects[0].id = pd.objectCount;
+  pd.aliasLegend[pd.aliasLegendCount].objects[0] = pd.objectCount;
   pd.objects[pd.objectCount].name = "_Empty_";
   incObject();
   incAliasLegend();
@@ -446,6 +446,7 @@ void initPuzzleData() {
   pd.requirePlayerMovement = 0;
   pd.throttleMovement = 0;
   pd.runRulesOnLevelStart = 0;
+  pd.realTimeInterval = 0;
   pd.backgroundColor = "black";
   pd.textColor = "white";
 
@@ -468,7 +469,7 @@ void initPuzzleData() {
     pd.aliasLegend[i].objectRelation = LEGEND_RELATION_UNKNOWN;
     pd.aliasLegend[i].objectCount = 0;
     pd.aliasLegend[i].objectCapacity = 10;
-    pd.aliasLegend[i].objects = malloc(sizeof(LegendValue) * pd.aliasLegend[i].objectCapacity);
+    pd.aliasLegend[i].objects = malloc(sizeof(int) * pd.aliasLegend[i].objectCapacity);
   }
 
   pd.glyphLegendCount = 0;
@@ -478,7 +479,7 @@ void initPuzzleData() {
     pd.glyphLegend[i].objectRelation = LEGEND_RELATION_UNKNOWN;
     pd.glyphLegend[i].objectCount = 0;
     pd.glyphLegend[i].objectCapacity = 10;
-    pd.glyphLegend[i].objects = malloc(sizeof(LegendValue) * pd.glyphLegend[i].objectCapacity);
+    pd.glyphLegend[i].objects = malloc(sizeof(int) * pd.glyphLegend[i].objectCapacity);
   }
 
 
@@ -666,7 +667,7 @@ void expandRules() {
       initRule(&rules[ruleCount]);
     }
   }
-  // TODO: This leaks memory for all the rules.
+
   freeRules();
   pd.ruleCount = ruleCount;
   pd.ruleCapacity = ruleCapacity;
@@ -720,6 +721,7 @@ void freePuzzle() {
   for (int i = 0; i < pd.levelCapacity; i++) {
     free(pd.levels[i].cells);
   }
+
   free(pd.winConditions);
 }
 
@@ -790,11 +792,11 @@ int glyphLegendObjectCount(int id) {
 }
 
 int aliasLegendObjectId(int legendId, int objectIndex) {
-  return pd.aliasLegend[legendId].objects[objectIndex].id;
+  return pd.aliasLegend[legendId].objects[objectIndex];
 }
 
 int glyphLegendObjectId(int legendId, int objectIndex) {
-  return pd.glyphLegend[legendId].objects[objectIndex].id;
+  return pd.glyphLegend[legendId].objects[objectIndex];
 }
 
 int aliasLegendContains(int legendId, int objId) {
@@ -823,7 +825,7 @@ int idForGlyph(char glyph) {
       if (pd.glyphLegend[i].objectCount > 1) {
         fprintf(stderr, "err: multi object key '%c'\n", glyph);
       } else {
-        return pd.glyphLegend[i].objects[0].id;
+        return pd.glyphLegend[i].objects[0];
       }
     }
   }
@@ -893,6 +895,10 @@ int layerIncludes(int layerId, int objId) {
 
 int objectCount() {
   return pd.objectCount;
+}
+
+float realTimeInterval() {
+  return pd.realTimeInterval;
 }
 
 int aliasLegendCount() {

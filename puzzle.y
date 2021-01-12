@@ -40,7 +40,7 @@ void addObjectsToGlyphLegend(char * name) {
     int legId = aliasLegendId(name);
     int count = pd.aliasLegend[legId].objectCount;
     for (int i = 0; i < count; i++) {
-        pd.glyphLegend[pd.glyphLegendCount].objects[pd.glyphLegend[pd.glyphLegendCount].objectCount].id = pd.aliasLegend[legId].objects[i].id;
+        pd.glyphLegend[pd.glyphLegendCount].objects[pd.glyphLegend[pd.glyphLegendCount].objectCount] = pd.aliasLegend[legId].objects[i];
         incGlyphLegendObject(pd.glyphLegendCount);
     }
 }
@@ -149,7 +149,7 @@ flickscreen: FLICKSCREEN ID { yyerror("FLICKSCREEN IS NOT YET SUPPORTED\n"); }
 key_repeat_interval: KEY_REPEAT_INTERVAL DECIMAL { pd.keyRepeatInterval = 0.1f; }
         ;
 
-realtime_interval: REALTIME_INTERVAL DECIMAL { }
+realtime_interval: REALTIME_INTERVAL DECIMAL { pd.realTimeInterval = 1; }
         ;
 
 noaction: NOACTION { pd.noAction = 1; }
@@ -204,7 +204,7 @@ object_name: OBJID GLYPH {
     pd.objects[pd.objectCount].name = $1;
 
     pd.aliasLegend[pd.aliasLegendCount].key = strdup($1);
-    pd.aliasLegend[pd.aliasLegendCount].objects[0].id = pd.objectCount;
+    pd.aliasLegend[pd.aliasLegendCount].objects[0] = pd.objectCount;
 
     incAliasLegendObject(pd.aliasLegendCount);
     incAliasLegend();
@@ -212,7 +212,7 @@ object_name: OBJID GLYPH {
     // single char key
     // They only reference AliasLegend names that have the actual object ID
     pd.glyphLegend[pd.glyphLegendCount].key = $2;
-    pd.glyphLegend[pd.glyphLegendCount].objects[0].id = pd.objectCount;
+    pd.glyphLegend[pd.glyphLegendCount].objects[0] = pd.objectCount;
 
     incGlyphLegendObject(pd.glyphLegendCount);
     incGlyphLegend();
@@ -221,7 +221,7 @@ object_name: OBJID GLYPH {
     pd.objects[pd.objectCount].name = $1;
 
     pd.aliasLegend[pd.aliasLegendCount].key = strdup($1);
-    pd.aliasLegend[pd.aliasLegendCount].objects[0].id = pd.objectCount;
+    pd.aliasLegend[pd.aliasLegendCount].objects[0] = pd.objectCount;
     incAliasLegendObject(pd.aliasLegendCount);
     incAliasLegend();
 }

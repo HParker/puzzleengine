@@ -5,6 +5,7 @@
 #include "render.h"
 
 int main(int argc, char ** argv) {
+  int frameCounter = 0;
   FILE *file;
   if (argc > 1) {
     file = fopen(argv[1], "r");
@@ -24,6 +25,12 @@ int main(int argc, char ** argv) {
   char curInput;
   while (1) {
     render(&rt);
+    if (realTimeInterval() != 0 && frameCounter > 1) {
+      tick(&rt);
+      frameCounter = 0;
+    }
+
+    frameCounter++;
     curInput = input();
     if (curInput != -1) {
       Direction dir = handleInput(&rt, curInput);
