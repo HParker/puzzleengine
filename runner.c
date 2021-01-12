@@ -738,7 +738,6 @@ int continueMatch(Runtime * rt, int ruleId, int stateId, Match * match) {
   int matched = 0;
   int prevMatchCount = match->partCount;
   Direction dirConstant = rule(ruleId)->directionConstraint;
-  debugRender(rt, match);
 
   if (dirConstant == RIGHT || dirConstant == HORIZONTAL || dirConstant == NONE) {
     if (match->partCount == prevMatchCount && completeMatch(rt, ruleId, stateId, RIGHT, match)) {
@@ -780,13 +779,19 @@ int continueMatch(Runtime * rt, int ruleId, int stateId, Match * match) {
 
 int cellMatch(Runtime * rt, int ruleId, int stateId, Match * match) {
   int legId, legAt;
-  Direction dir;
+  Direction dir, dirConst;
+
   if (rule(ruleId)->matchStates[stateId].partCount > 0 && rule(ruleId)->matchStates[stateId].parts[0].ruleIdentityCount > 0 ) {
+    dirConst = rule(ruleId)->directionConstraint;
     legId = rule(ruleId)->matchStates[stateId].parts[0].ruleIdentity[0].legendId;
     dir = rule(ruleId)->matchStates[stateId].parts[0].ruleIdentity[0].direction;
 
     legAt = legendAt(rt, legId, match->cursorX, match->cursorY);
-    if ((dir == COND_NO && legAt == 0) || (dir != COND_NO && legAt)) {
+
+    if ((dir == COND_NO && legAt == 0) ||
+        (dir != COND_NO &&
+         (legAt &&
+          matchesDirection(dir, dirConst, directionMoving(rt, legendObjIndex(rt, legId, match->cursorX, match->cursorY)), 1)))) {
       if (continueMatch(rt, ruleId, stateId, match)) {
         return 1;
       } else {

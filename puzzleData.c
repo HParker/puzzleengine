@@ -34,7 +34,11 @@ int verboseLogging() {
 }
 
 void verboseLoggingOn() {
-  pd.verboseLogging = 1;
+  if (pd.verboseLogging) {
+    pd.verboseLogging = 0;
+  } else {
+    pd.verboseLogging = 1;
+  }
 }
 
 
@@ -63,6 +67,14 @@ char * dirName(Direction dir) {
                              "" // UNSPECIFIED
   };
   return directionNames[dir];
+}
+
+char * backgroundColor() {
+  return pd.backgroundColor;
+}
+
+char * textColor() {
+  return pd.textColor;
 }
 
 
@@ -200,7 +212,11 @@ void addObjectsToLayer(char * name) {
 char * ruleString(int ruleId) {
   char * ruleStr = malloc(sizeof(char) * 4096);
 
-  strcpy(ruleStr, dirName(pd.rules[ruleId].directionConstraint));
+  char lineNumber[24];
+  sprintf(lineNumber, "%d. ", pd.rules[ruleId].lineNo);
+  strcpy(ruleStr, lineNumber);
+
+  strcat(ruleStr, dirName(pd.rules[ruleId].directionConstraint));
 
   for (int stateId = 0; stateId < pd.rules[ruleId].matchStateCount; stateId++) {
     strcat(ruleStr, "[");
@@ -242,8 +258,8 @@ char * ruleString(int ruleId) {
       }
       strcat(ruleStr, "]");
     }
-    return ruleStr;
   }
+  return ruleStr;
 }
 
 void printRules() {
@@ -430,6 +446,8 @@ void initPuzzleData() {
   pd.requirePlayerMovement = 0;
   pd.throttleMovement = 0;
   pd.runRulesOnLevelStart = 0;
+  pd.backgroundColor = "black";
+  pd.textColor = "white";
 
   pd.objectCount = 0;
   pd.objectCapacity = 100;

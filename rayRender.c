@@ -8,51 +8,59 @@
 
 #define TRANSPARENT CLITERAL(Color){ 0, 0, 0, 0 }           // Blank (Transparent)
 
-char * CHEVRON_COLORS[10] = {"red", "", "", "", "", "", "", "", "", ""};
-char * PURPLE_COLORS[10] = {"purple", "", "", "", "", "", "", "", "", ""};
+char * RED_COLORS[10] = {"red", "", "", "", "", "", "", "", "", ""};
+char * WHITE_COLORS[10] = {"green", "", "", "", "", "", "", "", "", ""};
+char * PURPLE_COLORS[10] = {"blue", "", "", "", "", "", "", "", "", ""};
 
-int SQUARE[25] = {
-                       '0','0','0','0','0',
+int CURSOR_SPRITE[25] = {
                        '0','.','.','.','0',
-                       '0','.','.','.','0',
-                       '0','.','.','.','0',
-                       '0','0','0','0','0'
+                       '.','.','.','.','.',
+                       '.','.','.','.','.',
+                       '.','.','.','.','.',
+                       '0','.','.','.','0'
 };
 
+int SQUARE[25] = {
+                       '0','0','.','0','0',
+                       '0','.','.','.','0',
+                       '.','.','.','.','.',
+                       '0','.','.','.','0',
+                       '0','0','.','0','0'
+};
 
 int CHEVRON_UP[25] = {
-                       '.','.','.','.','.',
                        '.','.','0','.','.',
-                       '.','0','.','0','.',
-                       '.','.','.','.','.',
+                       '.','0','0','0','.',
+                       '0','.','0','.','0',
+                       '.','.','0','.','.',
                        '.','.','.','.','.'
 };
 
 
 int CHEVRON_DOWN[25] = {
                          '.','.','.','.','.',
-                         '.','.','.','.','.',
-                         '.','0','.','0','.',
                          '.','.','0','.','.',
-                         '.','.','.','.','.'
+                         '0','.','0','.','0',
+                         '.','0','0','0','.',
+                         '.','.','0','.','.'
 };
 
 
 int CHEVRON_LEFT[25] = {
-                       '.','.','.','.','.',
                        '.','.','0','.','.',
                        '.','0','.','.','.',
-                       '.','.','0','.','.',
-                       '.','.','.','.','.'
+                       '0','0','0','0','.',
+                       '.','0','.','.','.',
+                       '.','.','0','.','.'
 };
 
 
 int CHEVRON_RIGHT[25] = {
-                       '.','.','.','.','.',
                        '.','.','0','.','.',
                        '.','.','.','0','.',
-                       '.','.','0','.','.',
-                       '.','.','.','.','.'
+                       '.','0','0','0','0',
+                       '.','.','.','0','.',
+                       '.','.','0','.','.'
 };
 
 const char * colorNames[] =
@@ -183,7 +191,7 @@ Color colorFromSprite(Runtime * rt, int objId, int cellIndex) {
   return PINK;
 }
 
-#define WINDOW_SIZE 840
+#define WINDOW_SIZE 940
 #define SPRITE_WIDTH 5
 
 void initRenderer() {
@@ -239,6 +247,14 @@ int windowSize() {
   return WINDOW_SIZE;
 }
 
+Color bkColor() {
+  return colorFromName(backgroundColor());
+}
+
+Color txtColor() {
+  return colorFromName(textColor());
+}
+
 int pixelSize(Runtime * rt) {
   if (rt->width > rt->height) {
     return (windowSize() / (rt->width * SPRITE_WIDTH));
@@ -254,8 +270,6 @@ int leftMargin(Runtime * rt) {
 int topMargin(Runtime * rt) {
   return ((windowSize() - (rt->height * pixelSize(rt) * SPRITE_WIDTH)) / 2);
 }
-
-
 
 void drawSprite(Runtime * rt, int sprite[25], char * colors[10], int x, int y) {
   // TODO: for now app sprites are 25 long, but we can make this more generic
@@ -274,10 +288,10 @@ void debugDrawSprite(Runtime * rt, int sprite[25], char * colors[10], int x, int
   for (int i = 0; i < 25; i++) {
     Color cellColor = colorFromList(colors, sprite[i]);
     if (cellColor.a != 0) {
-      cellColor.a = 200;
-      int realX = leftMargin(rt) + pixelSize(rt) / 4 + (x * pixelSize(rt) * SPRITE_WIDTH) + ((i % SPRITE_WIDTH) * pixelSize(rt));
-      int realY = topMargin(rt)  + pixelSize(rt) / 4 + (y * pixelSize(rt) * SPRITE_WIDTH) + ((i / SPRITE_WIDTH) * pixelSize(rt));
-      DrawRectangle(realX, realY, pixelSize(rt)/2, pixelSize(rt)/2, cellColor);
+      int realX = leftMargin(rt) + (x * pixelSize(rt) * SPRITE_WIDTH) + ((i % SPRITE_WIDTH) * pixelSize(rt));
+      int realY = topMargin(rt)  + (y * pixelSize(rt) * SPRITE_WIDTH) + ((i / SPRITE_WIDTH) * pixelSize(rt));
+
+      DrawRectangle(realX, realY, pixelSize(rt), pixelSize(rt), cellColor);
     }
   }
 }
@@ -321,17 +335,20 @@ void renderLevel(Runtime * rt) {
       }
     }
   }
+  if (verboseLogging()) {
+    Rectangle rec = { 0, 0, WINDOW_SIZE, WINDOW_SIZE };
+    DrawRectangleLinesEx(rec, 10, RED);
+  }
 }
 
 void renderMessage(Runtime * rt) {
   char * message = levelMessage(rt->levelIndex);
   int textLength = MeasureText(message, 20);
 
-  DrawText(message, windowSize() / 2 - textLength / 2, windowSize() / 2, 14, WHITE);
+  DrawText(message, windowSize() / 2 - textLength / 2, windowSize() / 2, 25, txtColor());
 }
 
 void drawMovement(Runtime * rt, int x, int y, Direction dir, char * colors[10]) {
-  debugDrawSprite(rt, SQUARE, colors, x, y);
   switch (dir) {
   case LEFT:
     debugDrawSprite(rt, CHEVRON_LEFT, colors, x, y);
@@ -346,7 +363,7 @@ void drawMovement(Runtime * rt, int x, int y, Direction dir, char * colors[10]) 
     debugDrawSprite(rt, CHEVRON_DOWN, colors, x, y);
     break;
   default:
-    printf("err: tried to draw a direction I can't draw!\n");
+    debugDrawSprite(rt, SQUARE, colors, x, y);
     break;
   }
 }
@@ -357,15 +374,19 @@ void drawMatch(Runtime * rt, Match * match) {
     int x = leftMargin(rt) + (match->parts[i].goalX * pixelSize(rt) * SPRITE_WIDTH) + ((i % SPRITE_WIDTH) * pixelSize(rt));
     int y = topMargin(rt) + (match->parts[i].goalY * pixelSize(rt) * SPRITE_WIDTH) + ((i / SPRITE_WIDTH) * pixelSize(rt));
 
-    drawMovement(rt, match->parts[i].goalX, match->parts[i].goalY, match->parts[i].goalDirection, CHEVRON_COLORS);
+    drawMovement(rt, match->parts[i].goalX, match->parts[i].goalY, match->parts[i].goalDirection, RED_COLORS);
   }
 }
 
 void drawCursors(Runtime * rt, Match * match) {
-  Rectangle rect;
   // cursor
-  debugDrawSprite(rt, SQUARE, CHEVRON_COLORS, match->cursorX, match->cursorY);
-  debugDrawSprite(rt, SQUARE, CHEVRON_COLORS, match->targetX, match->targetY);
+  /* if (match->cursorX != -1) { */
+  /*   debugDrawSprite(rt, CURSOR_SPRITE, WHITE_COLORS, match->cursorX, match->cursorY); */
+  /* } */
+
+  /* if (match->targetX != -1) { */
+  /*   debugDrawSprite(rt, CURSOR_SPRITE, WHITE_COLORS, match->targetX, match->targetY); */
+  /* } */
 }
 
 void drawToMove(Runtime * rt) {
@@ -382,7 +403,7 @@ void renderRule(Match * match) {
   Color transparentBlack = { 0, 0, 0, 140 };
   DrawRectangle(0, 0, WINDOW_SIZE, 50, transparentBlack);
   char * rstr = ruleString(match->ruleIndex);
-  DrawText(rstr, 10, 10, 14, WHITE);
+  DrawText(rstr, 10, 10, 20, WHITE);
   free(rstr);
 }
 
@@ -403,14 +424,13 @@ void debugRender(Runtime * rt, Match * match) {
         }
         BeginDrawing();
 
-        ClearBackground(BLACK);
+        ClearBackground(bkColor());
 
         renderLevel(rt);
-        drawCursors(rt, match);
         drawMatch(rt, match);
         drawToMove(rt);
         renderRule(match);
-
+        drawCursors(rt, match);
         EndDrawing();
       }
     } else {
@@ -420,13 +440,12 @@ void debugRender(Runtime * rt, Match * match) {
         }
         BeginDrawing();
 
-        ClearBackground(BLACK);
+        ClearBackground(bkColor());
 
         renderLevel(rt);
-        drawCursors(rt, match);
         drawMatch(rt, match);
         renderRule(match);
-
+        drawCursors(rt, match);
         EndDrawing();
         frameCounter++;
       }
@@ -437,7 +456,7 @@ void debugRender(Runtime * rt, Match * match) {
 
 void render(Runtime * rt) {
   BeginDrawing();
-  ClearBackground(BLACK);
+  ClearBackground(bkColor());
 
   switch (rt->levelType) {
   case SQUARES:

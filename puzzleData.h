@@ -408,6 +408,8 @@ extern int debug();
 extern int verboseLogging();
 extern void verboseLoggingOn();
 extern int colorPaletteId(char * name);
+extern char * backgroundColor();
+extern char * textColor();
 extern int legendId(char * name);
 extern void incObject();
 extern void incAliasLegend();
