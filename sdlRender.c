@@ -149,13 +149,55 @@ void render(Runtime * rt) {
 }
 
 void debugRender(Runtime * rt) {
-  render(rt);
+  /* render(rt); */
 }
 
 char input() {
   // block on input for now. I don't think we have to do this forever.
-  char c = '-';
-  while (SDL_PollEvent(&e) || c == '-') {
+  char c = -1;
+  if (SDL_PollEvent(&e)) {
+    if (e.type == SDL_QUIT) {
+      return 'q';
+    } else if (e.type == SDL_KEYDOWN) {
+      switch (e.key.keysym.sym) {
+      case SDLK_q:
+      case SDLK_ESCAPE:
+        return 'q';
+      case SDLK_r:
+        return 'r';
+      case SDLK_z:
+        return 'z';
+      case SDLK_w:
+      case SDLK_UP:
+        return 'w';
+      case SDLK_s:
+      case SDLK_DOWN:
+        return 's';
+      case SDLK_d:
+      case SDLK_RIGHT:
+        return 'd';
+      case SDLK_a:
+      case SDLK_LEFT:
+        return 'a';
+      case SDLK_x:
+        return 'x';
+      case SDLK_TAB:
+        return '`';
+      default:
+        break;
+      }
+    }
+  }
+  return c;
+}
+
+
+
+// Blocking
+char blockInput() {
+  // block on input for now. I don't think we have to do this forever.
+  char c = -1;
+  while (SDL_PollEvent(&e) || c == -1) {
     if (e.type == SDL_QUIT) {
     } else if (e.type == SDL_KEYDOWN) {
       switch (e.key.keysym.sym) {
@@ -180,6 +222,8 @@ char input() {
         return 'a';
       case SDLK_x:
         return 'x';
+      case SDLK_TAB:
+        return '`';
       default:
         break;
       }

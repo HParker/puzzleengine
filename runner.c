@@ -161,11 +161,37 @@ void addToMove(Runtime * rt, int objIndex, Direction direction) {
   }
 }
 
+void updateMap(Runtime * rt) {
+  if (rt->levelType == SQUARES) {
+    int layerId, x, y, cellIndex;
+    for (int i = 0; i < (layerCount() * rt->height * rt->width); i++) {
+      rt->map[i] = -1;
+    }
+
+    /* printf("Updating map with %i objects\n", rt->objectCount); */
+
+    for (int i = 0; i < rt->objectCount; i++) {
+      if (rt->objects[i].deleted == 0) {
+        layerId = objectLayer(rt->objects[i].objId);
+        if (layerId == -1) {
+          fprintf(stderr, "err: no layer id for index: %i, objid: %i, deleted: %i\n", i, rt->objects[i].objId, rt->objects[i].deleted);
+        }
+
+        x = rt->objects[i].x;
+        y = rt->objects[i].y;
+        cellIndex = (layerId * rt->width * rt->height) + (y * rt->width) + x;
+        rt->map[cellIndex] = i;
+      }
+    }
+  }
+}
+
 void addObj(Runtime * rt, int objId, int x, int y) {
   if (rt->objectCount + 1 >= rt->objectCapacity) {
     rt->objectCapacity += 50;
     rt->objects = realloc(rt->objects, sizeof(Obj) * rt->objectCapacity);
   }
+
   rt->objects[rt->objectCount].objId = objId;
   rt->objects[rt->objectCount].x = x;
   rt->objects[rt->objectCount].y = y;
@@ -318,31 +344,6 @@ int deltaY(Direction dir) {
   default:
     fprintf(stderr, "Err: deltaY bad direction %i\n", dir);
     return 0;
-  }
-}
-
-void updateMap(Runtime * rt) {
-  if (rt->levelType == SQUARES) {
-    int layerId, x, y, cellIndex;
-    for (int i = 0; i < (layerCount() * rt->height * rt->width); i++) {
-      rt->map[i] = -1;
-    }
-
-    for (int i = 0; i < rt->objectCount; i++) {
-      if (rt->objects[i].deleted == 0) {
-        layerId = objectLayer(rt->objects[i].objId);
-        if (layerId == -1) {
-          fprintf(stderr, "err: no layer id for index: %i, objid: %i, deleted: %i\n", i, rt->objects[i].objId, rt->objects[i].deleted);
-        }
-
-        if (rt->objects[i].deleted == 0 && layerId != -1) {
-          x = rt->objects[i].x;
-          y = rt->objects[i].y;
-          cellIndex = (layerId * rt->width * rt->height) + (y * rt->width) + x;
-          rt->map[cellIndex] = i;
-        }
-      }
-    }
   }
 }
 
@@ -737,69 +738,16 @@ int completeMatch(Runtime * rt, int ruleId, int stateId, Direction appDir, Match
   return 1;
 }
 
-int continueMatch(Runtime * rt, int ruleId, int stateId, Match * match) {
-  int matched = 0;
-  int prevMatchCount = match->partCount;
-  Direction dirConstant = rule(ruleId)->directionConstraint;
-
-  if (dirConstant == RIGHT || dirConstant == HORIZONTAL || dirConstant == NONE) {
-    if (match->partCount == prevMatchCount && completeMatch(rt, ruleId, stateId, RIGHT, match)) {
-      if (matched == 0) {
-        matched = 1;
-      }
-    }
-  }
-
-  if (dirConstant == UP || dirConstant == VERTICAL || dirConstant == NONE) {
-    if (match->partCount == prevMatchCount && completeMatch(rt, ruleId, stateId, UP, match)) {
-      if (matched == 0) {
-        matched = 1;
-      }
-    }
-  }
-
-  if (dirConstant == LEFT || dirConstant == HORIZONTAL || dirConstant == NONE) {
-    if (match->partCount == prevMatchCount && completeMatch(rt, ruleId, stateId, LEFT, match)) {
-      if (matched == 0) {
-        matched = 1;
-      }
-    }
-  }
-
-  if (dirConstant == DOWN || dirConstant == VERTICAL || dirConstant == NONE) {
-    if (match->partCount == prevMatchCount && completeMatch(rt, ruleId, stateId, DOWN, match)) {
-      if (matched == 0) {
-        matched = 1;
-      }
-    }
-  }
-
-  if (matched == 0) {
-    match->partCount = prevMatchCount;
-  }
-  return matched;
-}
-
 int cellMatch(Runtime * rt, int ruleId, int stateId, Match * match) {
-  int legId, legAt;
-  Direction dir, dirConst;
+  int legId;
+  Direction dirConst;
 
   if (rule(ruleId)->matchStates[stateId].partCount > 0 && rule(ruleId)->matchStates[stateId].parts[0].ruleIdentityCount > 0 ) {
     dirConst = rule(ruleId)->directionConstraint;
     legId = rule(ruleId)->matchStates[stateId].parts[0].ruleIdentity[0].legendId;
-    dir = rule(ruleId)->matchStates[stateId].parts[0].ruleIdentity[0].direction;
 
-    legAt = legendAt(rt, legId, match->cursorX, match->cursorY);
-
-    if ((dir == COND_NO && legAt == 0) ||
-        (dir != COND_NO &&
-         (legAt &&
-          matchesDirection(dir, dirConst, directionMoving(rt, legendObjIndex(rt, legId, match->cursorX, match->cursorY)), 1)))) {
-      if (continueMatch(rt, ruleId, stateId, match)) {
-        return 1;
-      } else {
-        return 0;
-      }
+    if (partIdentitys(rt, ruleId, stateId, 0, dirConst, match)) {
+      return completeMatch(rt, ruleId, stateId, dirConst, match);
     }
   }
   return 0;
@@ -811,8 +759,8 @@ int applyState(Runtime * rt, int ruleId, int stateId, Match * match) {
 
   int count = levelCellCount(rt->levelIndex);
   for (int i = 0; i < count; i++) {
-    match->cursorX = i % rt->width;
-    match->cursorY = i / rt->width;
+    match->targetX = match->cursorX = i % rt->width;
+    match->targetY = match->cursorY = i / rt->width;
     applied = cellMatch(rt, ruleId, stateId, match);
     if (applied) {
       // TODO: can I early return here?
@@ -890,21 +838,23 @@ int moveObjects(Runtime * rt) {
   while (somethingApplied == 1) {
     somethingApplied = 0;
     for (int i = 0; i < rt->toMoveCount; i++) {
-      int x = rt->objects[rt->toMove[i].objIndex].x;
-      int y = rt->objects[rt->toMove[i].objIndex].y;
+      if (rt->toMove[i].objIndex != -1) {
+        int x = rt->objects[rt->toMove[i].objIndex].x;
+        int y = rt->objects[rt->toMove[i].objIndex].y;
 
-      int layerIndex = objectLayer(rt->objects[rt->toMove[i].objIndex].objId);
-      int movingToX = x + deltaX(rt->toMove[i].direction);
-      int movingToY = y + deltaY(rt->toMove[i].direction);
+        int layerIndex = objectLayer(rt->objects[rt->toMove[i].objIndex].objId);
+        int movingToX = x + deltaX(rt->toMove[i].direction);
+        int movingToY = y + deltaY(rt->toMove[i].direction);
 
-      if (rt->objects[rt->toMove[i].objIndex].deleted == 0 && moveApplied[i] == 0 && isMovable(rt, movingToX, movingToY, layerIndex) == 1) {
-        rt->objects[rt->toMove[i].objIndex].x += deltaX(rt->toMove[i].direction);
-        rt->objects[rt->toMove[i].objIndex].y += deltaY(rt->toMove[i].direction);
-        if (aliasLegendContains(aliasLegendId("Player"), rt->objects[rt->toMove[i].objIndex].objId)) {
-          playerMoved = 1;
+        if (rt->objects[rt->toMove[i].objIndex].deleted == 0 && moveApplied[i] == 0 && isMovable(rt, movingToX, movingToY, layerIndex) == 1) {
+          rt->objects[rt->toMove[i].objIndex].x += deltaX(rt->toMove[i].direction);
+          rt->objects[rt->toMove[i].objIndex].y += deltaY(rt->toMove[i].direction);
+          if (aliasLegendContains(aliasLegendId("Player"), rt->objects[rt->toMove[i].objIndex].objId)) {
+            playerMoved = 1;
+          }
+          moveApplied[i] = 1;
+          somethingApplied = 1;
         }
-        moveApplied[i] = 1;
-        somethingApplied = 1;
       }
     }
   }
@@ -980,7 +930,7 @@ void addState(Runtime * rt) {
   rt->states[rt->statesCount].objectCount = rt->objectCount;
   rt->states[rt->statesCount].objectCapacity = rt->objectCapacity;
 
-  free(rt->states[rt->statesCount].objects);
+  /* free(rt->states[rt->statesCount].objects); */
   rt->states[rt->statesCount].objects = malloc(sizeof(Obj) * rt->objectCapacity);
   memcpy(rt->states[rt->statesCount].objects, rt->objects, sizeof(Obj) * rt->objectCapacity);
 
@@ -1001,7 +951,6 @@ void loadLevel(Runtime * rt) {
         addObj(rt, backgroundId, x, y);
       }
     }
-
 
     int count = levelCellCount(rt->levelIndex);
     for (int i = 0; i < count; i++) {
