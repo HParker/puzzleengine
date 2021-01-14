@@ -430,6 +430,10 @@ match_object_part: OBJID {
     RuleStatePart * rsp = &rs->parts[rs->partCount];
     RuleIdentity * rid = &rsp->ruleIdentity[rsp->ruleIdentityCount];
 
+    if (strcasecmp("...", $1)) {
+        r->hasSpread = 1;
+    }
+
     rid->direction = UNSPECIFIED;
     rid->legendId = aliasLegendId($1);
     free($1);

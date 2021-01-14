@@ -130,6 +130,8 @@ typedef struct RuleState {
 
 typedef struct Rule {
   int lineNo;
+  int hasSpread;
+
   int commandCount;
   Command commands[10];
 
@@ -429,7 +431,7 @@ extern void incRulePart(RuleState * ruleState);
 extern void incRuleIdent(RuleStatePart * part);
 
 extern int ruleCommandCount(int ruleId);
-extern int ruleCommandContains(int ruleId, Command cmd);
+extern int ruleCommandContains(Rule * rule, Command cmd);
 
 extern void incWinCondition();
 extern void incLevel();

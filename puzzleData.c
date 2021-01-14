@@ -295,6 +295,9 @@ void initState(RuleState * ruleState) {
 }
 
 void initRule(Rule * rule) {
+  rule->lineNo = 0;
+  rule->hasSpread = 0;
+
   rule->directionConstraint = NONE;
   rule->executionTime = NORMAL;
   rule->matchStateCount = 0;
@@ -379,9 +382,9 @@ int ruleCommandCount(int ruleId) {
   return pd.rules[ruleId].commandCount;
 }
 
-int ruleCommandContains(int ruleId, Command cmd) {
-  for (int i = 0; i < pd.rules[ruleId].commandCount; i++) {
-    if (pd.rules[ruleId].commands[i] == cmd) {
+int ruleCommandContains(Rule * rule, Command cmd) {
+  for (int i = 0; i < rule->commandCount; i++) {
+    if (rule->commands[i] == cmd) {
       return 1;
     }
   }
