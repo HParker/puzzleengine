@@ -161,26 +161,48 @@ void addToMove(Runtime * rt, int objIndex, Direction direction) {
   }
 }
 
-void updateMap(Runtime * rt) {
-  if (rt->levelType == SQUARES) {
-    int layerId, x, y, cellIndex;
-    for (int i = 0; i < (layerCount() * rt->height * rt->width); i++) {
-      rt->map[i] = -1;
-    }
+void updateObjInMap(Runtime * rt, int objIndex) {
+  int layerId, x, y, cellIndex;
 
-    /* printf("Updating map with %i objects\n", rt->objectCount); */
+  layerId = objectLayer(rt->objects[objIndex].objId);
+  x = rt->objects[objIndex].x;
+  y = rt->objects[objIndex].y;
+
+
+
+  cellIndex = (layerId * rt->width * rt->height) + (y * rt->width) + x;
+
+  /* printf("updating (%i,%i,%i)[%i] = %i\n", layerId, x, y, cellIndex, objIndex); */
+
+  rt->map[cellIndex] = objIndex;
+}
+
+void removeObjFromMap(Runtime * rt, int objIndex) {
+  int layerId, x, y, cellIndex;
+
+  layerId = objectLayer(rt->objects[objIndex].objId);
+  x = rt->objects[objIndex].x;
+  y = rt->objects[objIndex].y;
+  cellIndex = (layerId * rt->width * rt->height) + (y * rt->width) + x;
+
+  rt->map[cellIndex] = -1;
+}
+
+
+void clearMap(Runtime * rt) {
+  for (int i = 0; i < (layerCount() * rt->height * rt->width); i++) {
+    rt->map[i] = -1;
+  }
+}
+
+void updateMap(Runtime * rt) {
+  printf("Doing full map update\n");
+  if (rt->levelType == SQUARES) {
+    clearMap(rt);
 
     for (int i = 0; i < rt->objectCount; i++) {
       if (rt->objects[i].deleted == 0) {
-        layerId = objectLayer(rt->objects[i].objId);
-        if (layerId == -1) {
-          fprintf(stderr, "err: no layer id for index: %i, objid: %i, deleted: %i\n", i, rt->objects[i].objId, rt->objects[i].deleted);
-        }
-
-        x = rt->objects[i].x;
-        y = rt->objects[i].y;
-        cellIndex = (layerId * rt->width * rt->height) + (y * rt->width) + x;
-        rt->map[cellIndex] = i;
+        updateObjInMap(rt, i);
       }
     }
   }
@@ -192,11 +214,28 @@ void addObj(Runtime * rt, int objId, int x, int y) {
     rt->objects = realloc(rt->objects, sizeof(Obj) * rt->objectCapacity);
   }
 
-  rt->objects[rt->objectCount].objId = objId;
-  rt->objects[rt->objectCount].x = x;
-  rt->objects[rt->objectCount].y = y;
-  rt->objects[rt->objectCount].deleted = 0;
-  rt->objectCount++;
+  if (rt->removedId == -1) {
+    rt->objects[rt->objectCount].objId = objId;
+    rt->objects[rt->objectCount].x = x;
+    rt->objects[rt->objectCount].y = y;
+    rt->objects[rt->objectCount].deleted = 0;
+    updateObjInMap(rt, rt->objectCount);
+    rt->objectCount++;
+  } else {
+    rt->objects[rt->removedId].objId = objId;
+    rt->objects[rt->removedId].x = x;
+    rt->objects[rt->removedId].y = y;
+    rt->objects[rt->removedId].deleted = 0;
+    /* for (int i = 0; i < rt->toMoveCount; i++) { */
+    /*   if (rt->removedId == rt->toMove[i].objIndex) { */
+    /*     rt->toMove[i].objIndex = -1; */
+    /*   } */
+    /* } */
+
+    updateObjInMap(rt, rt->removedId);
+
+    rt->removedId = -1;
+  }
 }
 
 void loadCell(Runtime * rt, char cell, int x, int y) {
@@ -238,12 +277,13 @@ void initGame(Runtime * rt) {
   rt->statesCount = 0;
   rt->statesCapacity = 1000;
   rt->states = malloc(sizeof(State) * rt->statesCapacity);
-  for (int i = rt->statesCount + 1; i < rt->statesCapacity; i++) {
-    // TODO: can we remove these malloc(1)s?
-    rt->states[i].objects = malloc(1);
+  for (int i = 0; i < rt->statesCapacity; i++) {
+    rt->states[i].objectCapacity = 0;
+    rt->states[i].objectCount = 0;
   }
 
-  rt->map = malloc(1);
+  rt->removedId = -1;
+  rt->hasMap = 0;
 }
 
 void endGame(Runtime * rt) {
@@ -253,17 +293,26 @@ void endGame(Runtime * rt) {
 
   for (int i = 0; i < rt->statesCount; i++) {
     free(rt->states[i].objects);
+    rt->states[i].objectCount = 0;
+    rt->states[i].objectCapacity = 0;
   }
   free(rt->states);
 
-  free(rt->map);
+  if (rt->hasMap) {
+    free(rt->map);
+  }
+  rt->hasMap = 0;
+
   freePuzzle();
 }
 
 
 void undo(Runtime * rt, int partial) {
-  // TODO: can we free these?
-  /* free(rt->states[rt->statesCount].objects); */
+  if (rt->states[rt->statesCount].objectCount > 0) {
+    free(rt->states[rt->statesCount].objects);
+    rt->states[rt->statesCount].objectCount = 0;
+    rt->states[rt->statesCount].objectCapacity = 0;
+  }
 
   rt->objectCount = rt->states[rt->statesCount - 1].objectCount;
   rt->objectCapacity = rt->states[rt->statesCount - 1].objectCapacity;
@@ -276,29 +325,27 @@ void undo(Runtime * rt, int partial) {
 
   memcpy(rt->objects, rt->states[rt->statesCount - 1].objects, sizeof(Obj) * rt->objectCapacity);
 
+  updateMap(rt);
+
   rt->statesCount--;
   rt->historyCount--;
 }
 
 int isMovable(Runtime * rt, int x, int y, int layerIndex) {
-  // inbounds
-  // TODO: use onboard?
-  if (x >= rt->width || x < 0 || y >= rt->height || y < 0) {
-    return 0;
-  }
-
-  int hasCollidable = 0;
-  for (int i = 0; i < rt->objectCount; i++) {
-    if (rt->objects[i].deleted == 0 && rt->objects[i].x == x && rt->objects[i].y == y && layerIncludes(layerIndex, rt->objects[i].objId)) {
-      hasCollidable = 1;
+  if (onBoard(rt, x, y)) {
+    if (layerIndex == -1) {
+      printf("err: isMovable without a layer\n");
+      return 0;
+    }
+    int cellIndex = (layerIndex * rt->width * rt->height) + (y * rt->width) + x;
+    /* if (cellIndex > (layerCount() * rt->width * rt->height)) */
+    if (rt->map[cellIndex] == -1) {
+      return 1;
+    } else {
+      return 0;
     }
   }
-  // TODO: this is dumb
-  if (hasCollidable == 1) {
-    return 0;
-  } else {
-    return 1;
-  }
+  return 0;
 }
 
 int ruleApplies(Runtime * rt, int ruleIndex, ExecutionTime execTime) {
@@ -400,6 +447,7 @@ void applyMatch(Runtime * rt, Match * match) {
   }
 
   int emptyId = aliasLegendId("_EMPTY_");
+
   if (match->cancel) {
     rt->toMoveCount = 0;
     undo(rt, 1);
@@ -414,7 +462,9 @@ void applyMatch(Runtime * rt, Match * match) {
       }
     } else {
       if (match->parts[i].goalId == aliasLegendId("_Empty_")) {
+        removeObjFromMap(rt, match->parts[i].objIndex);
         rt->objects[match->parts[i].objIndex].deleted = 1;
+        /* rt->removedId = match->parts[i].objIndex; */
       } else if (match->parts[i].goalId == -1) {
         addToMove(rt, match->parts[i].objIndex,  match->parts[i].goalDirection);
       }
@@ -742,7 +792,7 @@ int cellMatch(Runtime * rt, int ruleId, int stateId, Match * match) {
   int legId;
   Direction dirConst;
 
-  if (rule(ruleId)->matchStates[stateId].partCount > 0 && rule(ruleId)->matchStates[stateId].parts[0].ruleIdentityCount > 0 ) {
+  if (rule(ruleId)->matchStates[stateId].partCount > 0 && rule(ruleId)->matchStates[stateId].parts[0].ruleIdentityCount > 0) {
     dirConst = rule(ruleId)->directionConstraint;
     legId = rule(ruleId)->matchStates[stateId].parts[0].ruleIdentity[0].legendId;
 
@@ -759,6 +809,7 @@ int applyState(Runtime * rt, int ruleId, int stateId, Match * match) {
 
   int count = levelCellCount(rt->levelIndex);
   for (int i = 0; i < count; i++) {
+    // TODO: we discard this targetX, targetY setting here. remove it
     match->targetX = match->cursorX = i % rt->width;
     match->targetY = match->cursorY = i / rt->width;
     applied = cellMatch(rt, ruleId, stateId, match);
@@ -769,6 +820,7 @@ int applyState(Runtime * rt, int ruleId, int stateId, Match * match) {
         return 1;
       }
     }
+
   }
   match->cursorX = -1;
   match->cursorY = -1;
@@ -778,7 +830,6 @@ int applyState(Runtime * rt, int ruleId, int stateId, Match * match) {
 }
 
 int applyRule(Runtime * rt, int ruleId, Match * match) {
-  updateMap(rt);
   int applied = 0;
 
   int stateCount = rule(ruleId)->matchStateCount;
@@ -847,8 +898,14 @@ int moveObjects(Runtime * rt) {
         int movingToY = y + deltaY(rt->toMove[i].direction);
 
         if (rt->objects[rt->toMove[i].objIndex].deleted == 0 && moveApplied[i] == 0 && isMovable(rt, movingToX, movingToY, layerIndex) == 1) {
+
+          removeObjFromMap(rt, rt->toMove[i].objIndex);
+
           rt->objects[rt->toMove[i].objIndex].x += deltaX(rt->toMove[i].direction);
           rt->objects[rt->toMove[i].objIndex].y += deltaY(rt->toMove[i].direction);
+
+          updateObjInMap(rt, rt->toMove[i].objIndex);
+
           if (aliasLegendContains(aliasLegendId("Player"), rt->objects[rt->toMove[i].objIndex].objId)) {
             playerMoved = 1;
           }
@@ -921,16 +978,22 @@ void addState(Runtime * rt) {
   if (rt->statesCount + 1 >= rt->statesCapacity) {
     rt->statesCapacity += 50;
     rt->states = realloc(rt->states, sizeof(State) * rt->statesCapacity);
-    for (int i = rt->statesCount + 1; i < rt->statesCapacity; i++) {
-      rt->states[i].objects = malloc(1);
+    for (int i = 0; i < rt->statesCapacity; i++) {
+      rt->states[i].objectCapacity = 0;
+      rt->states[i].objectCount = 0;
     }
+  }
+
+  if (rt->states[rt->statesCount].objectCount > 0) {
+    free(rt->states[rt->statesCount].objects);
+    rt->states[rt->statesCount].objectCount = 0;
+    rt->states[rt->statesCount].objectCapacity = 0;
   }
 
   rt->states[rt->statesCount].levelIndex = rt->levelIndex;
   rt->states[rt->statesCount].objectCount = rt->objectCount;
   rt->states[rt->statesCount].objectCapacity = rt->objectCapacity;
 
-  /* free(rt->states[rt->statesCount].objects); */
   rt->states[rt->statesCount].objects = malloc(sizeof(Obj) * rt->objectCapacity);
   memcpy(rt->states[rt->statesCount].objects, rt->objects, sizeof(Obj) * rt->objectCapacity);
 
@@ -939,11 +1002,20 @@ void addState(Runtime * rt) {
 
 void loadLevel(Runtime * rt) {
   rt->levelType = levelType(rt->levelIndex);
+
   if (rt->levelType == SQUARES) {
     rt->height = levelHeight(rt->levelIndex);
     rt->width = levelWidth(rt->levelIndex);
     rt->toMoveCount = 0;
     rt->objectCount = 0;
+
+    if (rt->hasMap) {
+      free(rt->map);
+    }
+    rt->hasMap = 1;
+    rt->map = malloc((sizeof(int) * rt->height * rt->width * layerCount()));
+
+    clearMap(rt);
 
     int backgroundId = aliasLegendObjectId(aliasLegendId("Background"), 0);
     for (int x = 0; x < rt->width; x++) {
@@ -960,12 +1032,6 @@ void loadLevel(Runtime * rt) {
     }
   }
 
-  // map
-  if (rt->levelType == SQUARES) {
-    free(rt->map);
-    rt->map = malloc((sizeof(int) * rt->height * rt->width * layerCount()));
-  }
-
   if (rt->pd->runRulesOnLevelStart) {
     applyRules(rt, NORMAL);
     moveObjects(rt);
@@ -977,6 +1043,10 @@ void nextLevel(Runtime * rt) {
   if (rt->levelIndex < levelCount() - 1) {
     rt->prevHistoryCount = rt->historyCount;
     rt->levelIndex++;
+    if (rt->hasMap) {
+      rt->hasMap = 0;
+      free(rt->map);
+    }
     loadLevel(rt);
   } else {
     rt->gameWon = 1;
@@ -995,6 +1065,7 @@ void startGame(Runtime * rt, FILE * file) {
 }
 
 void tick(Runtime * rt) {
+  printf("objectCount: %i\n", rt->objectCount);
   applyRules(rt, NORMAL);
   moveObjects(rt);
 }

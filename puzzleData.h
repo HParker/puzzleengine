@@ -291,6 +291,8 @@ typedef struct Runtime {
   LevelType levelType;
   int objectCount;
   int objectCapacity;
+
+  int removedId;
   Obj * objects;
 
   int toMoveCount;
@@ -301,6 +303,7 @@ typedef struct Runtime {
   int historyCapacity;
   Direction * history;
 
+  int hasMap;
   int * map;
 
   int statesCount;

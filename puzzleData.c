@@ -457,6 +457,8 @@ void initPuzzleData() {
     pd.objects[i].colorCount = 0;
     pd.objects[i].height = 0;
     pd.objects[i].width = 0;
+
+    // TODO: this should have been done already.
     for (int j = 0; j < 25; j++) {
       pd.objects[i].sprite[j] = '0';
     }
@@ -721,6 +723,7 @@ void freePuzzle() {
   for (int i = 0; i < pd.levelCapacity; i++) {
     free(pd.levels[i].cells);
   }
+  free(pd.levels);
 
   free(pd.winConditions);
 }
