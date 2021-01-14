@@ -1,11 +1,13 @@
 make BISON=/usr/local/opt/bison/bin/bison FLEX=/usr/local/opt/flex/bin/flex
 
+optimzations:
+- check for each rule at each square rather then the other way around
+-
+
 TODO:
+
+
 - smooth movement for a new demo
-- We need to do rule expansion after parsing. handling relative directions where not that difficult, but `moving` is challenging.
-  Since [ > this ] only applies to one thing, it is easy to implement directly, however
-  [ moving this ] [ that ] -> [ moving this ] [ moving that] moving always has to be the same.
-  We don't currently maintain any kind of state between []s and I don't want to start.
 - should `ObjectGlyph` be ncurses renderer specific?
   seems unlikely we would need to show the character in any other context.
 - validate object names used in rules exist or are `...`

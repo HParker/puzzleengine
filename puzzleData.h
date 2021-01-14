@@ -285,6 +285,7 @@ typedef struct Runtime {
   PuzzleData * pd;
   time_t randomSeed;
   int gameWon;
+  int requestCleanup;
   int levelIndex;
   char background;
   int height;

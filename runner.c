@@ -196,7 +196,7 @@ void clearMap(Runtime * rt) {
 }
 
 void updateMap(Runtime * rt) {
-  printf("Doing full map update\n");
+  /* printf("Doing full map update\n"); */
   if (rt->levelType == SQUARES) {
     clearMap(rt);
 
@@ -235,8 +235,9 @@ void cleanup(Runtime * rt) {
 
 void addObj(Runtime * rt, int objId, int x, int y) {
   if (rt->objectCount + 1 >= rt->objectCapacity) {
-    rt->objectCapacity += 50;
+    rt->objectCapacity = rt->objectCapacity * 2;
     rt->objects = realloc(rt->objects, sizeof(Obj) * rt->objectCapacity);
+    rt->requestCleanup = 1;
   }
 
   rt->objects[rt->objectCount].objId = objId;
@@ -1052,12 +1053,12 @@ void loadLevel(Runtime * rt) {
 
     clearMap(rt);
 
-    int backgroundId = aliasLegendObjectId(aliasLegendId("Background"), 0);
-    for (int x = 0; x < rt->width; x++) {
-      for (int y = 0; y < rt->height; y++) {
-        addObj(rt, backgroundId, x, y);
-      }
-    }
+    /* int backgroundId = aliasLegendObjectId(aliasLegendId("Background"), 0); */
+    /* for (int x = 0; x < rt->width; x++) { */
+    /*   for (int y = 0; y < rt->height; y++) { */
+    /*     addObj(rt, backgroundId, x, y); */
+    /*   } */
+    /* } */
 
     int count = levelCellCount(rt->levelIndex);
     for (int i = 0; i < count; i++) {
@@ -1100,14 +1101,22 @@ void startGame(Runtime * rt, FILE * file) {
 }
 
 void tick(Runtime * rt) {
-  /* cleanup(rt); */
+  if (rt->requestCleanup) {
+    cleanup(rt);
+    rt->requestCleanup = 0;
+  }
+
   printf("objectCount: %i\n", rt->objectCount);
   applyRules(rt, NORMAL);
   moveObjects(rt);
 }
 
 void update(Runtime * rt, Direction dir) {
-  /* cleanup(rt); */
+  if (rt->requestCleanup) {
+    cleanup(rt);
+    rt->requestCleanup = 0;
+  }
+
   int startingPlayerLocation = playerLocation(rt);
   addHistory(rt, dir);
   addState(rt);
