@@ -819,7 +819,7 @@ int cellMatch(Runtime * rt, Rule * rule, int stateId, Match * match) {
 int hasSpace(Runtime * rt, Rule * rule, RuleState * state, Match * match) {
   int spaceRequired = state->partCount;
   if (rule->hasSpread) {
-    return 1;
+    spaceRequired--;
   }
 
   switch (rule->directionConstraint) {
@@ -842,21 +842,23 @@ int applyState(Runtime * rt, Rule * rule, int stateId, Match * match) {
   int matched = 0;
 
   int count = levelCellCount(rt->levelIndex);
-  for (int i = 0; i < count; i++) {
-    // TODO: we discard this targetX, targetY setting here. remove it
-    match->targetX = match->cursorX = i % rt->width;
-    match->targetY = match->cursorY = i / rt->width;
-    if (hasSpace(rt, rule, &rule->matchStates[stateId], match)) {
-      applied = cellMatch(rt, rule, stateId, match);
-      if (applied) {
-        // TODO: can I early return here?
-        matched = 1;
-        if (match->partCount > 0 || match->cancel) {
-          return 1;
+  for (int y = 0; y < rt->height; y++) {
+    for (int x = 0; x < rt->width; x++) {
+      match->targetX = match->cursorX = x;
+      match->targetY = match->cursorY = y;
+      if (hasSpace(rt, rule, &rule->matchStates[stateId], match)) {
+        applied = cellMatch(rt, rule, stateId, match);
+        if (applied) {
+          // TODO: can I early return here?
+          matched = 1;
+          if (match->partCount > 0 || match->cancel) {
+            return 1;
+          }
         }
       }
     }
   }
+
   match->cursorX = -1;
   match->cursorY = -1;
   match->targetX = -1;
