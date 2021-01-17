@@ -266,7 +266,6 @@ typedef struct PuzzleData {
 
 typedef struct ToMove {
   int objIndex;
-  Direction direction;
 } ToMove;
 
 typedef struct Obj {
@@ -274,6 +273,7 @@ typedef struct Obj {
   int y;
   int deleted;
   int objId;
+  Direction moving;
 } Obj;
 
 typedef struct State {
@@ -289,7 +289,7 @@ typedef struct Runtime {
   int gameWon;
   int requestCleanup;
   int levelIndex;
-  char background;
+  int backgroundId;
   int height;
   int width;
 
@@ -334,7 +334,6 @@ extern int aliasLegendObjectCount(int id);
 extern int legendObject(int legendId, int objectIndex);
 extern int aliasLegendObject(int legendId, int objectIndex);
 extern int glyphLegendObject(int legendId, int objectIndex);
-/* extern int aliasLegendObjectId(int legendId, int objectIndex); */
 extern int glyphLgendObjectId(int legendId, int objectIndex);
 extern int aliasLegendObjectIsLegend(int legendId, int objectIndex);
 extern int glyphLegendObjectIsLegend(int legendId, int objectIndex);

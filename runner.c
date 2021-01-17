@@ -23,9 +23,7 @@ int legendObjId(Runtime * rt, int legendId, int x, int y) {
       cellIndex = (i * rt->width * rt->height) + (y * rt->width) + x;
 
       if (rt->map[cellIndex] != -1 &&
-          aliasLegendContains(legendId, rt->objects[rt->map[cellIndex]].objId) &&
-          rt->objects[rt->map[cellIndex]].deleted == 0 // TODO: audit places that use this that also check deleted
-          ) {
+          aliasLegendContains(legendId, rt->objects[rt->map[cellIndex]].objId)) {
         return rt->map[cellIndex];
       }
     }
@@ -45,12 +43,7 @@ int playerLocation(Runtime * rt) {
 }
 
 Direction directionMoving(Runtime * rt, int objIndex) {
-  for (int i = 0; i < rt->toMoveCount; i++) {
-    if (rt->toMove[i].objIndex == objIndex) {
-      return rt->toMove[i].direction;
-    }
-  }
-  return NONE;
+  return rt->objects[objIndex].moving;
 }
 
 Direction absoluteDirection(Direction applicationDirection, Direction ruleDir) {
@@ -119,23 +112,20 @@ int matchesDirection(Direction ruleDir, Direction applicationDir, Direction dir,
 void addToMove(Runtime * rt, int objIndex, Direction direction) {
   for (int i = 0; i < rt->toMoveCount; i++) {
     if (rt->toMove[i].objIndex == objIndex) {
-      rt->toMove[i].direction = direction;
+      rt->objects[objIndex].moving = direction;
       return;
     }
   }
 
   if (rt->toMoveCount < rt->toMoveCapacity) {
-    rt->toMove[rt->toMoveCount].objIndex = objIndex;
-    rt->toMove[rt->toMoveCount].direction = direction;
-    rt->toMoveCount++;
   } else {
     rt->toMoveCapacity += 50;
     rt->toMove = realloc(rt->toMove, sizeof(ToMove) * rt->toMoveCapacity);
-
-    rt->toMove[rt->toMoveCount].objIndex = objIndex;
-    rt->toMove[rt->toMoveCount].direction = direction;
-    rt->toMoveCount++;
   }
+
+  rt->toMove[rt->toMoveCount].objIndex = objIndex;
+  rt->objects[objIndex].moving = direction;
+  rt->toMoveCount++;
 }
 
 void updateObjInMap(Runtime * rt, int objIndex) {
@@ -201,6 +191,7 @@ void cleanup(Runtime * rt) {
       newObjs[newObjCursor].objId = rt->objects[i].objId;
       newObjs[newObjCursor].x = rt->objects[i].x;
       newObjs[newObjCursor].y = rt->objects[i].y;
+      newObjs[newObjCursor].moving = rt->objects[i].moving;
       newObjCursor++;
     }
   }
@@ -221,6 +212,7 @@ void addObj(Runtime * rt, int objId, int x, int y) {
   rt->objects[rt->objectCount].x = x;
   rt->objects[rt->objectCount].y = y;
   rt->objects[rt->objectCount].deleted = 0;
+  rt->objects[rt->objectCount].moving = NONE;
   updateObjInMap(rt, rt->objectCount);
   rt->objectCount++;
 
@@ -229,10 +221,10 @@ void addObj(Runtime * rt, int objId, int x, int y) {
 
 void loadCell(Runtime * rt, char cell, int x, int y) {
   int id = legendIdForGlyph(cell);
-  int backgroundId = rt->pd->aliasLegend[aliasLegendId("Background")].objects[0];
+
   for (int i = 0; i < rt->pd->glyphLegend[id].objectCount; i++) {
     int objId = rt->pd->glyphLegend[id].objects[i];
-    if (backgroundId != objId && objId != -1) {
+    if (rt->backgroundId != objId && objId != -1) {
       addObj(rt, objId, x, y);
     }
   }
@@ -663,7 +655,6 @@ int partIdentity(Runtime * rt, Rule * rule, int stateId, int partId, int identId
       }
     }
   }
-
   return matched;
 }
 
@@ -708,7 +699,6 @@ int completeMatch(Runtime * rt, Rule * rule, int stateId, Direction appDir, Matc
   int anyDistance = 0;
   int distance = 0;
   int dist = 0;
-  match->appliedDirection = appDir;
 
   int success = 1;
   for (int partId = 0; partId < rule->matchStates[stateId].partCount; partId++) {
@@ -732,18 +722,14 @@ int completeMatch(Runtime * rt, Rule * rule, int stateId, Direction appDir, Matc
           anyDistance = 0;
         }
       } else {
-        match->targetX = match->cursorX + (distance * deltaX(appDir));
-        match->targetY = match->cursorY + (distance * deltaY(appDir));
         if (partIdentitys(rt, rule, stateId, partId, appDir, match)) {
           success = 1;
-          anyDistance = 0; // TODO: not needed
         }
       }
-      // TODO: are we setting this again for a reason?
-      match->targetX = match->cursorX + (distance * deltaX(appDir));
-      match->targetY = match->cursorY + (distance * deltaY(appDir));
       // TODO: why would we do this if we aren't successful?
-      replaceCell(rt, rule, stateId, partId, appDir, match);
+      if (success) {
+        replaceCell(rt, rule, stateId, partId, appDir, match);
+      }
     }
 
     if (success != 1) {
@@ -759,16 +745,6 @@ int completeMatch(Runtime * rt, Rule * rule, int stateId, Direction appDir, Matc
     debugRender(rt, match);
   }
   return 1;
-}
-
-int cellMatch(Runtime * rt, Rule * rule, int stateId, Match * match) {
-  /* int legId = rule->matchStates[stateId].parts[0].ruleIdentity[0].legendId; */
-  Direction dirConst = rule->directionConstraint;
-
-  if (partIdentitys(rt, rule, stateId, 0, dirConst, match)) {
-    return completeMatch(rt, rule, stateId, dirConst, match);
-  }
-  return 0;
 }
 
 int hasSpace(Runtime * rt, Rule * rule, RuleState * state, Match * match) {
@@ -801,7 +777,7 @@ int applyState(Runtime * rt, Rule * rule, int stateId, Match * match) {
       match->targetX = match->cursorX = x;
       match->targetY = match->cursorY = y;
       if (hasSpace(rt, rule, &rule->matchStates[stateId], match)) {
-        applied = cellMatch(rt, rule, stateId, match);
+        applied = completeMatch(rt, rule, stateId, rule->directionConstraint, match);
         if (applied) {
           matched = 1;
           if (match->partCount > 0 || match->cancel) {
@@ -823,6 +799,7 @@ int applyRule(Runtime * rt, Rule * rule, Match * match) {
   int applied = 0;
 
   int stateCount = rule->matchStateCount;
+  match->appliedDirection = rule->directionConstraint;
   for (int i = 0; i < stateCount; i++) {
     applied = applyState(rt, rule, i, match);
     if (applied == 0) {
@@ -868,8 +845,7 @@ void applyRules(Runtime * rt, ExecutionTime execTime) {
   }
 }
 
-int moveObjects(Runtime * rt) {
-  int playerMoved = 0;
+void moveObjects(Runtime * rt) {
   int moveApplied[rt->toMoveCount];
   for (int i = 0; i < rt->toMoveCount; i++) {
     moveApplied[i] = 0;
@@ -879,34 +855,34 @@ int moveObjects(Runtime * rt) {
   while (somethingApplied == 1) {
     somethingApplied = 0;
     for (int i = 0; i < rt->toMoveCount; i++) {
-      if (rt->toMove[i].objIndex != -1) {
+      if (rt->toMove[i].objIndex != -1 && rt->objects[rt->toMove[i].objIndex].moving != UNSPECIFIED) {
         int x = rt->objects[rt->toMove[i].objIndex].x;
         int y = rt->objects[rt->toMove[i].objIndex].y;
 
         int layerIndex = objectLayer(rt->objects[rt->toMove[i].objIndex].objId);
-        int movingToX = x + deltaX(rt->toMove[i].direction);
-        int movingToY = y + deltaY(rt->toMove[i].direction);
+        int movingToX = x + deltaX(rt->objects[rt->toMove[i].objIndex].moving);
+        int movingToY = y + deltaY(rt->objects[rt->toMove[i].objIndex].moving);
 
         if (rt->objects[rt->toMove[i].objIndex].deleted == 0 && moveApplied[i] == 0 && isMovable(rt, movingToX, movingToY, layerIndex) == 1) {
 
           removeObjFromMap(rt, rt->toMove[i].objIndex);
 
-          rt->objects[rt->toMove[i].objIndex].x += deltaX(rt->toMove[i].direction);
-          rt->objects[rt->toMove[i].objIndex].y += deltaY(rt->toMove[i].direction);
+          rt->objects[rt->toMove[i].objIndex].x = movingToX;
+          rt->objects[rt->toMove[i].objIndex].y = movingToY;
+          rt->objects[rt->toMove[i].objIndex].moving = NONE;
 
           updateObjInMap(rt, rt->toMove[i].objIndex);
 
-          if (aliasLegendContains(aliasLegendId("Player"), rt->objects[rt->toMove[i].objIndex].objId)) {
-            playerMoved = 1;
-          }
           moveApplied[i] = 1;
           somethingApplied = 1;
         }
       }
     }
   }
+  for (int i = 0; i < rt->toMoveCount; i++) {
+    rt->objects[rt->toMove[i].objIndex].moving = NONE;
+  }
   rt->toMoveCount = 0;
-  return playerMoved;
 }
 
 void printHistory(Runtime * rt) {
@@ -1042,6 +1018,7 @@ void startGame(Runtime * rt, FILE * file) {
   rt->pd = parsePuzzle(file);
   loadLevel(rt);
 
+  rt->backgroundId = rt->pd->aliasLegend[aliasLegendId("Background")].objects[0];
   if (rt->pd->verboseLogging) {
     printRules();
   }

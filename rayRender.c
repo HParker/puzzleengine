@@ -313,13 +313,11 @@ void drawObj(Runtime * rt, int objIndex) {
 }
 
 void renderBackground(Runtime * rt) {
-  int backgroundId = aliasLegendObjectId(aliasLegendId("Background"), 0);
-
   int count = levelCellCount(rt->levelIndex);
   for (int cell = 0; cell < count; cell++) {
     int x = cell % rt->width;
     int y = cell / rt->width;
-    drawObject(rt, backgroundId, x, y);
+    drawObject(rt, rt->backgroundId, x, y);
   }
 }
 
@@ -393,7 +391,7 @@ void drawToMove(Runtime * rt) {
   for (int i = 0; i < rt->toMoveCount; i++) {
     int x = rt->objects[rt->toMove[i].objIndex].x;
     int y = rt->objects[rt->toMove[i].objIndex].y;
-    drawMovement(rt, x, y, rt->toMove[i].direction, PURPLE_COLORS);
+    drawMovement(rt, x, y, rt->objects[rt->toMove[i].objIndex].moving, PURPLE_COLORS);
   }
 }
 

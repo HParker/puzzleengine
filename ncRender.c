@@ -4,7 +4,6 @@
 #include "puzzleData.h"
 
 char charForLoc(Runtime * rt, int loc) {
-  int backgroundId = aliasLegendObjectId(aliasLegendId("Background"), 0);
   int maxHeight = -1;
   int id = -1;
   int currentHeight;
@@ -21,7 +20,7 @@ char charForLoc(Runtime * rt, int loc) {
     }
   }
   if (id == -1) {
-    return objectGlyph(backgroundId);
+    return objectGlyph(rt->backgroundId);
   }
   return objectGlyph(id);
 }

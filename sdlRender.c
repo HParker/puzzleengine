@@ -89,13 +89,12 @@ void renderBackground(Runtime * rt) {
 
   int width = 5;
   int height = 5;
-  int backgroundId = aliasLegendObjectId(aliasLegendId("Background"), 0);
   SDL_Rect sdlRect;
 
   int count = levelCellCount(rt->levelIndex);
   for (int cell = 0; cell < count; cell++) {
     for (int i = 0; i < 25; i++) {
-      Color cellColor = colorFromSprite(rt, backgroundId, i);
+      Color cellColor = colorFromSprite(rt, rt->backgroundId, i);
       if (cellColor.a != 0) {
         sdlRect.x = (cell % rt->width * pixelSize * width) + ((i % 5) * pixelSize);
         sdlRect.y = (cell / rt->width * pixelSize * height) + ((i / 5) * pixelSize);

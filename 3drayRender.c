@@ -172,12 +172,11 @@ void renderBackground(Runtime * rt) {
 
   int width = 5;
   int height = 5;
-  int backgroundId = aliasLegendObjectId(aliasLegendId("Background"), 0);
 
   int count = levelCellCount(rt->levelIndex);
   for (int cell = 0; cell < count; cell++) {
     for (int i = 0; i < 25; i++) {
-      Color cellColor = colorFromSprite(rt, backgroundId, i);
+      Color cellColor = colorFromSprite(rt, rt->backgroundId, i);
 
       if (cellColor.a != 0) {
         Vector3 cubePosition;
