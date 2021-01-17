@@ -316,6 +316,31 @@ void initRule(Rule * rule) {
   }
 }
 
+void resetRule(Rule * rule) {
+  rule->lineNo = 0;
+  rule->hasSpread = 0;
+
+  rule->directionConstraint = NONE;
+  rule->executionTime = NORMAL;
+  rule->matchStateCount = 0;
+  rule->matchStateCapacity = 1;
+  rule->commandCount = 0;
+  free(rule->matchStates);
+  rule->matchStates = malloc(sizeof(RuleState) * rule->matchStateCapacity);
+  for (int stateId = 0; stateId < rule->matchStateCapacity; stateId++) {
+    initState(&rule->matchStates[stateId]);
+  }
+
+  rule->resultStateCount = 0;
+  rule->resultStateCapacity = 1;
+  free(rule->resultStates);
+  rule->resultStates = malloc(sizeof(RuleState) * rule->resultStateCapacity);
+  for (int stateId = 0; stateId < rule->resultStateCapacity; stateId++) {
+    initState(&rule->resultStates[stateId]);
+  }
+}
+
+
 Rule * reallocRule(Rule * rules, int newSize) {
   return realloc(rules, sizeof(Rule) * newSize);
 }
@@ -640,6 +665,8 @@ void expandRules() {
         rules = reallocRule(rules, ruleCapacity);
       }
       ruleCount++;
+    } else {
+      resetRule(&rules[ruleCount]);
     }
 
     if (buildRule(DOWN, VERTICAL, &rules[ruleCount], &pd.rules[ruleId])) {
@@ -649,7 +676,7 @@ void expandRules() {
       }
       ruleCount++;
     } else {
-      initRule(&rules[ruleCount]);
+      resetRule(&rules[ruleCount]);
     }
 
     if (buildRule(LEFT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId])) {
@@ -659,7 +686,7 @@ void expandRules() {
       }
       ruleCount++;
     } else {
-      initRule(&rules[ruleCount]);
+      resetRule(&rules[ruleCount]);
     }
 
     if (buildRule(RIGHT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId])) {
@@ -669,7 +696,7 @@ void expandRules() {
       }
       ruleCount++;
     } else {
-      initRule(&rules[ruleCount]);
+      resetRule(&rules[ruleCount]);
     }
   }
 
