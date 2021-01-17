@@ -760,9 +760,18 @@ char * objectColor(int id, int index) {
 
 }
 
+int glyphLegendContains(int legendId, int objId) {
+  for (int i = 0; i < pd.glyphLegend[legendId].objectCount; i++) {
+    if (objId == pd.glyphLegend[legendId].objects[i]) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
 char objectGlyph(int objId) {
   for (int i = 0; i < pd.glyphLegendCount; i++) {
-    if (glyphLegendObjectCount(i) == 1 && glyphLegendContains(i, objId) == 1) {
+    if (pd.glyphLegend[i].objectCount == 1 && glyphLegendContains(i, objId) == 1) {
       return pd.glyphLegend[i].key;
     }
   }
@@ -780,48 +789,13 @@ int legendIdForGlyph(char glyph) {
   return -1;
 }
 
-int layerCount() {
-  return pd.layerCount;
-}
-
-int layerWidth(int layerId) {
-  return pd.layers[layerId].width;
-}
-
-int layerObjectId(int layerId, int objectIndex) {
-  return pd.layers[layerId].objectIds[objectIndex];
-}
-
-int aliasLegendObjectCount(int id) {
-  return pd.aliasLegend[id].objectCount;
-}
-
-int glyphLegendObjectCount(int id) {
-  return pd.glyphLegend[id].objectCount;
-}
-
-int aliasLegendObjectId(int legendId, int objectIndex) {
-  return pd.aliasLegend[legendId].objects[objectIndex];
-}
-
 int glyphLegendObjectId(int legendId, int objectIndex) {
   return pd.glyphLegend[legendId].objects[objectIndex];
 }
 
 int aliasLegendContains(int legendId, int objId) {
-  int count = aliasLegendObjectCount(legendId);
-  for (int i = 0; i < count; i++) {
-    if (objId == aliasLegendObjectId(legendId, i)) {
-      return 1;
-    }
-  }
-  return 0;
-}
-
-int glyphLegendContains(int legendId, int objId) {
-  int count = glyphLegendObjectCount(legendId);
-  for (int i = 0; i < count; i++) {
-    if (objId == glyphLegendObjectId(legendId, i)) {
+  for (int i = 0; i < pd.aliasLegend[legendId].objectCount; i++) {
+    if (objId == pd.aliasLegend[legendId].objects[i]) {
       return 1;
     }
   }

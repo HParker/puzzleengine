@@ -330,14 +330,11 @@ extern char * objectColor(int id, int colorIndex);
 extern int legendIdForGlyph(char glyph);
 extern int legendObjectCount(int id);
 extern int aliasLegendObjectCount(int id);
-extern int glyphLegendObjectCount(int id);
-extern int aliasLegendObjectId(int legendId, int objectIndex);
-extern int glyphLegendObjectId(int legendId, int objectIndex);
 
 extern int legendObject(int legendId, int objectIndex);
 extern int aliasLegendObject(int legendId, int objectIndex);
 extern int glyphLegendObject(int legendId, int objectIndex);
-extern int aliasLegendObjectId(int legendId, int objectIndex);
+/* extern int aliasLegendObjectId(int legendId, int objectIndex); */
 extern int glyphLgendObjectId(int legendId, int objectIndex);
 extern int aliasLegendObjectIsLegend(int legendId, int objectIndex);
 extern int glyphLegendObjectIsLegend(int legendId, int objectIndex);

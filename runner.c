@@ -229,10 +229,9 @@ void addObj(Runtime * rt, int objId, int x, int y) {
 
 void loadCell(Runtime * rt, char cell, int x, int y) {
   int id = legendIdForGlyph(cell);
-  int count = glyphLegendObjectCount(id);
-  int backgroundId = aliasLegendObjectId(aliasLegendId("Background"), 0);
-  for (int i = 0; i < count; i++) {
-    int objId = glyphLegendObjectId(id, i);
+  int backgroundId = rt->pd->aliasLegend[aliasLegendId("Background")].objects[0];
+  for (int i = 0; i < rt->pd->glyphLegend[id].objectCount; i++) {
+    int objId = rt->pd->glyphLegend[id].objects[i];
     if (backgroundId != objId && objId != -1) {
       addObj(rt, objId, x, y);
     }
@@ -394,7 +393,7 @@ int specificLegendId(Runtime * rt, int legendId, Match * match) {
       }
     }
   }
-  return aliasLegendObjectId(legendId, 0);
+  return rt->pd->aliasLegend[legendId].objects[0];
 }
 
 
@@ -1008,13 +1007,6 @@ void loadLevel(Runtime * rt) {
     rt->map = malloc((sizeof(int) * rt->height * rt->width * rt->pd->layerCount));
 
     clearMap(rt);
-
-    /* int backgroundId = aliasLegendObjectId(aliasLegendId("Background"), 0); */
-    /* for (int x = 0; x < rt->width; x++) { */
-    /*   for (int y = 0; y < rt->height; y++) { */
-    /*     addObj(rt, backgroundId, x, y); */
-    /*   } */
-    /* } */
 
     int count = levelCellCount(rt->levelIndex);
     for (int i = 0; i < count; i++) {
