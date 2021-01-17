@@ -119,6 +119,8 @@ typedef struct RuleIdentity {
 typedef struct RuleStatePart {
   int ruleIdentityCount;
   int ruleIdentityCapacity;
+  int isSpread;
+  int resultIncludesSelf; // TODO: use this optimization
   RuleIdentity * ruleIdentity;
 } RuleStatePart;
 

@@ -279,6 +279,7 @@ void initRuleIdentity(RuleIdentity * ruleIdent) {
 void initPart(RuleStatePart * part) {
   part->ruleIdentityCount = 0;
   part->ruleIdentityCapacity = 1;
+  part->isSpread = 0;
   part->ruleIdentity = malloc(sizeof(RuleIdentity) * part->ruleIdentityCapacity);
   for (int ident = 0; ident < part->ruleIdentityCapacity; ident++) {
     initRuleIdentity(&part->ruleIdentity[ident]);
@@ -595,6 +596,7 @@ int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule *
 
     for (int stateId = 0; stateId < sourceRule->matchStateCount; stateId++) {
       for (int partId = 0; partId < sourceRule->matchStates[stateId].partCount; partId++) {
+        targetRule->matchStates[stateId].parts[partId].isSpread = sourceRule->matchStates[stateId].parts[partId].isSpread;
         for (int identId = 0; identId < sourceRule->matchStates[stateId].parts[partId].ruleIdentityCount; identId++) {
           Direction ruleDir = sourceRule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
           int legendId = sourceRule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
@@ -613,6 +615,7 @@ int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule *
 
     for (int stateId = 0; stateId < sourceRule->resultStateCount; stateId++) {
       for (int partId = 0; partId < sourceRule->resultStates[stateId].partCount; partId++) {
+        targetRule->resultStates[stateId].parts[partId].isSpread = sourceRule->resultStates[stateId].parts[partId].isSpread;
         for (int identId = 0; identId < sourceRule->resultStates[stateId].parts[partId].ruleIdentityCount; identId++) {
           Direction ruleDir = sourceRule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction;
           int legendId = sourceRule->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId;

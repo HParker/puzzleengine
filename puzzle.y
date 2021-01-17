@@ -432,7 +432,9 @@ match_object_part: OBJID {
 
     if (strcasecmp("...", $1) == 0 ) {
       r->hasSpread = 1;
+      rsp->isSpread = 1;
     }
+
 
     if (strcasecmp("background", $1) == 0) {
       rsp->ruleIdentity[rsp->ruleIdentityCount].direction = UNSPECIFIED;
