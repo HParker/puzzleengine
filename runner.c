@@ -16,10 +16,10 @@ int onBoard(Runtime * rt, int x, int y) {
   }
   return 1;
 }
-
+// STop here
 int legendObjId(Runtime * rt, int legendId, int x, int y) {
     int cellIndex;
-    for (int i = 0; i < layerCount(); i++) {
+    for (int i = 0; i < rt->pd->layerCount; i++) {
       cellIndex = (i * rt->width * rt->height) + (y * rt->width) + x;
 
       if (rt->map[cellIndex] != -1 &&
@@ -167,7 +167,7 @@ void removeObjFromMap(Runtime * rt, int objIndex) {
 
 
 void clearMap(Runtime * rt) {
-  for (int i = 0; i < (layerCount() * rt->height * rt->width); i++) {
+  for (int i = 0; i < (rt->pd->layerCount * rt->height * rt->width); i++) {
     rt->map[i] = -1;
   }
 }
@@ -328,7 +328,7 @@ int isMovable(Runtime * rt, int x, int y, int layerIndex) {
       return 0;
     }
     int cellIndex = (layerIndex * rt->width * rt->height) + (y * rt->width) + x;
-    /* if (cellIndex > (layerCount() * rt->width * rt->height)) */
+    /* if (cellIndex > (rt->pd->layerCount * rt->width * rt->height)) */
     if (rt->map[cellIndex] == -1) {
       return 1;
     } else {
@@ -399,7 +399,7 @@ int specificLegendId(Runtime * rt, int legendId, Match * match) {
 
 
 void applyMatch(Runtime * rt, Match * match) {
-  if (verboseLogging()) {
+  if (rt->pd->verboseLogging) {
     if (match->cancel == 0) {
       fprintf(stderr, "applying count %i\n", match->partCount);
       for (int i = 0; i < match->partCount; i++) {
@@ -692,22 +692,14 @@ int partIdentitys(Runtime * rt, Rule * rule, int stateId, int partId, Direction 
 
 int identitysAtDistance(Runtime * rt, Rule * rule, int stateId, int partId, Direction appDir, int distance, Match * match) {
   int dist = distance;
-  match->targetX = match->cursorX + (dist * deltaX(appDir));
-  match->targetY = match->cursorY + (dist * deltaY(appDir));
 
-  // TODO: this sucks, we need to see how far to the edge
-  for (int i = 0; i < 100; i++) {
+  while (onBoard(rt, match->targetX, match->targetY)) {
+    if (partIdentitys(rt, rule, stateId, partId, appDir, match)) {
+      return dist;
+    }
+    dist++;
     match->targetX = match->cursorX + (dist * deltaX(appDir));
     match->targetY = match->cursorY + (dist * deltaY(appDir));
-    if (onBoard(rt, match->targetX, match->targetY)) {
-      if (partIdentitys(rt, rule, stateId, partId, appDir, match)) {
-        return dist;
-      }
-      dist++;
-    } else {
-      // off the board no reason to continue
-      return -1;
-    }
   }
   return -1;
 }
@@ -764,7 +756,7 @@ int completeMatch(Runtime * rt, Rule * rule, int stateId, Direction appDir, Matc
     distance++;
   }
 
-  if (verboseLogging()) {
+  if (rt->pd->verboseLogging) {
     debugRender(rt, match);
   }
   return 1;
@@ -934,13 +926,13 @@ Direction handleInput(Runtime * rt, int input) {
     return LEFT;
   } else if (input == 'd') {
     return RIGHT;
-  } else if (input == 'x' && noAction() == 0) {
+  } else if (input == 'x' && rt->pd->noAction == 0) {
     return USE;
   } else if (input == 'q') {
     return QUIT;
-  } else if (input == 'r' && noRestart() == 0) {
+  } else if (input == 'r' && rt->pd->noRestart == 0) {
     return RESTART;
-  } else if (input == 'z' && noUndo() == 0) {
+  } else if (input == 'z' && rt->pd->noUndo == 0) {
     return UNDO;
   } else if (input == '`') {
     verboseLoggingOn();
@@ -1013,7 +1005,7 @@ void loadLevel(Runtime * rt) {
       free(rt->map);
     }
     rt->hasMap = 1;
-    rt->map = malloc((sizeof(int) * rt->height * rt->width * layerCount()));
+    rt->map = malloc((sizeof(int) * rt->height * rt->width * rt->pd->layerCount));
 
     clearMap(rt);
 
@@ -1058,7 +1050,7 @@ void startGame(Runtime * rt, FILE * file) {
   rt->pd = parsePuzzle(file);
   loadLevel(rt);
 
-  if (verboseLogging()) {
+  if (rt->pd->verboseLogging) {
     printRules();
   }
 
@@ -1101,7 +1093,7 @@ void update(Runtime * rt, Direction dir) {
     moveObjects(rt);
     applyRules(rt, LATE);
 
-    if (requirePlayerMovement() &&
+    if (rt->pd->requirePlayerMovement &&
         (startingPlayerLocation == playerLocation(rt))) {
       undo(rt, 1);
       return;

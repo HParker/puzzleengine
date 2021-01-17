@@ -27,9 +27,6 @@ sdl: parser
 check: default
 	./bin/parseTest && ./bin/runnerTest
 
-debug: parser
-	${CC} -o ./bin/debugpuzzlescript puzzle.tab.c debugRender.c runner.c puzzleData.c main.c
-
 nc: parser
 	${CC} -o ./bin/ncpuzzlescript puzzle.tab.c ncRender.c runner.c puzzleData.c main.c `pkg-config --cflags --libs ncurses`
 

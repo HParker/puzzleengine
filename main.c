@@ -25,7 +25,7 @@ int main(int argc, char ** argv) {
   char curInput;
   while (1) {
     render(&rt);
-    if (realTimeInterval() != 0) {
+    if (rt.pd->realTimeInterval != 0) {
       tick(&rt);
       frameCounter = 0;
     }

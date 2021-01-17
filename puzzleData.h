@@ -325,15 +325,8 @@ extern Object * object(int id);
 extern char * objectName(int id);
 extern int objectSpriteCell(int id, int index);
 extern char * objectColor(int id, int colorIndex);
-extern int debug();
-extern int requirePlayerMovement();
-extern int objectCount();
-
-// prelude
-extern float realTimeInterval();
 
 // legend
-extern int legendCount();
 extern int legendIdForGlyph(char glyph);
 extern int legendObjectCount(int id);
 extern int aliasLegendObjectCount(int id);
@@ -353,14 +346,11 @@ extern int glyphLegendContains(int legendId, int objId);
 extern int aliasLegendContains(int legendId, int objId);
 extern int aliasLegendId(char * name);
 
-extern int aliasLegendCount();
-extern int glyphLegendCount();
 extern char * aliasLegendKey(int id);
 extern char glyphLegendKey(int id);
 
 // layers
 extern int objectLayer(int objId);
-extern int layerCount();
 extern int layerWidth(int layerId);
 extern int layerObjectId(int layerId, int objectIndex);
 
@@ -371,10 +361,11 @@ extern int levelCellCount(int levelIndex);
 extern int levelCell(int levelIndex, int cellIndex);
 extern LevelType levelType(int levelIndex);
 extern char * levelMessage(int levelIndex);
+
 // layers
 int layerIncludes(int layerId, int objId);
-
 int objectId(char * name);
+
 //rules
 extern int ruleCount();
 extern Rule * rule(int index);
@@ -407,12 +398,6 @@ extern int winConditionCount();
 extern WinCondition * winCondition(int winConditionIndex);
 
 // Parser methods
-extern int noAction();
-extern int noRestart();
-extern int noUndo();
-extern int noRepeatAction();
-extern int debug();
-extern int verboseLogging();
 extern void verboseLoggingOn();
 extern int colorPaletteId(char * name);
 extern char * backgroundColor();

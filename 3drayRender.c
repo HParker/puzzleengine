@@ -232,7 +232,7 @@ void drawObj(Runtime * rt, int objIndex) {
 void renderLevel(Runtime * rt) {
   int objLayer;
   renderBackground(rt);
-  int count = layerCount();
+  int count = rt->pd->layerCount;
   for (int layer = 0; layer < count; layer++) {
     for (int i = 0; i < rt->objectCount; i++) {
       objLayer = objectLayer(rt->objects[i].objId);

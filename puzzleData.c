@@ -9,30 +9,6 @@ extern PuzzleData pd;
 
 #define PUZZLE_MALLOC_INC 10;
 
-int noAction() {
-  return pd.noAction;
-}
-
-int noRestart() {
-  return pd.noAction;
-}
-
-int noUndo() {
-  return pd.noUndo;
-}
-
-int noRepeatAction() {
-  return pd.noRepeatAction;
-}
-
-int debug() {
-  return pd.debug;
-}
-
-int verboseLogging() {
-  return pd.verboseLogging;
-}
-
 void verboseLoggingOn() {
   if (pd.verboseLogging) {
     pd.verboseLogging = 0;
@@ -717,7 +693,7 @@ PuzzleData * parsePuzzle(FILE * file) {
 
   expandRules();
 
-  if (debug()) {
+  if (pd.debug) {
     printRules();
   }
 
@@ -761,9 +737,6 @@ void freePuzzle() {
   free(pd.winConditions);
 }
 
-int requirePlayerMovement() {
-  return pd.requirePlayerMovement;
-}
 
 Object * object(int id) {
   return &pd.objects[id];
@@ -933,17 +906,13 @@ int objectCount() {
   return pd.objectCount;
 }
 
-float realTimeInterval() {
-  return pd.realTimeInterval;
-}
+/* int aliasLegendCount() { */
+/*   return pd.aliasLegendCount; */
+/* } */
 
-int aliasLegendCount() {
-  return pd.aliasLegendCount;
-}
-
-int glyphLegendCount() {
-  return pd.glyphLegendCount;
-}
+/* int glyphLegendCount() { */
+/*   return pd.glyphLegendCount; */
+/* } */
 
 char * aliasLegendKey(int id) {
   if (id == 1) {

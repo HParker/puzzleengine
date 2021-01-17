@@ -196,7 +196,7 @@ Color colorFromSprite(Runtime * rt, int objId, int cellIndex) {
 
 void initRenderer() {
   InitWindow(WINDOW_SIZE, WINDOW_SIZE, "My Puzzle");
-  SetTargetFPS(60);
+  SetTargetFPS(240);
 }
 
 void closeRenderer() {
@@ -326,7 +326,7 @@ void renderBackground(Runtime * rt) {
 void renderLevel(Runtime * rt) {
   int objLayer;
   renderBackground(rt);
-  int count = layerCount();
+  int count = rt->pd->layerCount;
   for (int layer = 0; layer < count; layer++) {
     for (int i = 0; i < rt->objectCount; i++) {
       objLayer = objectLayer(rt->objects[i].objId);
@@ -335,7 +335,7 @@ void renderLevel(Runtime * rt) {
       }
     }
   }
-  if (verboseLogging()) {
+  if (rt->pd->verboseLogging) {
     Rectangle rec = { 0, 0, WINDOW_SIZE, WINDOW_SIZE };
     DrawRectangleLinesEx(rec, 10, RED);
   }
@@ -417,7 +417,7 @@ void debugRender(Runtime * rt, Match * match) {
     awaitInput = 1;
   }
 
-  if (rt->levelType == SQUARES && verboseLogging()) {
+  if (rt->levelType == SQUARES && rt->pd->verboseLogging) {
     if (awaitInput) {
       while (pressed == 0) {
         if (IsKeyPressed(KEY_PERIOD)) {
