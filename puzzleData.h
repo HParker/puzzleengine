@@ -100,7 +100,8 @@ typedef enum Direction
    RESTART     = 17,
    UNDO        = 18,
    UNSPECIFIED = 19,
-   MOVING      = 20
+   MOVING      = 20,
+   DEBUGGER       = 21
   } Direction;
 
 typedef enum ExecutionTime
@@ -287,7 +288,7 @@ typedef struct Runtime {
   PuzzleData * pd;
   time_t randomSeed;
   int gameWon;
-  int requestCleanup;
+  int deadCount;
   int levelIndex;
   int backgroundId;
   int height;
@@ -379,7 +380,7 @@ extern int checkWinCondition(Runtime * rt, int winConditionIndex);
 extern int checkWinConditions(Runtime * rt);
 
 // Update
-extern Direction handleInput(Runtime * rt, int input);
+extern Direction handleInput(Runtime * rt, Direction input);
 extern void update(Runtime * rt, Direction dir);
 extern void tick(Runtime * rt);
 

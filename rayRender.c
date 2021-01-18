@@ -196,7 +196,7 @@ Color colorFromSprite(Runtime * rt, int objId, int cellIndex) {
 
 void initRenderer() {
   InitWindow(WINDOW_SIZE, WINDOW_SIZE, "My Puzzle");
-  SetTargetFPS(240);
+  SetTargetFPS(140);
 }
 
 void closeRenderer() {
@@ -469,35 +469,34 @@ void render(Runtime * rt) {
   EndDrawing();
 }
 
-char input() {
-  char returnKey = -1;
+Direction input() {
   if (IsKeyPressed(KEY_RIGHT) || IsKeyPressed(KEY_D)) {
-    returnKey = 'd';
+    return RIGHT;
   }
   if (IsKeyPressed(KEY_LEFT) || IsKeyPressed(KEY_A)) {
-    returnKey = 'a';
+    return LEFT;
   }
   if (IsKeyPressed(KEY_UP) || IsKeyPressed(KEY_W)) {
-    returnKey = 'w';
+    return UP;
   }
   if (IsKeyPressed(KEY_DOWN) || IsKeyPressed(KEY_S)) {
-    returnKey = 's';
+    return DOWN;
   }
   if (IsKeyPressed(KEY_Q) || IsKeyPressed(KEY_ESCAPE)) {
-    returnKey = 'q';
+    return QUIT;
   }
   if (IsKeyPressed(KEY_R)) {
-    returnKey = 'r';
+    return RESTART;
   }
   if (IsKeyPressed(KEY_Z)) {
-    returnKey = 'z';
+    return UNDO;
   }
   if (IsKeyPressed(KEY_X) || IsKeyPressed(KEY_SPACE)) {
-    returnKey = 'x';
+    return USE;
   }
 
   if (IsKeyPressed(KEY_TAB)) {
-    returnKey = '`';
+    return DEBUGGER;
   }
-  return returnKey;
+  return UNSPECIFIED;
 }

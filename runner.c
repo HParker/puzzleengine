@@ -19,7 +19,7 @@ int onBoard(Runtime * rt, int x, int y) {
 
 int legendObjId(Runtime * rt, int legendId, int x, int y) {
     int cellIndex;
-    for (int i = rt->pd->layerCount - 1; i >= 0; i--) {
+    for (int i = 0; i < rt->pd->layerCount; i++) {
       cellIndex = (i * rt->width * rt->height) + (y * rt->width) + x;
 
       if (rt->map[cellIndex] != -1 &&
@@ -199,7 +199,6 @@ void addObj(Runtime * rt, int objId, int x, int y) {
   if (rt->objectCount + 1 >= rt->objectCapacity) {
     rt->objectCapacity = rt->objectCapacity * 2;
     rt->objects = realloc(rt->objects, sizeof(Obj) * rt->objectCapacity);
-    rt->requestCleanup = 1;
   }
 
   rt->objects[rt->objectCount].objId = objId;
@@ -235,7 +234,7 @@ void initGame(Runtime * rt) {
   rt->levelIndex = 0;
   rt->gameWon = 0;
   rt->prevHistoryCount = 0;
-  rt->requestCleanup = 0;
+  rt->deadCount = 0;
 
   rt->objectCount = 0;
   rt->objectCapacity = 250;
@@ -437,6 +436,7 @@ void applyMatch(Runtime * rt, Match * match) {
       if (match->parts[i].goalId == EMPTY_ID) {
         removeObjFromMap(rt, match->parts[i].objIndex);
         rt->objects[match->parts[i].objIndex].deleted = 1;
+        rt->deadCount++;
         /* rt->removedId = match->parts[i].objIndex; */
       } else if (match->parts[i].goalId == -1) {
         addToMove(rt, match->parts[i].objIndex,  match->parts[i].goalDirection);
@@ -885,30 +885,31 @@ void printHistory(Runtime * rt) {
   }
 }
 
-Direction handleInput(Runtime * rt, int input) {
-  // TODO: doesn't need rt
-  if (input == 'w') {
-    return UP;
-  } else if (input == 's') {
-    return DOWN;
-  } else if (input == 'a') {
-    return LEFT;
-  } else if (input == 'd') {
-    return RIGHT;
-  } else if (input == 'x' && rt->pd->noAction == 0) {
-    return USE;
-  } else if (input == 'q') {
-    return QUIT;
-  } else if (input == 'r' && rt->pd->noRestart == 0) {
-    return RESTART;
-  } else if (input == 'z' && rt->pd->noUndo == 0) {
-    return UNDO;
-  } else if (input == '`') {
+Direction handleInput(Runtime * rt, Direction input) {
+  switch (input) {
+  case DEBUGGER:
     verboseLoggingOn();
     return NONE;
-  } else {
-    // Is this none or something else?
-    return NONE;
+  case USE:
+    if (rt->pd->noAction) {
+      return NONE;
+    } else {
+      return USE;
+    }
+  case RESTART:
+    if (rt->pd->noRestart) {
+      return NONE;
+    } else {
+      return RESTART;
+    }
+  case UNDO:
+    if (rt->pd->noUndo) {
+      return NONE;
+    } else {
+      return UNDO;
+    }
+  default:
+    return input;
   }
 }
 
@@ -1020,9 +1021,9 @@ void startGame(Runtime * rt, FILE * file) {
 }
 
 void tick(Runtime * rt) {
-  if (rt->requestCleanup) {
+  if (rt->deadCount > 300) {
     cleanup(rt);
-    rt->requestCleanup = 0;
+    rt->deadCount = 0;
   }
 
   printf("objectCount: %i\n", rt->objectCount);
@@ -1031,9 +1032,10 @@ void tick(Runtime * rt) {
 }
 
 void update(Runtime * rt, Direction dir) {
-  if (rt->requestCleanup) {
+  printf("Object count: %i\n", rt->objectCount);
+  if (rt->deadCount > 300) {
     cleanup(rt);
-    rt->requestCleanup = 0;
+    rt->deadCount = 0;
   }
 
   int startingPlayerLocation = playerLocation(rt);

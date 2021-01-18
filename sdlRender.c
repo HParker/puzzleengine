@@ -151,9 +151,8 @@ void debugRender(Runtime * rt) {
   /* render(rt); */
 }
 
-char input() {
+Direction input() {
   // block on input for now. I don't think we have to do this forever.
-  char c = -1;
   if (SDL_PollEvent(&e)) {
     if (e.type == SDL_QUIT) {
       return 'q';
@@ -161,33 +160,33 @@ char input() {
       switch (e.key.keysym.sym) {
       case SDLK_q:
       case SDLK_ESCAPE:
-        return 'q';
+        return QUIT;
       case SDLK_r:
-        return 'r';
+        return RESTART;
       case SDLK_z:
-        return 'z';
+        return UNDO;
       case SDLK_w:
       case SDLK_UP:
-        return 'w';
+        return UP;
       case SDLK_s:
       case SDLK_DOWN:
-        return 's';
+        return DOWN;
       case SDLK_d:
       case SDLK_RIGHT:
-        return 'd';
+        return RIGHT;
       case SDLK_a:
       case SDLK_LEFT:
-        return 'a';
+        return LEFT;
       case SDLK_x:
-        return 'x';
+        return USE;
       case SDLK_TAB:
-        return '`';
+        return DEBUGGER;
       default:
         break;
       }
     }
   }
-  return c;
+  return UNSPECIFIED;
 }
 
 

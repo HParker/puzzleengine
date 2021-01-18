@@ -92,5 +92,23 @@ void closeRenderer() {
 }
 
 char input() {
-  return getch();
+  switch (getch()) {
+  case 'q':
+    return QUIT;
+    case 'r':
+      return RESTART;
+      case 'w':
+        return UP;
+      case 'a':
+        return LEFT;
+      case 's':
+        return DOWN;
+      case 'd':
+        return RIGHT;
+      case 'z':
+        return UNDO;
+      case 'x':
+        return USE;
+  }
+  return UNSPECIFIED;
 }
