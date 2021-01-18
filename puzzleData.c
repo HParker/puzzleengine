@@ -789,10 +789,6 @@ int legendIdForGlyph(char glyph) {
   return -1;
 }
 
-int glyphLegendObjectId(int legendId, int objectIndex) {
-  return pd.glyphLegend[legendId].objects[objectIndex];
-}
-
 int aliasLegendContains(int legendId, int objId) {
   for (int i = 0; i < pd.aliasLegend[legendId].objectCount; i++) {
     if (objId == pd.aliasLegend[legendId].objects[i]) {

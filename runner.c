@@ -16,10 +16,10 @@ int onBoard(Runtime * rt, int x, int y) {
   }
   return 1;
 }
-// STop here
+
 int legendObjId(Runtime * rt, int legendId, int x, int y) {
     int cellIndex;
-    for (int i = 0; i < rt->pd->layerCount; i++) {
+    for (int i = rt->pd->layerCount - 1; i >= 0; i--) {
       cellIndex = (i * rt->width * rt->height) + (y * rt->width) + x;
 
       if (rt->map[cellIndex] != -1 &&
@@ -178,12 +178,6 @@ void updateMap(Runtime * rt) {
 void cleanup(Runtime * rt) {
   int newObjCursor = 0;
   Obj * newObjs = malloc(sizeof(Obj) * rt->objectCapacity);
-
-  /* for (int i = 0; i < rt->toMoveCount; i++) { */
-  /*   if (rt->objects[rt->toMove[i].objIndex].deleted == 1) { */
-  /*     rt->toMove[i].objIndex = -1; */
-  /*   } */
-  /* } */
 
   for (int i = 0; i < rt->objectCount; i++) {
     if (rt->objects[i].deleted == 0) {
