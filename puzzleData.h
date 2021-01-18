@@ -116,18 +116,18 @@ typedef struct RuleIdentity {
 } RuleIdentity;
 
 // parts are split by `|`
-typedef struct RuleStatePart {
+typedef struct RulePart {
   int ruleIdentityCount;
   int ruleIdentityCapacity;
   int isSpread;
   int resultIncludesSelf; // TODO: use this optimization
   RuleIdentity * ruleIdentity;
-} RuleStatePart;
+} RulePart;
 
 typedef struct RuleState {
   int partCount;
   int partCapacity;
-  RuleStatePart * parts;
+  RulePart * parts;
 } RuleState;
 
 typedef struct Rule {
@@ -412,7 +412,7 @@ extern void incRule();
 extern void incRuleMatchState(Rule * rule);
 extern void incRuleResultState(Rule * rule);
 extern void incRulePart(RuleState * ruleState);
-extern void incRuleIdent(RuleStatePart * part);
+extern void incRuleIdent(RulePart * part);
 
 extern int ruleCommandCount(int ruleId);
 extern int ruleCommandContains(Rule * rule, Command cmd);

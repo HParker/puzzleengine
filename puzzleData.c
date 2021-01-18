@@ -252,7 +252,7 @@ void initRuleIdentity(RuleIdentity * ruleIdent) {
   ruleIdent->legendId = 1; // TODO: this is empty, but that isn't clear
 }
 
-void initPart(RuleStatePart * part) {
+void initPart(RulePart * part) {
   part->ruleIdentityCount = 0;
   part->ruleIdentityCapacity = 1;
   part->isSpread = 0;
@@ -265,7 +265,7 @@ void initPart(RuleStatePart * part) {
 void initState(RuleState * ruleState) {
   ruleState->partCount = 0;
   ruleState->partCapacity = 1;
-  ruleState->parts = malloc(sizeof(RuleStatePart) * ruleState->partCapacity);
+  ruleState->parts = malloc(sizeof(RulePart) * ruleState->partCapacity);
   for (int partId = 0; partId < ruleState->partCapacity; partId++) {
     initPart(&ruleState->parts[partId]);
   }
@@ -361,7 +361,7 @@ void incRuleResultState(Rule * rule) {
 void incRulePart(RuleState * ruleState) {
   if (ruleState->partCount + 1 >= ruleState->partCapacity) {
     ruleState->partCapacity += PUZZLE_MALLOC_INC;
-    ruleState->parts = realloc(ruleState->parts, sizeof(RuleStatePart) * ruleState->partCapacity);
+    ruleState->parts = realloc(ruleState->parts, sizeof(RulePart) * ruleState->partCapacity);
     for (int partId = ruleState->partCount + 1; partId < ruleState->partCapacity; partId++) {
       initPart(&ruleState->parts[partId]);
     }
@@ -369,7 +369,7 @@ void incRulePart(RuleState * ruleState) {
   ruleState->partCount++;
 }
 
-void incRuleIdent(RuleStatePart * part) {
+void incRuleIdent(RulePart * part) {
   if (part->ruleIdentityCount + 1 >= part->ruleIdentityCapacity) {
     part->ruleIdentityCapacity += PUZZLE_MALLOC_INC;
     part->ruleIdentity = realloc(part->ruleIdentity, sizeof(RuleIdentity) * part->ruleIdentityCapacity);

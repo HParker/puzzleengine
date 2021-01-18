@@ -412,7 +412,7 @@ match_state_part: match_on_square {
                 | %empty {
   Rule * r = &pd.rules[pd.ruleCount];
   RuleState * rs = &r->matchStates[r->matchStateCount];
-  RuleStatePart * rsp = &rs->parts[rs->partCount];
+  RulePart * rsp = &rs->parts[rs->partCount];
 
   rsp->ruleIdentity[rsp->ruleIdentityCount].direction = UNSPECIFIED;
   rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId("_EMPTY_");
@@ -427,7 +427,7 @@ match_on_square: match_on_square match_object_part | match_object_part;
 match_object_part: OBJID {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->matchStates[r->matchStateCount];
-    RuleStatePart * rsp = &rs->parts[rs->partCount];
+    RulePart * rsp = &rs->parts[rs->partCount];
     RuleIdentity * rid = &rsp->ruleIdentity[rsp->ruleIdentityCount];
 
     if (strcasecmp("...", $1) == 0 ) {
@@ -450,7 +450,7 @@ match_object_part: OBJID {
                  | DIRECTION OBJID {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->matchStates[r->matchStateCount];
-    RuleStatePart * rsp = &rs->parts[rs->partCount];
+    RulePart * rsp = &rs->parts[rs->partCount];
     RuleIdentity * rid = &rsp->ruleIdentity[rsp->ruleIdentityCount];
 
     rid->direction = $1;
@@ -476,7 +476,7 @@ result_state_part: result_on_square {
         |       %empty {
   Rule * r = &pd.rules[pd.ruleCount];
   RuleState * rs = &r->resultStates[r->resultStateCount];
-  RuleStatePart * rsp = &rs->parts[rs->partCount];
+  RulePart * rsp = &rs->parts[rs->partCount];
 
   rsp->ruleIdentity[rsp->ruleIdentityCount].direction = UNSPECIFIED;
   rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId("_EMPTY_");
@@ -490,7 +490,7 @@ result_on_square: result_on_square result_object_part | result_object_part;
 result_object_part: OBJID {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->resultStates[r->resultStateCount];
-    RuleStatePart * rsp = &rs->parts[rs->partCount];
+    RulePart * rsp = &rs->parts[rs->partCount];
     RuleIdentity * rid = &rsp->ruleIdentity[rsp->ruleIdentityCount];
 
     rid->direction = UNSPECIFIED;
@@ -501,7 +501,7 @@ result_object_part: OBJID {
                  | DIRECTION OBJID {
     Rule * r = &pd.rules[pd.ruleCount];
     RuleState * rs = &r->resultStates[r->resultStateCount];
-    RuleStatePart * rsp = &rs->parts[rs->partCount];
+    RulePart * rsp = &rs->parts[rs->partCount];
     RuleIdentity * rid = &rsp->ruleIdentity[rsp->ruleIdentityCount];
 
     rid->direction = $1;
