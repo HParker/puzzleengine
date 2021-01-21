@@ -222,6 +222,16 @@ color (color|colour)
   return DIRECTION;
 }
 
+<RULES>parallel {
+  yylval.enumValue = PARALLEL;
+  return DIRECTION;
+}
+
+<RULES>perpendicular {
+  yylval.enumValue = PERPENDICULAR;
+  return DIRECTION;
+}
+
 <RULES>stationary {
   yylval.enumValue = STATIONARY;
   return DIRECTION;

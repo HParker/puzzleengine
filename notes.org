@@ -32,3 +32,42 @@ TODO:
 # O #
 #   #
 #####
+
+
+legacy apply match debugging
+  if (rt->pd->verboseLogging) {
+    if (match->cancel == 0) {
+      fprintf(stderr, "applying count %i\n", match->partCount);
+      for (int i = 0; i < match->partCount; i++) {
+        if (match->parts[i].newObject == 1) {
+          fprintf(stderr, "Applying rule (%i): %i new: %i id: '%s' (%i) location (%i, %i) goalMovment: %s\n",
+                 rule(match->ruleIndex)->lineNo,
+                 match->ruleIndex,
+                 match->parts[i].newObject,
+                 objectName(match->parts[i].goalId),
+                 match->parts[i].goalId,
+                 match->parts[i].goalX,
+                 match->parts[i].goalY,
+                 dirName(match->parts[i].goalDirection)
+                 );
+        } else {
+          fprintf(stderr, "Applying rule (): %i new: %i, objIndex: %i, (%i) id: '%s' (%i) -> '%s' (%i) location: (%i, %i) -> (%i, %i) goalMovment: %s\n",
+                 match->ruleIndex,
+                 match->parts[i].newObject,
+                 match->parts[i].objIndex,
+                 i,
+                 objectName(rt->objects[match->parts[i].objIndex].objId),
+                 rt->objects[match->parts[i].objIndex].objId,
+                 objectName(match->parts[i].goalId),
+                 match->parts[i].goalId,
+                 rt->objects[match->parts[i].objIndex].x,
+                 rt->objects[match->parts[i].objIndex].y,
+                 match->parts[i].goalX,
+                 match->parts[i].goalY,
+                 dirName(match->parts[i].goalDirection));
+        }
+      }
+    } else {
+      fprintf(stderr, "Applying rule: %i cancel\n", match->ruleIndex);
+    }
+  }

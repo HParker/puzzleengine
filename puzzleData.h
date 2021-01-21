@@ -80,28 +80,30 @@ typedef enum Command
 
 typedef enum Direction
   {
-   RIGHT       = 0,
-   UP          = 1,
-   LEFT        = 2,
-   DOWN        = 3,
-   HORIZONTAL  = 4,
-   VERTICAL    = 5,
-   STATIONARY  = 6,
-   RANDOMDIR   = 7,
-   RANDOM      = 8,
-   REL_UP      = 9,
-   REL_DOWN    = 10,
-   REL_LEFT    = 11,
-   REL_RIGHT   = 12,
-   USE         = 13,
-   NONE        = 14,
-   COND_NO     = 15,
-   QUIT        = 16,
-   RESTART     = 17,
-   UNDO        = 18,
-   UNSPECIFIED = 19,
-   MOVING      = 20,
-   DEBUGGER       = 21
+   RIGHT         = 0,
+   UP            = 1,
+   LEFT          = 2,
+   DOWN          = 3,
+   HORIZONTAL    = 4,
+   VERTICAL      = 5,
+   STATIONARY    = 6,
+   RANDOMDIR     = 7,
+   RANDOM        = 8,
+   REL_UP        = 9,
+   REL_DOWN      = 10,
+   REL_LEFT      = 11,
+   REL_RIGHT     = 12,
+   USE           = 13,
+   NONE          = 14,
+   COND_NO       = 15,
+   QUIT          = 16,
+   RESTART       = 17,
+   UNDO          = 18,
+   UNSPECIFIED   = 19,
+   MOVING        = 20,
+   DEBUGGER      = 21,
+   PARALLEL      = 22,
+   PERPENDICULAR = 23
   } Direction;
 
 typedef enum ExecutionTime
@@ -132,6 +134,7 @@ typedef struct RuleState {
 } RuleState;
 
 typedef struct Rule {
+  int id;
   int lineNo;
   int hasSpread;
 

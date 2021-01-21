@@ -406,7 +406,6 @@ void renderRule(Match * match) {
 }
 
 void debugRender(Runtime * rt, Match * match) {
-  return;
   int awaitInput = 0;
   int frameCounter = 0;
   int frameDelay = 1;
@@ -429,7 +428,7 @@ void debugRender(Runtime * rt, Match * match) {
         drawMatch(rt, match);
         drawToMove(rt);
         renderRule(match);
-        drawCursors(rt, match);
+        /* drawCursors(rt, match); */
         EndDrawing();
       }
     } else {

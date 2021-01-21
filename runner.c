@@ -382,42 +382,13 @@ int specificLegendId(Runtime * rt, int legendId, Match * match) {
 }
 
 
+void debugRuleApplication(Runtime * rt, Match * match) {
+  printf("Rule: %s\n", ruleString(match->ruleIndex));
+}
+
 void applyMatch(Runtime * rt, Match * match) {
   if (rt->pd->verboseLogging) {
-    if (match->cancel == 0) {
-      fprintf(stderr, "applying count %i\n", match->partCount);
-      for (int i = 0; i < match->partCount; i++) {
-        if (match->parts[i].newObject == 1) {
-          fprintf(stderr, "Applying rule (%i): %i new: %i id: '%s' (%i) location (%i, %i) goalMovment: %s\n",
-                 rule(match->ruleIndex)->lineNo,
-                 match->ruleIndex,
-                 match->parts[i].newObject,
-                 objectName(match->parts[i].goalId),
-                 match->parts[i].goalId,
-                 match->parts[i].goalX,
-                 match->parts[i].goalY,
-                 dirName(match->parts[i].goalDirection)
-                 );
-        } else {
-          fprintf(stderr, "Applying rule: %i new: %i, objIndex: %i, (%i) id: '%s' (%i) -> '%s' (%i) location: (%i, %i) -> (%i, %i) goalMovment: %s\n",
-                 match->ruleIndex,
-                 match->parts[i].newObject,
-                 match->parts[i].objIndex,
-                 i,
-                 objectName(rt->objects[match->parts[i].objIndex].objId),
-                 rt->objects[match->parts[i].objIndex].objId,
-                 objectName(match->parts[i].goalId),
-                 match->parts[i].goalId,
-                 rt->objects[match->parts[i].objIndex].x,
-                 rt->objects[match->parts[i].objIndex].y,
-                 match->parts[i].goalX,
-                 match->parts[i].goalY,
-                 dirName(match->parts[i].goalDirection));
-        }
-      }
-    } else {
-      fprintf(stderr, "Applying rule: %i cancel\n", match->ruleIndex);
-    }
+    debugRuleApplication(rt, match);
   }
 
   if (match->cancel) {
@@ -547,7 +518,7 @@ int alreadyResult(Runtime * rt, Rule * rule, int stateId, int partId, Direction 
 }
 
 void replaceCell(Runtime * rt, Rule * rule, int stateId, int partId, Direction appDir, Match * match) {
-  match->ruleIndex = rule->lineNo;
+  match->ruleIndex = rule->id;
   if (rule->resultStateCount == 0) {
     if (ruleCommandContains(rule, CANCEL)) {
       match->cancel = 1;
@@ -805,7 +776,7 @@ int applyRule(Runtime * rt, Rule * rule, Match * match) {
 
 void applyRules(Runtime * rt, ExecutionTime execTime) {
   int applied = 1;
-  int maxAttempts = 10000;
+  int maxAttempts = 1000;
   int attempts = 0;
 
   Match match;
@@ -1025,14 +996,15 @@ void tick(Runtime * rt) {
     cleanup(rt);
     rt->deadCount = 0;
   }
-
-  printf("objectCount: %i\n", rt->objectCount);
   applyRules(rt, NORMAL);
   moveObjects(rt);
 }
 
 void update(Runtime * rt, Direction dir) {
-  printf("Object count: %i\n", rt->objectCount);
+  if (dir == NONE) {
+    return;
+  }
+
   if (rt->deadCount > 300) {
     cleanup(rt);
     rt->deadCount = 0;
