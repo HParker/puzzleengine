@@ -137,6 +137,9 @@ typedef struct Rule {
   int id;
   int lineNo;
   int hasSpread;
+  int hasRelativeDirection;
+  int hasMultipleParts;
+  int hasCompoundDirection;
 
   int commandCount;
   Command commands[10];

@@ -30,13 +30,13 @@ char * dirName(Direction dir) {
                              "STATIONARY",
                              "RANDOMDIR",
                              "RANDOM",
-                             "REL_UP",
-                             "REL_DOWN",
-                             "REL_LEFT",
-                             "REL_RIGHT",
+                             "^",
+                             "v",
+                             "<",
+                             ">",
                              "USE",
                              "NONE",
-                             "COND_NO",
+                             "NO",
                              "QUIT",
                              "RESTART",
                              "UNDO",
@@ -214,7 +214,7 @@ char * ruleString(int ruleId) {
   char * ruleStr = malloc(sizeof(char) * 4096);
 
   char lineNumber[80];
-  sprintf(lineNumber, "(%i), %d. ", ruleId, pd.rules[ruleId].lineNo);
+  sprintf(lineNumber, "%d. ", pd.rules[ruleId].lineNo);
   strcpy(ruleStr, lineNumber);
 
   strcat(ruleStr, dirName(pd.rules[ruleId].directionConstraint));
@@ -254,7 +254,7 @@ char * ruleString(int ruleId) {
         strcat(ruleStr, aliasLegendKey(legendId));
 
         if (partId + 1 < pd.rules[ruleId].resultStates[stateId].partCount) {
-          strcat(ruleStr, "|");
+          strcat(ruleStr, " | ");
         }
       }
     }
@@ -271,7 +271,7 @@ void printRules() {
   char * rstr;
   for (int ruleId = 0; ruleId < pd.ruleCount; ruleId++) {
     rstr = ruleString(ruleId);
-    printf("index; %i: %s\n", ruleId, rstr);
+    printf("%i: %s\n", ruleId, rstr);
     free(rstr);
   }
 }
@@ -303,6 +303,9 @@ void initState(RuleState * ruleState) {
 void initRule(Rule * rule) {
   rule->lineNo = 0;
   rule->hasSpread = 0;
+  rule->hasRelativeDirection = 0;
+  rule->hasMultipleParts = 0;
+  rule->hasCompoundDirection = 0;
 
   rule->directionConstraint = NONE;
   rule->executionTime = NORMAL;
@@ -656,7 +659,6 @@ int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule *
 }
 
 int buildReverseRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule * sourceRule) {
-  int reverseRuleWasRequired = 0;
   if (sourceRule->directionConstraint == NONE ||
       sourceRule->directionConstraint == appDir ||
       sourceRule->directionConstraint == dirCategory) {
@@ -677,18 +679,11 @@ int buildReverseRule(Direction appDir, Direction dirCategory, Rule * targetRule,
         for (int identId = 0; identId < sourceRule->matchStates[stateId].parts[partId].ruleIdentityCount; identId++) {
           Direction ruleDir = sourceRule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
           int legendId = sourceRule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+          // This is the part that is different from `buildRule`
+          targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction = ((realDirection(appDir, ruleDir) + 2) % 4);
+          targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId = legendId;
+          incRuleIdent(&targetRule->matchStates[stateId].parts[partId]);
 
-          // This is the diference from `buildRule`
-          if (ruleDir == PARALLEL || ruleDir == PERPENDICULAR || ruleDir == HORIZONTAL || ruleDir == VERTICAL) {
-            reverseRuleWasRequired = 1;
-            targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction = ((realDirection(appDir, ruleDir) + 2) % 4);
-            targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId = legendId;
-            incRuleIdent(&targetRule->matchStates[stateId].parts[partId]);
-          } else {
-            targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction = realDirection(appDir, ruleDir);
-            targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId = legendId;
-            incRuleIdent(&targetRule->matchStates[stateId].parts[partId]);
-          }
         }
         incRulePart(&targetRule->matchStates[stateId]);
       }
@@ -696,7 +691,7 @@ int buildReverseRule(Direction appDir, Direction dirCategory, Rule * targetRule,
     }
 
     if (sourceRule->resultStateCount == 0) {
-      return reverseRuleWasRequired;
+      return 1;
     }
 
     for (int stateId = 0; stateId < sourceRule->resultStateCount; stateId++) {
@@ -705,24 +700,17 @@ int buildReverseRule(Direction appDir, Direction dirCategory, Rule * targetRule,
         for (int identId = 0; identId < sourceRule->resultStates[stateId].parts[partId].ruleIdentityCount; identId++) {
           Direction ruleDir = sourceRule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction;
           int legendId = sourceRule->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId;
-
           // This is the part that is different from `buildRule`
-          if (ruleDir == PARALLEL || ruleDir == PERPENDICULAR || ruleDir == HORIZONTAL || ruleDir == VERTICAL) {
-            reverseRuleWasRequired = 1;
-            targetRule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction = ((realDirection(appDir, ruleDir) + 2) % 4);
-            targetRule->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId = legendId;
-            incRuleIdent(&targetRule->resultStates[stateId].parts[partId]);
-          } else {
-            targetRule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction = realDirection(appDir, ruleDir);
-            targetRule->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId = legendId;
-            incRuleIdent(&targetRule->resultStates[stateId].parts[partId]);
-          }
+          targetRule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction = ((realDirection(appDir, ruleDir) + 2) % 4);
+          targetRule->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId = legendId;
+          incRuleIdent(&targetRule->resultStates[stateId].parts[partId]);
+
         }
         incRulePart(&targetRule->resultStates[stateId]);
       }
       incRuleResultState(targetRule);
     }
-    return reverseRuleWasRequired;
+    return 1;
   }
   return 0;
 }
@@ -752,7 +740,6 @@ void freeRules() {
 
 void expandRules() {
   int ruleCount = 0;
-  int hasOneRule = 0;
   int ruleCapacity = 800;
 
   Rule * rules = malloc(sizeof(Rule) * ruleCapacity);
@@ -772,81 +759,85 @@ void expandRules() {
       resetRule(&rules[ruleCount]);
     }
 
-    if (buildRule(UP, VERTICAL, &rules[ruleCount], &pd.rules[ruleId])) {
-      if (ruleCount + 1 >= ruleCapacity) {
-        ruleCapacity += PUZZLE_MALLOC_INC;
-        rules = reallocRule(rules, ruleCapacity);
+    if (pd.rules[ruleId].hasMultipleParts || pd.rules[ruleId].hasRelativeDirection || pd.rules[ruleId].directionConstraint != NONE) {
+      if (buildRule(UP, VERTICAL, &rules[ruleCount], &pd.rules[ruleId])) {
+        if (ruleCount + 1 >= ruleCapacity) {
+          ruleCapacity += PUZZLE_MALLOC_INC;
+          rules = reallocRule(rules, ruleCapacity);
+        }
+        rules[ruleCount].id = ruleCount;
+        ruleCount++;
+      } else {
+        resetRule(&rules[ruleCount]);
       }
-      rules[ruleCount].id = ruleCount;
-      ruleCount++;
-    } else {
-      resetRule(&rules[ruleCount]);
-    }
 
-    if (buildRule(LEFT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId])) {
-      if (ruleCount + 1 >= ruleCapacity) {
-        ruleCapacity += PUZZLE_MALLOC_INC;
-        rules = reallocRule(rules, ruleCapacity);
+      if (buildRule(LEFT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId])) {
+        if (ruleCount + 1 >= ruleCapacity) {
+          ruleCapacity += PUZZLE_MALLOC_INC;
+          rules = reallocRule(rules, ruleCapacity);
+        }
+        rules[ruleCount].id = ruleCount;
+        ruleCount++;
+      } else {
+        resetRule(&rules[ruleCount]);
       }
-      rules[ruleCount].id = ruleCount;
-      ruleCount++;
-    } else {
-      resetRule(&rules[ruleCount]);
-    }
-    if (buildRule(RIGHT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId])) {
-      if (ruleCount + 1 >= ruleCapacity) {
-        ruleCapacity += PUZZLE_MALLOC_INC;
-        rules = reallocRule(rules, ruleCapacity);
+      if (buildRule(RIGHT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId])) {
+        if (ruleCount + 1 >= ruleCapacity) {
+          ruleCapacity += PUZZLE_MALLOC_INC;
+          rules = reallocRule(rules, ruleCapacity);
+        }
+        rules[ruleCount].id = ruleCount;
+        ruleCount++;
+      } else {
+        resetRule(&rules[ruleCount]);
       }
-      rules[ruleCount].id = ruleCount;
-      ruleCount++;
-    } else {
-      resetRule(&rules[ruleCount]);
-    }
 
-    // Reverse rules for
-    if (buildReverseRule(UP, VERTICAL, &rules[ruleCount], &pd.rules[ruleId])) {
-      if (ruleCount + 1 >= ruleCapacity) {
-        ruleCapacity += PUZZLE_MALLOC_INC;
-        rules = reallocRule(rules, ruleCapacity);
-      }
-      rules[ruleCount].id = ruleCount;
-      ruleCount++;
-    } else {
-      resetRule(&rules[ruleCount]);
-    }
+      // Reverse rules for
+      if (pd.rules[ruleId].hasCompoundDirection) {
+        if (buildReverseRule(UP, VERTICAL, &rules[ruleCount], &pd.rules[ruleId])) {
+          if (ruleCount + 1 >= ruleCapacity) {
+            ruleCapacity += PUZZLE_MALLOC_INC;
+            rules = reallocRule(rules, ruleCapacity);
+          }
+          rules[ruleCount].id = ruleCount;
+          ruleCount++;
+        } else {
+          resetRule(&rules[ruleCount]);
+        }
 
-    if (buildReverseRule(DOWN, VERTICAL, &rules[ruleCount], &pd.rules[ruleId])) {
-      if (ruleCount + 1 >= ruleCapacity) {
-        ruleCapacity += PUZZLE_MALLOC_INC;
-        rules = reallocRule(rules, ruleCapacity);
-      }
-      rules[ruleCount].id = ruleCount;
-      ruleCount++;
-    } else {
-      resetRule(&rules[ruleCount]);
-    }
+        if (buildReverseRule(DOWN, VERTICAL, &rules[ruleCount], &pd.rules[ruleId])) {
+          if (ruleCount + 1 >= ruleCapacity) {
+            ruleCapacity += PUZZLE_MALLOC_INC;
+            rules = reallocRule(rules, ruleCapacity);
+          }
+          rules[ruleCount].id = ruleCount;
+          ruleCount++;
+        } else {
+          resetRule(&rules[ruleCount]);
+        }
 
-    if (buildReverseRule(LEFT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId])) {
-      if (ruleCount + 1 >= ruleCapacity) {
-        ruleCapacity += PUZZLE_MALLOC_INC;
-        rules = reallocRule(rules, ruleCapacity);
-      }
-      rules[ruleCount].id = ruleCount;
-      ruleCount++;
-    } else {
-      resetRule(&rules[ruleCount]);
-    }
+        if (buildReverseRule(LEFT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId])) {
+          if (ruleCount + 1 >= ruleCapacity) {
+            ruleCapacity += PUZZLE_MALLOC_INC;
+            rules = reallocRule(rules, ruleCapacity);
+          }
+          rules[ruleCount].id = ruleCount;
+          ruleCount++;
+        } else {
+          resetRule(&rules[ruleCount]);
+        }
 
-    if (buildReverseRule(RIGHT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId])) {
-      if (ruleCount + 1 >= ruleCapacity) {
-        ruleCapacity += PUZZLE_MALLOC_INC;
-        rules = reallocRule(rules, ruleCapacity);
+        if (buildReverseRule(RIGHT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId])) {
+          if (ruleCount + 1 >= ruleCapacity) {
+            ruleCapacity += PUZZLE_MALLOC_INC;
+            rules = reallocRule(rules, ruleCapacity);
+          }
+          rules[ruleCount].id = ruleCount;
+          ruleCount++;
+        } else {
+          resetRule(&rules[ruleCount]);
+        }
       }
-      rules[ruleCount].id = ruleCount;
-      ruleCount++;
-    } else {
-      resetRule(&rules[ruleCount]);
     }
   }
 

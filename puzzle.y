@@ -398,7 +398,9 @@ rule_postfix: OBJID {
 
 match_states:   match_states match_state | match_state;
 
-match_state:    OPEN_SQUARE match_state_internals CLOSE_SQUARE { incRuleMatchState(&pd.rules[pd.ruleCount]); }
+match_state:    OPEN_SQUARE match_state_internals CLOSE_SQUARE {
+    incRuleMatchState(&pd.rules[pd.ruleCount]);
+}
 
 match_state_internals: match_state_internals VERTICAL_PIPE match_state_part
                 |      match_state_part
@@ -408,6 +410,10 @@ match_state_part: match_on_square {
   Rule * r = &pd.rules[pd.ruleCount];
   RuleState * rs = &r->matchStates[r->matchStateCount];
   incRulePart(rs);
+  if (rs->partCount > 1) {
+      r->hasMultipleParts = 1;
+  }
+
 }
                 | %empty {
   Rule * r = &pd.rules[pd.ruleCount];
@@ -453,6 +459,22 @@ match_object_part: OBJID {
     RulePart * rsp = &rs->parts[rs->partCount];
     RuleIdentity * rid = &rsp->ruleIdentity[rsp->ruleIdentityCount];
 
+
+
+    if ($1 == PARALLEL ||
+        $1 == PERPENDICULAR) {
+        r->hasCompoundDirection = 1;
+        r->hasRelativeDirection = 1;
+    } else if ($1 == MOVING ||
+        $1 == REL_UP ||
+        $1 == REL_DOWN ||
+        $1 == REL_LEFT ||
+        $1 == REL_RIGHT ||
+                $1 == HORIZONTAL ||
+                $1 == VERTICAL
+                ) {
+        r->hasRelativeDirection = 1;
+    }
     rid->direction = $1;
     rid->legendId = aliasLegendId($2);
     free($2);
@@ -504,6 +526,16 @@ result_object_part: OBJID {
     RulePart * rsp = &rs->parts[rs->partCount];
     RuleIdentity * rid = &rsp->ruleIdentity[rsp->ruleIdentityCount];
 
+    if ($1 == PARALLEL ||
+        $1 == PERPENDICULAR) {
+        r->hasCompoundDirection = 1;
+    } else if ($1 == MOVING ||
+        $1 == REL_UP ||
+        $1 == REL_DOWN ||
+        $1 == REL_LEFT ||
+        $1 == REL_RIGHT) {
+        r->hasRelativeDirection = 1;
+    }
     rid->direction = $1;
     rid->legendId = aliasLegendId($2);
     free($2);
