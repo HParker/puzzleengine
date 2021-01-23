@@ -1,7 +1,7 @@
 BISON = bison
 FLEX = flex
 CC = gcc
-
+FLAGS = -O3 -Wall -Wextra
 default: parser
 	mkdir -p bin
 	${CC} -g -o ./bin/parseTest puzzle.tab.c puzzleData.c test/parseTest.c `pkg-config --cflags --libs check`
@@ -21,7 +21,7 @@ parser:
 	${FLEX} puzzle.lex
 
 sdl: parser
-	${CC} -o ./bin/sdlpuzzlescript puzzle.tab.c sdlRender.c runner.c puzzleData.c main.c `pkg-config --cflags --libs sdl2`
+	${CC} -O3 -Wall -Wextra -o ./bin/sdlpuzzlescript puzzle.tab.c sdlRender.c runner.c puzzleData.c main.c `pkg-config --cflags --libs sdl2`
 
 
 check: default

@@ -626,11 +626,8 @@ int partIdentity(Runtime * rt, Rule * rule, int stateId, int partId, int identId
 
 int partIdentitys(Runtime * rt, Rule * rule, int stateId, int partId, Direction appDir, Match * match) {
   int success = 0;
-  int ruleLine = 0;
   for (int i = 0; i < rule->matchStates[stateId].parts[partId].ruleIdentityCount; i++) {
     success = partIdentity(rt, rule, stateId, partId, i, appDir, match);
-    ruleLine = rule->lineNo;
-
     if (success == 0) {
       return 0;
     }
@@ -983,9 +980,10 @@ void nextLevel(Runtime * rt) {
 void startGame(Runtime * rt, FILE * file) {
   initGame(rt);
   rt->pd = parsePuzzle(file);
-  loadLevel(rt);
 
   rt->backgroundId = rt->pd->aliasLegend[aliasLegendId("Background")].objects[0];
+  loadLevel(rt);
+
   if (rt->pd->verboseLogging) {
     printRules();
   }

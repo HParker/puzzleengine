@@ -35,6 +35,8 @@ typedef struct AliasLegend {
   int objectCount;
   int objectCapacity;
   int * objects;
+
+  int * mask;
 } AliasLegend;
 
 typedef struct Layer {
@@ -125,6 +127,7 @@ typedef struct RulePart {
   int ruleIdentityCapacity;
   int isSpread;
   RuleIdentity * ruleIdentity;
+  int * mask;
 } RulePart;
 
 typedef struct RuleState {
