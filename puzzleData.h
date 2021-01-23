@@ -116,6 +116,7 @@ typedef enum ExecutionTime
 typedef struct RuleIdentity {
   Direction direction;
   int legendId;
+  int resultIncludesSelf;
 } RuleIdentity;
 
 // parts are split by `|`
@@ -123,7 +124,6 @@ typedef struct RulePart {
   int ruleIdentityCount;
   int ruleIdentityCapacity;
   int isSpread;
-  int resultIncludesSelf; // TODO: use this optimization
   RuleIdentity * ruleIdentity;
 } RulePart;
 

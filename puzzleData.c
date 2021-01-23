@@ -231,6 +231,10 @@ char * ruleString(int ruleId) {
         }
         strcat(ruleStr, aliasLegendKey(legendId));
 
+        if (pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[identId].resultIncludesSelf) {
+          strcat(ruleStr, "* ");
+        }
+
         if (partId + 1 < pd.rules[ruleId].matchStates[stateId].partCount) {
           strcat(ruleStr, " | ");
         }
@@ -252,6 +256,11 @@ char * ruleString(int ruleId) {
           strcat(ruleStr, " ");
         }
         strcat(ruleStr, aliasLegendKey(legendId));
+        if (pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity[identId].resultIncludesSelf) {
+          strcat(ruleStr, "* ");
+        }
+
+
 
         if (partId + 1 < pd.rules[ruleId].resultStates[stateId].partCount) {
           strcat(ruleStr, " | ");
@@ -279,6 +288,7 @@ void printRules() {
 void initRuleIdentity(RuleIdentity * ruleIdent) {
   ruleIdent->direction = UNSPECIFIED;
   ruleIdent->legendId = 1; // TODO: this is empty, but that isn't clear
+  ruleIdent->resultIncludesSelf = 0;
 }
 
 void initPart(RulePart * part) {
@@ -633,9 +643,11 @@ int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule *
         x = 0;
         for (int partId = sourceRule->matchStates[stateId].partCount; partId > 0; partId--) {
           targetRule->matchStates[stateId].parts[x].isSpread = sourceRule->matchStates[stateId].parts[partId - 1].isSpread;
+
           for (int identId = 0; identId < sourceRule->matchStates[stateId].parts[partId - 1].ruleIdentityCount; identId++) {
             Direction ruleDir = sourceRule->matchStates[stateId].parts[partId - 1].ruleIdentity[identId].direction;
             int legendId = sourceRule->matchStates[stateId].parts[partId - 1].ruleIdentity[identId].legendId;
+            targetRule->matchStates[stateId].parts[x].ruleIdentity[identId].resultIncludesSelf = sourceRule->matchStates[stateId].parts[partId - 1].ruleIdentity[identId].resultIncludesSelf;
             targetRule->matchStates[stateId].parts[x].ruleIdentity[identId].direction = realDirection(appDir, ruleDir);
             targetRule->matchStates[stateId].parts[x].ruleIdentity[identId].legendId = legendId;
             incRuleIdent(&targetRule->matchStates[stateId].parts[x]);
@@ -649,6 +661,7 @@ int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule *
           for (int identId = 0; identId < sourceRule->matchStates[stateId].parts[partId].ruleIdentityCount; identId++) {
             Direction ruleDir = sourceRule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
             int legendId = sourceRule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+            targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].resultIncludesSelf = sourceRule->matchStates[stateId].parts[partId].ruleIdentity[identId].resultIncludesSelf;
             targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction = realDirection(appDir, ruleDir);
             targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId = legendId;
             incRuleIdent(&targetRule->matchStates[stateId].parts[partId]);
@@ -672,6 +685,7 @@ int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule *
           for (int identId = 0; identId < sourceRule->resultStates[stateId].parts[partId].ruleIdentityCount; identId++) {
             Direction ruleDir = sourceRule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction;
             int legendId = sourceRule->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+            targetRule->matchStates[stateId].parts[x].ruleIdentity[identId].resultIncludesSelf = sourceRule->matchStates[stateId].parts[partId].ruleIdentity[identId].resultIncludesSelf;
             targetRule->resultStates[stateId].parts[x].ruleIdentity[identId].direction = realDirection(appDir, ruleDir);
             targetRule->resultStates[stateId].parts[x].ruleIdentity[identId].legendId = legendId;
             incRuleIdent(&targetRule->resultStates[stateId].parts[x]);
@@ -685,6 +699,7 @@ int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule *
           for (int identId = 0; identId < sourceRule->resultStates[stateId].parts[partId].ruleIdentityCount; identId++) {
             Direction ruleDir = sourceRule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction;
             int legendId = sourceRule->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+            targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].resultIncludesSelf = sourceRule->matchStates[stateId].parts[partId].ruleIdentity[identId].resultIncludesSelf;
             targetRule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction = realDirection(appDir, ruleDir);
             targetRule->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId = legendId;
             incRuleIdent(&targetRule->resultStates[stateId].parts[partId]);
@@ -721,8 +736,11 @@ int buildReverseRule(Direction appDir, Direction dirCategory, Rule * targetRule,
         for (int identId = 0; identId < sourceRule->matchStates[stateId].parts[partId].ruleIdentityCount; identId++) {
           Direction ruleDir = sourceRule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
           int legendId = sourceRule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+          targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].resultIncludesSelf = sourceRule->matchStates[stateId].parts[partId].ruleIdentity[identId].resultIncludesSelf;
+
           // This is the part that is different from `buildRule`
           targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction = ((realDirection(appDir, ruleDir) + 2) % 4);
+
           targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId = legendId;
           incRuleIdent(&targetRule->matchStates[stateId].parts[partId]);
 
@@ -742,8 +760,11 @@ int buildReverseRule(Direction appDir, Direction dirCategory, Rule * targetRule,
         for (int identId = 0; identId < sourceRule->resultStates[stateId].parts[partId].ruleIdentityCount; identId++) {
           Direction ruleDir = sourceRule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction;
           int legendId = sourceRule->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+          targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].resultIncludesSelf = sourceRule->matchStates[stateId].parts[partId].ruleIdentity[identId].resultIncludesSelf;
+
           // This is the part that is different from `buildRule`
           targetRule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction = ((realDirection(appDir, ruleDir) + 2) % 4);
+
           targetRule->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId = legendId;
           incRuleIdent(&targetRule->resultStates[stateId].parts[partId]);
 
@@ -889,11 +910,57 @@ void expandRules() {
   pd.rules = rules;
 }
 
+int legendHasObjectId(int legendId, int objectId) {
+  for (int i = 0; i < pd.aliasLegend[legendId].objectCount; i++) {
+    if (objectId == pd.aliasLegend[legendId].objects[i]) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+int legendContainsLegend(int legendId, int subsetLegendId) {
+  for (int i = 0; i < pd.aliasLegend[subsetLegendId].objectCount; i++) {
+    if (legendHasObjectId(legendId, pd.aliasLegend[subsetLegendId].objects[i]) == 0) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+int resultHasIdent(Rule * rule, int stateId, int partId, int identId) {
+  int matchLegendId = rule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+  if (stateId < rule->resultStateCount && partId < rule->resultStates[stateId].partCount) {
+    for (int i = 0; i < rule->resultStates[stateId].parts[partId].ruleIdentityCount; i++) {
+      int legendId = rule->resultStates[stateId].parts[partId].ruleIdentity[i].legendId;
+      if (legendContainsLegend(legendId, matchLegendId) || legendContainsLegend(matchLegendId, legendId)) {
+        return 1;
+      }
+    }
+  }
+  return 0;
+}
+
+void improveRules() {
+  Rule * rule;
+  for (int ruleId = 0; ruleId < pd.ruleCount; ruleId++) {
+    rule = &pd.rules[ruleId];
+    for (int stateId = 0; stateId < rule->matchStateCount; stateId++) {
+      for (int partId = 0; partId < rule->matchStates[stateId].partCount; partId++) {
+        for (int identId = 0; identId < rule->matchStates[stateId].parts[partId].ruleIdentityCount; identId++) {
+          rule->matchStates[stateId].parts[partId].ruleIdentity[identId].resultIncludesSelf = resultHasIdent(rule, stateId, partId, identId);
+        }
+      }
+    }
+  }
+}
+
 PuzzleData * parsePuzzle(FILE * file) {
   initPuzzleData();
   yyin = file;
   yyparse();
 
+  improveRules();
   expandRules();
 
   if (pd.debug) {

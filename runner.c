@@ -312,7 +312,6 @@ int isMovable(Runtime * rt, int x, int y, int layerIndex) {
       return 0;
     }
     int cellIndex = (layerIndex * rt->width * rt->height) + (y * rt->width) + x;
-    /* if (cellIndex > (rt->pd->layerCount * rt->width * rt->height)) */
     if (rt->map[cellIndex] == -1) {
       return 1;
     } else {
@@ -489,14 +488,15 @@ Direction matchLegendDirection(Rule * rule, int stateId, int partId, int legendI
   return UNSPECIFIED;
 }
 
-int resultHasLegendId(Rule * rule, int stateId, int partId, int legendId, int objId) {
+int resultMaintainsObjId(Rule * rule, int stateId, int partId, int objId) {
+  int resultLegendId;
   if (rule->resultStates[stateId].parts[partId].ruleIdentityCount == 0) {
     return 0;
   }
-  int resultLegendId;
+
   for (int i = 0; i < rule->resultStates[stateId].parts[partId].ruleIdentityCount; i++) {
     resultLegendId = rule->resultStates[stateId].parts[partId].ruleIdentity[i].legendId;
-    if (resultLegendId == legendId || aliasLegendContains(resultLegendId, objId)) {
+    if (aliasLegendContains(resultLegendId, objId)) {
       return 1;
     }
   }
@@ -537,10 +537,12 @@ void replaceCell(Runtime * rt, Rule * rule, int stateId, int partId, Direction a
     int objId = legendObjId(rt, legendId, match->targetX, match->targetY);
 
     if (objId != -1) {
-      int resultIncludesSelf = resultHasLegendId(rule, stateId, partId, legendId, rt->objects[objId].objId);
       if (ruleDir != COND_NO &&
           legendId != EMPTY_ID &&
-          resultIncludesSelf == 0
+          (rule->matchStates[stateId].parts[partId].ruleIdentity[identId].resultIncludesSelf == 0 ||
+           resultMaintainsObjId(rule, stateId, partId, rt->objects[objId].objId) == 0
+           )
+          //resultIncludesSelf == 0
           ) {
         match->parts[match->partCount].newObject = 0;
         match->parts[match->partCount].goalId = EMPTY_ID;
@@ -602,7 +604,6 @@ void replaceCell(Runtime * rt, Rule * rule, int stateId, int partId, Direction a
 }
 
 int partIdentity(Runtime * rt, Rule * rule, int stateId, int partId, int identId, Direction appDir, Match * match) {
-  int objIndex = -1;
   int matched = 0;
 
   Direction ruleDir = rule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
