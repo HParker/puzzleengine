@@ -624,23 +624,153 @@ int partIdentity(Runtime * rt, Rule * rule, int stateId, int partId, int identId
   return matched;
 }
 
-int partIdentitys(Runtime * rt, Rule * rule, int stateId, int partId, Direction appDir, Match * match) {
-  int success = 0;
-  for (int i = 0; i < rule->matchStates[stateId].parts[partId].ruleIdentityCount; i++) {
-    success = partIdentity(rt, rule, stateId, partId, i, appDir, match);
-    if (success == 0) {
-      return 0;
+void cellMask(Runtime * rt, char * mask, Match * match) {
+  int cellIndex;
+  for (int i = 0; i < rt->pd->layerCount; i++) {
+    cellIndex = (i * rt->width * rt->height) + (match->targetY * rt->width) + match->targetX;
+    if (rt->map[cellIndex] != -1) {
+      int element = rt->objects[rt->map[cellIndex]].objId;
+      unsigned int byte_index = element/8;
+      unsigned int bit_index = element % 8;
+      unsigned int bit_mask = (1 << bit_index);
+
+      mask[byte_index] |= bit_mask;
+    }
+  }
+}
+
+int mask_partMatches(Runtime * rt, Rule * rule, int stateId, int partId, Direction appDir, Match * match) {
+  char * ruleMask = rule->matchStates[stateId].parts[partId].mask;
+  char * ruleAbsentMask = rule->matchStates[stateId].parts[partId].absentMask;
+  char * cm = calloc(rt->pd->objectCount+1, 1);
+  char * combo = calloc(rt->pd->objectCount+1, 1);
+  char * absentCombo = calloc(rt->pd->objectCount+1, 1);
+  char * empty = calloc(rt->pd->objectCount+1, 1);
+  cellMask(rt, cm, match);
+
+  if (memcmp(cm, empty, rt->pd->objectCount+1) == 0) {
+    return 0;
+  }
+
+  int positiveMatch = 0;
+  for (int objectId = 0; objectId < rt->pd->objectCount/8+1; objectId++) {
+    combo[objectId] = (ruleMask[objectId] & cm[objectId]);
+  }
+
+  if (memcmp(cm, combo, rt->pd->objectCount+1) == 0) {
+    positiveMatch = 1;
+  }
+
+  int absentMatch = 0;
+  if (rule->matchStates[stateId].parts[partId].hasAbsentMask) {
+    for (int objectId = 0; objectId < rt->pd->objectCount/8+1; objectId++) {
+      absentCombo[objectId] = (ruleAbsentMask[objectId] & ~cm[objectId]);
+    }
+    if (memcmp(cm, absentCombo, rt->pd->objectCount+1) == 0) {
+      absentMatch = 1;
+    }
+  }
+
+
+  free(cm);
+  free(combo);
+  free(absentCombo);
+  free(empty);
+
+  if (positiveMatch || absentMatch) {
+    return 1;
+  }
+  return 0;
+}
+
+int directionMatches(Runtime * rt, Rule * rule, int stateId, int partId, Direction appDir, Match * match) {
+  int matched = 0;
+  for (int identId = 0; identId < rule->matchStates[stateId].parts[partId].ruleIdentityCount; identId++) {
+    Direction ruleDir = rule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
+    int legendId = rule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+    if (ruleDir == COND_NO || ruleDir == STATIONARY || ruleDir == UNSPECIFIED) {
+      matched = 1;
     }
 
-    /* if (success == 0) { */
-    /*   fprintf(stderr, "X -- FAILED rule: %i state: %i part: %i ident: %i, appDir: %s (%i, %i)\n", ruleLine, stateId, partId, i, dirName(appDir), match->targetX, match->targetY); */
-    /*   return 0; */
-    /* } else { */
-    /*   fprintf(stderr, "V --- Matched rule: %i state: %i part: %i ident: %i, appDir: %s (%i, %i)\n", ruleLine, stateId, partId, i, dirName(appDir), match->targetX, match->targetY); */
-    /* } */
+
+    for (int i = 0; i < rt->toMoveCount; i++) {
+      /* printf("(%i,%i) %s | (%i,%i) %i\n", */
+      /*        rt->objects[rt->toMove[i].objIndex].x, */
+      /*        rt->objects[rt->toMove[i].objIndex].y, */
+      /*        dirName(rt->objects[rt->toMove[i].objIndex].moving), */
+      /*        match->targetX, */
+      /*        match->targetY, */
+      /*        rt->objects[rt->toMove[i].objIndex].objId */
+      /*        ); */
+
+
+      if (rt->objects[rt->toMove[i].objIndex].x == match->targetX &&
+          rt->objects[rt->toMove[i].objIndex].y == match->targetY &&
+          rt->objects[rt->toMove[i].objIndex].moving == ruleDir &&
+          aliasLegendContains(legendId, rt->objects[rt->toMove[i].objIndex].objId)) {
+        matched = 1;
+      }
+    }
   }
+  return matched;
+}
+
+int partIdentitys(Runtime * rt, Rule * rule, int stateId, int partId, Direction appDir, Match * match) {
+  int maskResult, dirResult;
+  int success = 1;
+  maskResult = mask_partMatches(rt, rule, stateId, partId, appDir, match);
+  dirResult = directionMatches(rt, rule, stateId, partId, appDir, match);
+
+  for (int i = 0; i < rule->matchStates[stateId].parts[partId].ruleIdentityCount; i++) {
+    if (success != 0) {
+      success = partIdentity(rt, rule, stateId, partId, i, appDir, match);
+    }
+  }
+
+  if (success != (maskResult && dirResult)) {
+    char * ruleMask = rule->matchStates[stateId].parts[partId].mask;
+    char * ruleAbsentMask = rule->matchStates[stateId].parts[partId].absentMask;
+    char * cm = calloc(rt->pd->objectCount+1, 1);
+    cellMask(rt, cm, match);
+
+    printf("mask: ");
+    for (int objectId = 0; objectId < rt->pd->objectCount/8+1; objectId++) {
+      for (int i = 7; 0 <= i; i--) {
+        printf("%c", (ruleMask[objectId] & (1 << i)) ? '1' : '0');
+      }
+    }
+    printf("\n");
+
+    printf("absn: ");
+    for (int objectId = 0; objectId < rt->pd->objectCount/8+1; objectId++) {
+      for (int i = 7; 0 <= i; i--) {
+        printf("%c", (ruleAbsentMask[objectId] & (1 << i)) ? '1' : '0');
+      }
+    }
+    printf("\n");
+
+    printf("cell: ");
+    for (int objectId = 0; objectId < rt->pd->objectCount/8+1; objectId++) {
+      for (int i = 7; 0 <= i; i--) {
+        printf("%c", (cm[objectId] & (1 << i)) ? '1' : '0');
+      }
+    }
+    printf("\n");
+
+
+    printf("(%i,%i) Missmatch suc: %i mr: (%i && %i)\n", match->targetX, match->targetY, success, maskResult, dirResult);
+    printf("Rule[%i]: %s\n\n", partId, ruleString(match->ruleIndex));
+  }
+
+
+  /* if (success == 0) { */
+  /*   fprintf(stderr, "X -- FAILED rule: %i state: %i part: %i ident: %i, appDir: %s (%i, %i)\n", ruleLine, stateId, partId, i, dirName(appDir), match->targetX, match->targetY); */
+  /*   return 0; */
+  /* } else { */
+  /*   fprintf(stderr, "V --- Matched rule: %i state: %i part: %i ident: %i, appDir: %s (%i, %i)\n", ruleLine, stateId, partId, i, dirName(appDir), match->targetX, match->targetY); */
+  /* } */
   /* fprintf(stderr, "> --- Identity Success\n"); */
-  return 1;
+  return success;
 }
 
 int identitysAtDistance(Runtime * rt, Rule * rule, int stateId, int partId, Direction appDir, int distance, Match * match) {

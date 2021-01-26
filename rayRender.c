@@ -196,7 +196,7 @@ Color colorFromSprite(Runtime * rt, int objId, int cellIndex) {
 
 void initRenderer() {
   InitWindow(WINDOW_SIZE, WINDOW_SIZE, "My Puzzle");
-  SetTargetFPS(140);
+  SetTargetFPS(27);
 }
 
 void closeRenderer() {

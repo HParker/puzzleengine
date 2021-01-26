@@ -972,14 +972,45 @@ void makeLegendMasks() {
   }
 }
 
+void makeRuleMasks() {
+  int legendId;
+  Direction ruleDir;
+  // TODO: we can probably do this instead of making the array to begin with...
+  for (int ruleId = 0; ruleId < pd.ruleCount; ruleId++) {
+    for (int stateId = 0; stateId < pd.rules[ruleId].matchStateCount; stateId++) {
+      for (int partId = 0; partId < pd.rules[ruleId].matchStates[stateId].partCount; partId++) {
+        pd.rules[ruleId].matchStates[stateId].parts[partId].mask = calloc(pd.objectCount, 1);
+        pd.rules[ruleId].matchStates[stateId].parts[partId].absentMask = calloc(pd.objectCount, 1);
+        for (int identId = 0; identId < pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCount; identId++) {
+          legendId = pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+          ruleDir = pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
+
+          if (ruleDir == COND_NO) {
+            for (int objectId = 0; objectId < pd.objectCount/8+1; objectId++) {
+              pd.rules[ruleId].matchStates[stateId].parts[partId].hasAbsentMask = 1;
+              pd.rules[ruleId].matchStates[stateId].parts[partId].absentMask[objectId] |= pd.aliasLegend[legendId].mask[objectId];
+            }
+          } else {
+            for (int objectId = 0; objectId < pd.objectCount/8+1; objectId++) {
+              pd.rules[ruleId].matchStates[stateId].parts[partId].mask[objectId] |= pd.aliasLegend[legendId].mask[objectId];
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 PuzzleData * parsePuzzle(FILE * file) {
   initPuzzleData();
   yyin = file;
   yyparse();
 
   makeLegendMasks();
+
   improveRules();
   expandRules();
+  makeRuleMasks();
 
   if (pd.debug) {
     printRules();

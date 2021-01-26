@@ -36,7 +36,7 @@ typedef struct AliasLegend {
   int objectCapacity;
   int * objects;
 
-  int * mask;
+  char * mask;
 } AliasLegend;
 
 typedef struct Layer {
@@ -80,6 +80,10 @@ typedef enum Command
    WIN = 14,
   } Command;
 
+// TODO: none, unspecified and stationary are a bit confused.
+// Stationary - explicit from a rule only
+// none - Should be replaced with UNSPECIFIED
+// unspecified - rule doesn't say so we don't care
 typedef enum Direction
   {
    RIGHT         = 0,
@@ -127,7 +131,9 @@ typedef struct RulePart {
   int ruleIdentityCapacity;
   int isSpread;
   RuleIdentity * ruleIdentity;
-  int * mask;
+  char * mask;
+  int hasAbsentMask;
+  char * absentMask;
 } RulePart;
 
 typedef struct RuleState {
