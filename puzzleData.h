@@ -327,6 +327,10 @@ typedef struct Runtime {
   int hasMap;
   int * map;
 
+  int hasOMap;
+  int OMapCount;
+  int * OMap;
+
   int statesCount;
   int statesCapacity;
   State * states;

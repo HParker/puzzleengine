@@ -134,12 +134,7 @@ void updateObjInMap(Runtime * rt, int objIndex) {
   x = rt->objects[objIndex].x;
   y = rt->objects[objIndex].y;
 
-
-
   cellIndex = (layerId * rt->width * rt->height) + (y * rt->width) + x;
-
-  /* printf("updating (%i,%i,%i)[%i] = %i\n", layerId, x, y, cellIndex, objIndex); */
-
   rt->map[cellIndex] = objIndex;
 }
 
@@ -257,6 +252,7 @@ void initGame(Runtime * rt) {
 
   rt->removedId = -1;
   rt->hasMap = 0;
+  rt->hasOMap = 0;
 }
 
 void endGame(Runtime * rt) {
@@ -732,17 +728,11 @@ int directionMatches(Runtime * rt, Rule * rule, int stateId, int partId, Directi
 }
 
 int partIdentitys(Runtime * rt, Rule * rule, int stateId, int partId, Direction appDir, Match * match) {
-  int maskResult, dirResult;
-  int success = 1;
   if (mask_partMatches(rt, rule, stateId, partId, appDir, match) && directionMatches(rt, rule, stateId, partId, appDir, match))  {
     return 1;
   } else {
     return 0;
   }
-  maskResult = mask_partMatches(rt, rule, stateId, partId, appDir, match);
-  dirResult = directionMatches(rt, rule, stateId, partId, appDir, match);
-
-  return (maskResult && dirResult);
 }
 
 int identitysAtDistance(Runtime * rt, Rule * rule, int stateId, int partId, Direction appDir, int distance, Match * match) {
@@ -1044,6 +1034,13 @@ void addState(Runtime * rt) {
 
   rt->statesCount++;
 }
+void resetMap(Runtime * rt) {
+  if (rt->hasMap) {
+    free(rt->map);
+  }
+  rt->hasMap = 1;
+  rt->map = malloc((sizeof(int) * rt->height * rt->width * rt->pd->layerCount));
+}
 
 void loadLevel(Runtime * rt) {
   rt->levelType = levelType(rt->levelIndex);
@@ -1054,13 +1051,19 @@ void loadLevel(Runtime * rt) {
     rt->toMoveCount = 0;
     rt->objectCount = 0;
 
-    if (rt->hasMap) {
-      free(rt->map);
-    }
-    rt->hasMap = 1;
-    rt->map = malloc((sizeof(int) * rt->height * rt->width * rt->pd->layerCount));
-
+    resetMap(rt);
     clearMap(rt);
+
+    if (rt->hasOMap) {
+      // TODO: cleanup
+    }
+    rt->OMap = malloc(sizeof(int) * rt->height * rt->width);
+    for (int y = 0; y < rt->height; y++) {
+      for (int x = 0; x < rt->width; x++) {
+        rt->OMap[(y * rt->width) + x] = calloc(rt->objectCount+1, 1);
+      }
+    }
+
 
     int count = levelCellCount(rt->levelIndex);
     for (int i = 0; i < count; i++) {
@@ -1081,10 +1084,6 @@ void nextLevel(Runtime * rt) {
   if (rt->levelIndex < levelCount() - 1) {
     rt->prevHistoryCount = rt->historyCount;
     rt->levelIndex++;
-    if (rt->hasMap) {
-      rt->hasMap = 0;
-      free(rt->map);
-    }
     loadLevel(rt);
   } else {
     rt->gameWon = 1;
