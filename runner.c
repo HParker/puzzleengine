@@ -705,12 +705,8 @@ int hasSpace(Runtime * rt, Rule * rule, RuleState * state, Match * match) {
   }
 
   switch (rule->directionConstraint) {
-  case UP:
-    return (match->cursorY - spaceRequired >= -1);
   case DOWN:
     return (match->cursorY + spaceRequired <= rt->height);
-  case LEFT:
-    return (match->cursorX - spaceRequired >= -1);
   case RIGHT:
     return (match->cursorX + spaceRequired <= rt->width);
   default:
