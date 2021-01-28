@@ -413,7 +413,6 @@ match_state_part: match_on_square {
   if (rs->partCount > 1) {
       r->hasMultipleParts = 1;
   }
-
 }
                 | %empty {
   Rule * r = &pd.rules[pd.ruleCount];
@@ -442,13 +441,13 @@ match_object_part: OBJID {
     }
 
 
-    if (strcasecmp("background", $1) == 0) {
-      rsp->ruleIdentity[rsp->ruleIdentityCount].direction = UNSPECIFIED;
-      rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId("_EMPTY_");
-    } else {
+    /* if (strcasecmp("background", $1) == 0) { */
+    /*   rsp->ruleIdentity[rsp->ruleIdentityCount].direction = UNSPECIFIED; */
+    /*   rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId("_EMPTY_"); */
+    /* } else { */
       rid->direction = UNSPECIFIED;
       rid->legendId = aliasLegendId($1);
-    }
+    /* } */
 
     free($1);
     incRuleIdent(rsp);

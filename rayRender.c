@@ -389,9 +389,11 @@ void drawCursors(Runtime * rt, Match * match) {
 
 void drawToMove(Runtime * rt) {
   for (int i = 0; i < rt->toMoveCount; i++) {
-    int x = rt->objects[rt->toMove[i].objIndex].x;
-    int y = rt->objects[rt->toMove[i].objIndex].y;
-    drawMovement(rt, x, y, rt->objects[rt->toMove[i].objIndex].moving, PURPLE_COLORS);
+    if (rt->objects[rt->toMove[i].objIndex].deleted == 0) {
+      int x = rt->objects[rt->toMove[i].objIndex].x;
+      int y = rt->objects[rt->toMove[i].objIndex].y;
+      drawMovement(rt, x, y, rt->objects[rt->toMove[i].objIndex].moving, PURPLE_COLORS);
+    }
   }
 }
 
@@ -406,7 +408,7 @@ void renderRule(Match * match) {
 }
 
 void debugRender(Runtime * rt, Match * match) {
-  int awaitInput = 0;
+  int awaitInput = 1;
   int frameCounter = 0;
   int frameDelay = 1;
   int pressed = 0;

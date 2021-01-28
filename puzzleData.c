@@ -233,6 +233,8 @@ char * ruleString(int ruleId) {
 
         if (pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[identId].resultIncludesSelf) {
           strcat(ruleStr, "* ");
+        } else {
+          strcat(ruleStr, " ");
         }
 
         if (partId + 1 < pd.rules[ruleId].matchStates[stateId].partCount) {
@@ -258,6 +260,8 @@ char * ruleString(int ruleId) {
         strcat(ruleStr, aliasLegendKey(legendId));
         if (pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity[identId].resultIncludesSelf) {
           strcat(ruleStr, "* ");
+        } else {
+          strcat(ruleStr, " ");
         }
 
 
@@ -941,6 +945,14 @@ int resultHasIdent(Rule * rule, int stateId, int partId, int identId) {
   return 0;
 }
 
+// TODO: this optimization doesn't always work in an annoying way
+//       say a rule says [ left Player ] -> [ PlayerLeft ]
+//       and Player = PlayerLeft or PlayerRight
+//       since at the time of writing the rules we can't know if player is
+//       already PlayerLeft, we actually can't tell if the rule is going to
+//       change the object at the time or writing the rule.
+//
+//       Maybe there is a way around this, but I haven't found it yet.
 void improveRules() {
   Rule * rule;
   for (int ruleId = 0; ruleId < pd.ruleCount; ruleId++) {
