@@ -217,7 +217,7 @@ void loadCell(Runtime * rt, char cell, int x, int y) {
 
   for (int i = 0; i < rt->pd->glyphLegend[id].objectCount; i++) {
     int objId = rt->pd->glyphLegend[id].objects[i];
-    if (rt->backgroundId != objId && objId != -1) {
+    if (objId != -1 /* && aliasLegendContains(rt->backgroundId, objId) */) {
       addObj(rt, objId, x, y);
     }
   }
@@ -602,46 +602,32 @@ void replaceCell(Runtime * rt, Rule * rule, int stateId, int partId, Direction a
 }
 
 int partIdentity(Runtime * rt, Rule * rule, int stateId, int partId, int identId, Direction appDir, Match * match) {
-  int objIndex = -1;
-  int matched = 0;
-
   Direction ruleDir = rule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
   int legendId = rule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
 
-  if (legendId == EMPTY_ID) {
-    matched = 1;
+  if (legendId == EMPTY_ID || legendId == rt->backgroundId) {
+    return 1;
   } else {
     int objId = legendObjId(rt, legendId, match->targetX, match->targetY);
     if (ruleDir == COND_NO && objId == -1) {
-      matched = 1;
+      return 1;
     } else if (ruleDir != COND_NO && objId != -1) {
       if (matchesDirection(ruleDir, appDir, directionMoving(rt, objId), 1) == 1) {
-        matched = 1;
+        return 1;
       }
     }
   }
-  return matched;
+  return 0;
 }
 
 int partIdentitys(Runtime * rt, Rule * rule, int stateId, int partId, Direction appDir, Match * match) {
   int success = 0;
-  int ruleLine = 0;
   for (int i = 0; i < rule->matchStates[stateId].parts[partId].ruleIdentityCount; i++) {
     success = partIdentity(rt, rule, stateId, partId, i, appDir, match);
-    ruleLine = rule->lineNo;
-
     if (success == 0) {
       return 0;
     }
-
-    /* if (success == 0) { */
-    /*   fprintf(stderr, "X -- FAILED rule: %i state: %i part: %i ident: %i, appDir: %s (%i, %i)\n", ruleLine, stateId, partId, i, dirName(appDir), match->targetX, match->targetY); */
-    /*   return 0; */
-    /* } else { */
-    /*   fprintf(stderr, "V --- Matched rule: %i state: %i part: %i ident: %i, appDir: %s (%i, %i)\n", ruleLine, stateId, partId, i, dirName(appDir), match->targetX, match->targetY); */
-    /* } */
   }
-  /* fprintf(stderr, "> --- Identity Success\n"); */
   return 1;
 }
 
@@ -982,9 +968,10 @@ void nextLevel(Runtime * rt) {
 void startGame(Runtime * rt, FILE * file) {
   initGame(rt);
   rt->pd = parsePuzzle(file);
+  rt->backgroundId = aliasLegendId("Background");
   loadLevel(rt);
 
-  rt->backgroundId = rt->pd->aliasLegend[aliasLegendId("Background")].objects[0];
+
   if (rt->pd->verboseLogging) {
     printRules();
   }

@@ -442,13 +442,8 @@ match_object_part: OBJID {
     }
 
 
-    if (strcasecmp("background", $1) == 0) {
-      rsp->ruleIdentity[rsp->ruleIdentityCount].direction = UNSPECIFIED;
-      rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId("_EMPTY_");
-    } else {
-      rid->direction = UNSPECIFIED;
-      rid->legendId = aliasLegendId($1);
-    }
+    rid->direction = UNSPECIFIED;
+    rid->legendId = aliasLegendId($1);
 
     free($1);
     incRuleIdent(rsp);
@@ -470,8 +465,8 @@ match_object_part: OBJID {
         $1 == REL_DOWN ||
         $1 == REL_LEFT ||
         $1 == REL_RIGHT ||
-                $1 == HORIZONTAL ||
-                $1 == VERTICAL
+        $1 == HORIZONTAL ||
+        $1 == VERTICAL
                 ) {
         r->hasRelativeDirection = 1;
     }
