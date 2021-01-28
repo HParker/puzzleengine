@@ -315,16 +315,12 @@ color (color|colour)
     yylval.enumValue = NO;
   } else if (strcasecmp(yytext, "some") == 0) {
     yylval.enumValue = SOME;
-  } else if (strcasecmp(yytext, "on") == 0) {
-    yylval.enumValue = ON;
   }
+  // `one` would be a useful word here
   return LOGIC_WORD;
 }
 
 <WINCONDITIONS>on {
-  if (strcasecmp(yytext, "on") == 0) {
-    yylval.enumValue = ON;
-  }
   return LOGIC_ON;
 }
 
