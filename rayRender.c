@@ -10,7 +10,7 @@
 
 char * RED_COLORS[10] = {"red", "", "", "", "", "", "", "", "", ""};
 char * WHITE_COLORS[10] = {"green", "", "", "", "", "", "", "", "", ""};
-char * PURPLE_COLORS[10] = {"blue", "", "", "", "", "", "", "", "", ""};
+char * BLUE_COLORS[10] = {"blue", "", "", "", "", "", "", "", "", ""};
 
 int CURSOR_SPRITE[25] = {
                        '0','.','.','.','0',
@@ -278,61 +278,75 @@ int playerY(Runtime * rt) {
 }
 
 int startTileY(Runtime * rt) {
-  int dist;
   if (rt->pd->doesZoomScreen) {
-    if (rt->height > rt->pd->zoomScreenY) {
-      dist = playerY(rt) - rt->pd->zoomScreenY/2;
-      if (dist > 0) {
-        if (dist + rt->pd->zoomScreenY > rt->height) {
-          return rt->height - rt->pd->zoomScreenY;
-        }
-        return dist;
+    if (playerY(rt) - rt->pd->zoomScreenY/2 > 0) {
+      if (playerY(rt) + rt->pd->zoomScreenY/2 >= rt->height) {
+        return rt->height - rt->pd->zoomScreenY;
       }
+      return playerY(rt) - rt->pd->zoomScreenY/2;
+    } else {
+      return 0;
     }
   }
   return 0;
 }
 
 int startTileX(Runtime * rt) {
-  int dist;
   if (rt->pd->doesZoomScreen) {
-    if (rt->width > rt->pd->zoomScreenX) {
-      dist = playerY(rt) - rt->pd->zoomScreenX/2;
-      if (dist > 0) {
-        return dist;
+    if (playerX(rt) - rt->pd->zoomScreenX/2 > 0) {
+      if (playerX(rt) + rt->pd->zoomScreenX/2 >= rt->width) {
+        return rt->width - rt->pd->zoomScreenX;
+      } else {
+        return playerX(rt) - rt->pd->zoomScreenX/2;
       }
+    } else {
+      return 0;
     }
   }
   return 0;
 }
 
 int endTileY(Runtime * rt) {
-  int dist;
   if (rt->pd->doesZoomScreen) {
-    return startTileY(rt) + rt->pd->zoomScreenY;
+    if (rt->pd->zoomScreenY < rt->height) {
+      return startTileY(rt) + rt->pd->zoomScreenY;
+    } else {
+      return rt->height;
+    }
   }
   return rt->height;
 }
 
 int endTileX(Runtime * rt) {
-  int dist;
   if (rt->pd->doesZoomScreen) {
-    return startTileX(rt) + rt->pd->zoomScreenX;
+    if (rt->pd->zoomScreenX < rt->width) {
+      return startTileX(rt) + rt->pd->zoomScreenX;
+    } else {
+      return rt->width;
+    }
   }
   return rt->width;
 }
 
 int tileWidthY(Runtime * rt) {
   if (rt->pd->doesZoomScreen) {
-    return rt->pd->zoomScreenY;
+    if (rt->pd->zoomScreenY < rt->height) {
+      return rt->pd->zoomScreenY;
+    } else {
+      return rt->height;
+    }
   } else {
-    return rt->width;
+    return rt->height;
   }
 }
 
 int tileWidthX(Runtime * rt) {
-    if (rt->pd->doesZoomScreen) {
-    return rt->pd->zoomScreenX;
+  if (rt->pd->doesZoomScreen) {
+    if (rt->pd->zoomScreenX < rt->width) {
+      return rt->pd->zoomScreenX;
+    } else {
+      return rt->width;
+    }
   } else {
     return rt->width;
   }
@@ -475,7 +489,7 @@ void drawToMove(Runtime * rt) {
   for (int i = 0; i < rt->toMoveCount; i++) {
     int x = rt->objects[rt->toMove[i].objIndex].x;
     int y = rt->objects[rt->toMove[i].objIndex].y;
-    drawMovement(rt, x, y, rt->objects[rt->toMove[i].objIndex].moving, PURPLE_COLORS);
+    drawMovement(rt, x, y, rt->objects[rt->toMove[i].objIndex].moving, BLUE_COLORS);
   }
 }
 

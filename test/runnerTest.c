@@ -236,6 +236,15 @@ START_TEST (test_runs_pathlines)
 }
 END_TEST
 
+START_TEST (test_runs_zoom_test)
+{
+  Runtime rt;
+  test_solution_file(&rt, "./puzzles/zoom_test.puzz", "./solutions/zoom_test.solution");
+  ck_assert_int_eq(1, rt.gameWon);
+  endGame(&rt);
+}
+END_TEST
+
 Suite * puzzle_script_parser_suite(void)
 {
   Suite * s;
@@ -273,6 +282,7 @@ Suite * puzzle_script_parser_suite(void)
   tcase_add_test(test_Runner, test_runs_enqueue);
   tcase_add_test(test_Runner, test_runs_ooo);
   tcase_add_test(test_Runner, test_runs_pathlines);
+  tcase_add_test(test_Runner, test_runs_zoom_test);
 
   suite_add_tcase(s, test_Runner);
 

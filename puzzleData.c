@@ -643,7 +643,6 @@ int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule *
             } else {
               targetRule->matchStates[stateId].parts[x].ruleIdentity[identId].direction = realDirection(appDir, ruleDir);
             }
-            printf("%i%i%i %s\n", stateId, partId, identId, dirName(targetRule->matchStates[stateId].parts[x].ruleIdentity[identId].direction));
             targetRule->matchStates[stateId].parts[x].ruleIdentity[identId].legendId = legendId;
             incRuleIdent(&targetRule->matchStates[stateId].parts[x]);
           }
