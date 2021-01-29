@@ -35,6 +35,7 @@ typedef struct AliasLegend {
   int objectCount;
   int objectCapacity;
   int * objects;
+  char * mask;
 } AliasLegend;
 
 typedef struct Layer {

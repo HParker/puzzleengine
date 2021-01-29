@@ -893,12 +893,30 @@ void expandRules() {
   pd.rules = rules;
 }
 
+void makeLegendMasks() {
+  // TODO: we can probably do this instead of making the array to begin with...
+  for (int legendId = 0; legendId < pd.aliasLegendCount; legendId++) {
+    pd.aliasLegend[legendId].mask = calloc(pd.objectCount, 1);
+    for (int objectId = 0; objectId < pd.aliasLegend[legendId].objectCount; objectId++) {
+      unsigned int element = pd.aliasLegend[legendId].objects[objectId];
+      unsigned int byte_index = element/8;
+      unsigned int bit_index = element % 8;
+      unsigned int bit_mask = (1 << bit_index);
+
+      if ((pd.aliasLegend[legendId].mask[byte_index] & bit_mask) == 0) {
+        pd.aliasLegend[legendId].mask[byte_index] |= bit_mask;
+      }
+    }
+  }
+}
+
 PuzzleData * parsePuzzle(FILE * file) {
   initPuzzleData();
   yyin = file;
   yyparse();
 
   expandRules();
+  makeLegendMasks();
 
   if (pd.debug) {
     printDebug();
@@ -997,12 +1015,11 @@ int legendIdForGlyph(char glyph) {
 }
 
 int aliasLegendContains(int legendId, int objId) {
-  for (int i = 0; i < pd.aliasLegend[legendId].objectCount; i++) {
-    if (objId == pd.aliasLegend[legendId].objects[i]) {
-      return 1;
-    }
-  }
-  return 0;
+    int element = objId;
+  int byte_index = element/8;
+  int bit_index = element % 8;
+  int bit_mask = (1 << bit_index);
+  return ((pd.aliasLegend[legendId].mask[byte_index] & bit_mask) != 0);
 }
 
 int idForGlyph(char glyph) {
