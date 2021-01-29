@@ -287,13 +287,24 @@ int startTileY(Runtime * rt) {
     } else {
       return 0;
     }
+
+
+    /* if (rt->height > rt->pd->zoomScreenY) { */
+    /*   dist = playerY(rt) - rt->pd->zoomScreenY/2; */
+    /*   if (dist > 0) { */
+    /*     if (dist + rt->pd->zoomScreenY > rt->height) { */
+    /*       return rt->height - rt->pd->zoomScreenY; */
+    /*     } */
+    /*     return dist; */
+    /*   } */
+    /* } */
   }
   return 0;
 }
 
 int startTileX(Runtime * rt) {
   if (rt->pd->doesZoomScreen) {
-    if (playerX(rt) - rt->pd->zoomScreenX/2 > 0) {
+    if (playerX(rt) - rt->pd->zoomScreenX/2 >= 0) {
       if (playerX(rt) + rt->pd->zoomScreenX/2 >= rt->width) {
         return rt->width - rt->pd->zoomScreenX;
       } else {
