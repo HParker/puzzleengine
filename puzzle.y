@@ -65,6 +65,7 @@ int rowWidth = 0;
   char cell;
   float decimal;
   int enumValue;
+  int number;
 };
 
 %define parse.error verbose
@@ -78,6 +79,9 @@ int rowWidth = 0;
 %token MODE_HEADER EQUALS END_LAYER END_OF_RULE MESSAGE LEGEND_AND LEGEND_OR END_OF_OBJECT_LINE
 %token  <identifier> ID OBJID COLOR LEGEND_ID LEGEND_VALUE END_LEGEND_LINE LAYER_NAME RULE_POSTFIX
 %token  <decimal> DECIMAL
+
+%token  <number> DIGIT
+%token  DIMENSION_SEP
 
 %token MOVE_RIGHT MOVE_UP MOVE_LEFT MOVE_DOWN
 %token OPEN_SQUARE CLOSE_SQUARE VERTICAL_PIPE ARROW
@@ -149,7 +153,7 @@ flickscreen: FLICKSCREEN ID { yyerror("FLICKSCREEN IS NOT YET SUPPORTED\n"); }
 key_repeat_interval: KEY_REPEAT_INTERVAL DECIMAL { pd.keyRepeatInterval = 0.1f; }
         ;
 
-realtime_interval: REALTIME_INTERVAL DECIMAL { pd.realTimeInterval = 1; }
+realtime_interval: REALTIME_INTERVAL DECIMAL { pd.realTimeInterval = $2; }
         ;
 
 noaction: NOACTION { pd.noAction = 1; }
@@ -173,7 +177,11 @@ text_color: TEXT_COLOR ID { pd.textColor = $2; }
 throttle_movement: THROTTLE_MOVEMENT ID { pd.throttleMovement = 1; }
         ;
 
-zoomscreen: ZOOMSCREEN ID { yyerror("ZOOMSCREEN IS NOT YET SUPPORTED\n"); }
+zoomscreen: ZOOMSCREEN DIGIT DIGIT {
+  pd.doesZoomScreen = 1;
+  pd.zoomScreenX = $2;
+  pd.zoomScreenY = $3;
+}
         ;
 
 debug: DEBUG { pd.debug = 1; }
@@ -325,9 +333,9 @@ rule_line: any_eor rule some_eor {
 some_eor: some_eor END_OF_RULE | END_OF_RULE;
 any_eor: some_eor | %empty;
 
-rule:           rule_prefix match_states arrow result_states rule_postfix
+rule:           rule_prefix match_states arrow result_states rule_postfixs
         |       rule_prefix match_states arrow result_states
-        |       match_states arrow result_states rule_postfix {
+        |       match_states arrow result_states rule_postfixs {
     pd.rules[pd.ruleCount].executionTime = NORMAL;
     pd.rules[pd.ruleCount].directionConstraint = NONE;
 }
@@ -335,12 +343,12 @@ rule:           rule_prefix match_states arrow result_states rule_postfix
     pd.rules[pd.ruleCount].executionTime = NORMAL;
     pd.rules[pd.ruleCount].directionConstraint = NONE;
 }
-        |       match_states arrow rule_postfix
+        |       match_states arrow rule_postfixs
                 {
     pd.rules[pd.ruleCount].executionTime = NORMAL;
     pd.rules[pd.ruleCount].directionConstraint = NONE;
 }
-        |       rule_prefix match_states arrow rule_postfix
+        |       rule_prefix match_states arrow rule_postfixs
 
 arrow: ARROW
 
@@ -356,6 +364,8 @@ rule_prefix:    EXECUTION_TIME {
   pd.rules[pd.ruleCount].executionTime = $1;
   pd.rules[pd.ruleCount].directionConstraint = $2;
 }
+
+rule_postfixs: rule_postfixs rule_postfix | rule_postfix
 
 rule_postfix: OBJID {
     if (strcasecmp("sfx0", $1) == 0) {

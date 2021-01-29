@@ -196,7 +196,7 @@ Color colorFromSprite(Runtime * rt, int objId, int cellIndex) {
 
 void initRenderer() {
   InitWindow(WINDOW_SIZE, WINDOW_SIZE, "My Puzzle");
-  SetTargetFPS(140);
+  SetTargetFPS(60);
 }
 
 void closeRenderer() {
@@ -255,20 +255,104 @@ Color txtColor() {
   return colorFromName(textColor());
 }
 
-int pixelSize(Runtime * rt) {
-  if (rt->width > rt->height) {
-    return (windowSize() / (rt->width * SPRITE_WIDTH));
+int playerX(Runtime * rt) {
+  int legendId = aliasLegendId("Player");
+  for (int i = 0; i < rt->objectCount; i++) {
+    if (rt->objects[i].deleted == 0 && aliasLegendContains(legendId, rt->objects[i].objId)) {
+      return rt->objects[i].x;
+    }
+  }
+  fprintf(stderr, "Err: failed to find playerX\n");
+  return 0;
+}
+
+int playerY(Runtime * rt) {
+  int legendId = aliasLegendId("Player");
+  for (int i = 0; i < rt->objectCount; i++) {
+    if (rt->objects[i].deleted == 0 && aliasLegendContains(legendId, rt->objects[i].objId)) {
+      return rt->objects[i].y;
+    }
+  }
+  fprintf(stderr, "Err: failed to find playerX\n");
+  return 0;
+}
+
+int startTileY(Runtime * rt) {
+  int dist;
+  if (rt->pd->doesZoomScreen) {
+    if (rt->height > rt->pd->zoomScreenY) {
+      dist = playerY(rt) - rt->pd->zoomScreenY/2;
+      if (dist > 0) {
+        if (dist + rt->pd->zoomScreenY > rt->height) {
+          return rt->height - rt->pd->zoomScreenY;
+        }
+        return dist;
+      }
+    }
+  }
+  return 0;
+}
+
+int startTileX(Runtime * rt) {
+  int dist;
+  if (rt->pd->doesZoomScreen) {
+    if (rt->width > rt->pd->zoomScreenX) {
+      dist = playerY(rt) - rt->pd->zoomScreenX/2;
+      if (dist > 0) {
+        return dist;
+      }
+    }
+  }
+  return 0;
+}
+
+int endTileY(Runtime * rt) {
+  int dist;
+  if (rt->pd->doesZoomScreen) {
+    return startTileY(rt) + rt->pd->zoomScreenY;
+  }
+  return rt->height;
+}
+
+int endTileX(Runtime * rt) {
+  int dist;
+  if (rt->pd->doesZoomScreen) {
+    return startTileX(rt) + rt->pd->zoomScreenX;
+  }
+  return rt->width;
+}
+
+int tileWidthY(Runtime * rt) {
+  if (rt->pd->doesZoomScreen) {
+    return rt->pd->zoomScreenY;
   } else {
-    return (windowSize() / (rt->height * SPRITE_WIDTH));
+    return rt->width;
+  }
+}
+
+int tileWidthX(Runtime * rt) {
+    if (rt->pd->doesZoomScreen) {
+    return rt->pd->zoomScreenX;
+  } else {
+    return rt->width;
+  }
+}
+
+
+int pixelSize(Runtime * rt) {
+  if (tileWidthX(rt) > tileWidthY(rt)) {
+    return (windowSize() / (tileWidthX(rt) * SPRITE_WIDTH));
+  } else {
+    return (windowSize() / (tileWidthY(rt) * SPRITE_WIDTH));
   }
 }
 
 int leftMargin(Runtime * rt) {
-  return ((windowSize() - (rt->width * pixelSize(rt) * SPRITE_WIDTH)) / 2);
+  return ((windowSize() - (tileWidthX(rt) * pixelSize(rt) * SPRITE_WIDTH)) / 2);
 }
 
 int topMargin(Runtime * rt) {
-  return ((windowSize() - (rt->height * pixelSize(rt) * SPRITE_WIDTH)) / 2);
+  return ((windowSize() - (tileWidthY(rt) * pixelSize(rt) * SPRITE_WIDTH)) / 2);
 }
 
 void drawSprite(Runtime * rt, int sprite[25], char * colors[10], int x, int y) {
@@ -276,8 +360,8 @@ void drawSprite(Runtime * rt, int sprite[25], char * colors[10], int x, int y) {
   for (int i = 0; i < 25; i++) {
     Color cellColor = colorFromList(colors, sprite[i]);
     if (cellColor.a != 0) {
-      int realX = leftMargin(rt) + (x * pixelSize(rt) * SPRITE_WIDTH) + ((i % SPRITE_WIDTH) * pixelSize(rt));
-      int realY = topMargin(rt) + (y * pixelSize(rt) * SPRITE_WIDTH) + ((i / SPRITE_WIDTH) * pixelSize(rt));
+      int realX = leftMargin(rt) + ((x - startTileX(rt)) * pixelSize(rt) * SPRITE_WIDTH) + ((i % SPRITE_WIDTH) * pixelSize(rt));
+      int realY = topMargin(rt) + ((y - startTileY(rt)) * pixelSize(rt) * SPRITE_WIDTH) + ((i / SPRITE_WIDTH) * pixelSize(rt));
       DrawRectangle(realX, realY, pixelSize(rt), pixelSize(rt), cellColor);
     }
   }
@@ -318,6 +402,21 @@ void renderBackground(Runtime * rt) {
     int x = cell % rt->width;
     int y = cell / rt->width;
     drawObject(rt, rt->backgroundId, x, y);
+  }
+}
+
+void renderTiles(Runtime * rt) {
+  int x, y, layer, cellIndex;
+  for (y = startTileY(rt); y < endTileY(rt); y++) {
+    for (x = startTileX(rt); x < endTileX(rt); x++) {
+      drawObject(rt, rt->backgroundId, x, y);
+      for (layer = 0; layer < rt->pd->layerCount; layer++) {
+        cellIndex = (layer * rt->width * rt->height) + (y * rt->width) + x;
+        if (rt->map[cellIndex] != -1) {
+          drawObj(rt, rt->map[cellIndex]);
+        }
+      }
+    }
   }
 }
 
@@ -368,23 +467,8 @@ void drawMovement(Runtime * rt, int x, int y, Direction dir, char * colors[10]) 
 
 void drawMatch(Runtime * rt, Match * match) {
   for (int i = 0; i < match->partCount; i++) {
-
-    int x = leftMargin(rt) + (match->parts[i].goalX * pixelSize(rt) * SPRITE_WIDTH) + ((i % SPRITE_WIDTH) * pixelSize(rt));
-    int y = topMargin(rt) + (match->parts[i].goalY * pixelSize(rt) * SPRITE_WIDTH) + ((i / SPRITE_WIDTH) * pixelSize(rt));
-
     drawMovement(rt, match->parts[i].goalX, match->parts[i].goalY, match->parts[i].goalDirection, RED_COLORS);
   }
-}
-
-void drawCursors(Runtime * rt, Match * match) {
-  // cursor
-  /* if (match->cursorX != -1) { */
-  /*   debugDrawSprite(rt, CURSOR_SPRITE, WHITE_COLORS, match->cursorX, match->cursorY); */
-  /* } */
-
-  /* if (match->targetX != -1) { */
-  /*   debugDrawSprite(rt, CURSOR_SPRITE, WHITE_COLORS, match->targetX, match->targetY); */
-  /* } */
 }
 
 void drawToMove(Runtime * rt) {
@@ -407,8 +491,6 @@ void renderRule(Match * match) {
 
 void debugRender(Runtime * rt, Match * match) {
   int awaitInput = 0;
-  int frameCounter = 0;
-  int frameDelay = 1;
   int pressed = 0;
   if (match->partCount > 0) {
     awaitInput = 1;
@@ -428,24 +510,7 @@ void debugRender(Runtime * rt, Match * match) {
         drawMatch(rt, match);
         drawToMove(rt);
         renderRule(match);
-        /* drawCursors(rt, match); */
         EndDrawing();
-      }
-    } else {
-      while (frameCounter < frameDelay) {
-        if (IsKeyPressed(KEY_PERIOD)) {
-          pressed = 1;
-        }
-        BeginDrawing();
-
-        ClearBackground(bkColor());
-
-        renderLevel(rt);
-        drawMatch(rt, match);
-        renderRule(match);
-        drawCursors(rt, match);
-        EndDrawing();
-        frameCounter++;
       }
     }
   }
@@ -459,7 +524,7 @@ void render(Runtime * rt) {
   DrawFPS(0,0);
   switch (rt->levelType) {
   case SQUARES:
-    renderLevel(rt);
+    renderTiles(rt);
     break;
   case MESSAGE_TEXT:
     renderMessage(rt);

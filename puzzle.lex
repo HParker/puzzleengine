@@ -6,7 +6,7 @@
 int modeToEnter = -1;
 int commentNestingLevel = 0;
 int inMode = 0;
-
+int dimensionCount = 0;
 %}
 
 %option noyywrap caseless yylineno
@@ -14,6 +14,7 @@ int inMode = 0;
 %s MODE
 %s IDENTIFIER
 %s FLOAT
+%s DIMENSIONS
 %s COMMENT
 %s OBJECTS
 %s LEGEND
@@ -51,7 +52,7 @@ color (color|colour)
 ^scanline[ ]+ { BEGIN IDENTIFIER; return SCANLINE; }
 ^text_color[ ]+ { BEGIN IDENTIFIER; return TEXT_COLOR; }
 ^throttle_movement[ ]+ { BEGIN IDENTIFIER; return THROTTLE_MOVEMENT; }
-^zoomscreen[ ]+ { BEGIN IDENTIFIER; return ZOOMSCREEN; }
+^zoomscreen[ ]+ { BEGIN DIMENSIONS; return ZOOMSCREEN; }
 ^enable_level_select {}
 
 ^debug { return DEBUG; }
@@ -77,11 +78,23 @@ color (color|colour)
   return ID;
 }
 
-<FLOAT>[0-9\.]+/[\n] {
+<FLOAT>[0-9\.]+ {
   BEGIN INITIAL;
-  yylval.decimal = 0.1f;
+  yylval.decimal = atof(yytext);
   return DECIMAL;
 }
+
+<DIMENSIONS>[0-9]+ {
+  yylval.number = atoi(yytext);
+  dimensionCount++;
+  if (dimensionCount > 2) {
+    dimensionCount = 0;
+    BEGIN INITIAL;
+  }
+  return DIGIT;
+}
+
+<DIMENSIONS>x {}
 
 ={2,}[\n]+ {
   if (inMode) {
@@ -212,6 +225,13 @@ color (color|colour)
   return DIRECTION;
 }
 
+<RULES>\+ {
+  /* yylval.enumValue = RIGHT; */
+  /* return DIRECTION; */
+           // Eat the + for now until I figure out where I want it
+}
+
+
 <RULES>horizontal {
   yylval.enumValue = HORIZONTAL;
   return DIRECTION;
@@ -283,7 +303,7 @@ color (color|colour)
   return DIRECTION;
 }
 
-<RULES>^late {
+<RULES>late {
   yylval.enumValue = LATE;
   return EXECUTION_TIME;
 }
@@ -342,6 +362,8 @@ message[ ]+ {
   yylval.cell = yytext[0];
   return GLYPH;
 }
+
+<LEVELS>level_select_point {}
 
 [ \t\n]
 

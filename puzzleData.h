@@ -218,8 +218,10 @@ typedef struct PuzzleData {
   int colorPalette;
   char * backgroundColor;
   char * textColor;
+  int doesFlickScreen;
   int flickScreenX;
   int flickScreenY;
+  int doesZoomScreen;
   int zoomScreenX;
   int zoomScreenY;
   int scanLine;
@@ -294,6 +296,7 @@ typedef struct Runtime {
   PuzzleData * pd;
   time_t randomSeed;
   int gameWon;
+  int doAgain;
   int deadCount;
   int levelIndex;
   int backgroundId;

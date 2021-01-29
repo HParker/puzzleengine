@@ -217,7 +217,7 @@ void loadCell(Runtime * rt, char cell, int x, int y) {
 
   for (int i = 0; i < rt->pd->glyphLegend[id].objectCount; i++) {
     int objId = rt->pd->glyphLegend[id].objects[i];
-    if (objId != -1 /* && aliasLegendContains(rt->backgroundId, objId) */) {
+    if (objId != -1) {
       addObj(rt, objId, x, y);
     }
   }
@@ -414,7 +414,11 @@ void applyMatch(Runtime * rt, Match * match) {
       }
     }
   }
+  if (ruleCommandContains(&rt->pd->rules[match->ruleIndex], AGAIN) && match->partCount > 0) {
+    rt->doAgain = 1;
+  }
   match->partCount = 0;
+
 }
 
 int distance(int i, int j) {
@@ -941,9 +945,13 @@ void loadLevel(Runtime * rt) {
   }
 
   if (rt->pd->runRulesOnLevelStart && rt->levelType == SQUARES) {
-    applyRules(rt, NORMAL);
-    moveObjects(rt);
-    applyRules(rt, LATE);
+    rt->doAgain = 1;
+    while (rt->doAgain == 1) {
+      rt->doAgain = 0;
+      applyRules(rt, NORMAL);
+      moveObjects(rt);
+      applyRules(rt, LATE);
+    }
   }
 }
 
@@ -975,15 +983,18 @@ void startGame(Runtime * rt, FILE * file) {
 }
 
 void tick(Runtime * rt) {
+  rt->doAgain = 0;
   if (rt->deadCount > 300) {
     cleanup(rt);
     rt->deadCount = 0;
   }
   applyRules(rt, NORMAL);
   moveObjects(rt);
+  applyRules(rt, LATE);
 }
 
 void update(Runtime * rt, Direction dir) {
+  rt->doAgain = 0;
   if (dir == NONE) {
     return;
   }
