@@ -1,0 +1,147 @@
+title Stealthy tree
+
+realtime_interval 0.001
+again_interval 1
+
+========
+OBJECTS
+========
+
+Player
+Green
+
+GuardUp
+Blue
+
+GuardSweep
+yellow
+
+GuardDown
+Pink
+
+Wall
+Brown
+
+Background
+White
+
+Exit
+black
+
+=======
+LEGEND
+=======
+
+Guard = GuardUp or GuardDown or GuardSweep
+. = Background
+P = Player
+X = Wall
+G = Guard
+U = GuardUp
+D = GuardDown
+O = Exit
+
+=======
+SOUNDS
+=======
+
+================
+COLLISIONLAYERS
+================
+
+Background
+Exit
+Wall, Guard, Player
+
+======
+RULES
+======
+
+UP [ stationary Player ] [ GuardUp | no Wall ] -> [ stationary Player ] [ > GuardUP | ]
+UP [ stationary Player ] [ GuardUP | Wall ] -> [ stationary Player ] [ GuardDown | Wall ]
+
+DOWN [ stationary Player ] [ GuardDown | no Wall ] -> [ stationary Player ] [ > GuardDown | ]
+DOWN [ stationary Player ] [ GuardDown | Wall ] -> [ stationary Player ] [ GuardUp | Wall ]
+
+
+
+==============
+WINCONDITIONS
+==============
+
+all Player on Exit
+
+=======
+LEVELS
+=======
+
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+x..U.......UU.......Uxx..U.......UU.......Uxx..U.......UU.......Uxx..U.......UU.......Ux
+x...U.....U..U.....U.xx...U.....U..U.....U.xx...U.....U..U.....U.xx...U.....U..U.....U.x
+xOP..U...U....U...U..xxOP..U...U....U...U..xxOP..U...U....U...U..xxOP..U...U....U...U..x
+x.....U.U......U.U...xx.....U.U......U.U...xx.....U.U......U.U...xx.....U.U......U.U...x
+x......U........U....xx......U........U....xx......U........U....xx......U........U....x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+x..U.......UU.......Uxx..U.......UU.......Uxx..U.......UU.......Uxx..U.......UU.......Ux
+x...U.....U..U.....U.xx...U.....U..U.....U.xx...U.....U..U.....U.xx...U.....U..U.....U.x
+xOP..U...U....U...U..xxOP..U...U....U...U..xxOP..U...U....U...U..xxOP..U...U....U...U..x
+x.....U.U......U.U...xx.....U.U......U.U...xx.....U.U......U.U...xx.....U.U......U.U...x
+x......U........U....xx......U........U....xx......U........U....xx......U........U....x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+x..U.......UU.......Uxx..U.......UU.......Uxx..U.......UU.......Uxx..U.......UU.......Ux
+x...U.....U..U.....U.xx...U.....U..U.....U.xx...U.....U..U.....U.xx...U.....U..U.....U.x
+xOP..U...U....U...U..xxOP..U...U....U...U..xxOP..U...U....U...U..xxOP..U...U....U...U..x
+x.....U.U......U.U...xx.....U.U......U.U...xx.....U.U......U.U...xx.....U.U......U.U...x
+x......U........U....xx......U........U....xx......U........U....xx......U........U....x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+x..U.......UU.......Uxx..U.......UU.......Uxx..U.......UU.......Uxx..U.......UU.......Ux
+x...U.....U..U.....U.xx...U.....U..U.....U.xx...U.....U..U.....U.xx...U.....U..U.....U.x
+xOP..U...U....U...U..xxOP..U...U....U...U..xxOP..U...U....U...U..xxOP..U...U....U...U..x
+x.....U.U......U.U...xx.....U.U......U.U...xx.....U.U......U.U...xx.....U.U......U.U...x
+x......U........U....xx......U........U....xx......U........U....xx......U........U....x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+x..U.......UU.......Uxx..U.......UU.......Uxx..U.......UU.......Uxx..U.......UU.......Ux
+x...U.....U..U.....U.xx...U.....U..U.....U.xx...U.....U..U.....U.xx...U.....U..U.....U.x
+xOP..U...U....U...U..xxOP..U...U....U...U..xxOP..U...U....U...U..xxOP..U...U....U...U..x
+x.....U.U......U.U...xx.....U.U......U.U...xx.....U.U......U.U...xx.....U.U......U.U...x
+x......U........U....xx......U........U....xx......U........U....xx......U........U....x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+x..U.......UU.......Uxx..U.......UU.......Uxx..U.......UU.......Uxx..U.......UU.......Ux
+x...U.....U..U.....U.xx...U.....U..U.....U.xx...U.....U..U.....U.xx...U.....U..U.....U.x
+xOP..U...U....U...U..xxOP..U...U....U...U..xxOP..U...U....U...U..xxOP..U...U....U...U..x
+x.....U.U......U.U...xx.....U.U......U.U...xx.....U.U......U.U...xx.....U.U......U.U...x
+x......U........U....xx......U........U....xx......U........U....xx......U........U....x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+x..U.......UU.......Uxx..U.......UU.......Uxx..U.......UU.......Uxx..U.......UU.......Ux
+x...U.....U..U.....U.xx...U.....U..U.....U.xx...U.....U..U.....U.xx...U.....U..U.....U.x
+xOP..U...U....U...U..xxOP..U...U....U...U..xxOP..U...U....U...U..xxOP..U...U....U...U..x
+x.....U.U......U.U...xx.....U.U......U.U...xx.....U.U......U.U...xx.....U.U......U.U...x
+x......U........U....xx......U........U....xx......U........U....xx......U........U....x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+x..U.......UU.......Uxx..U.......UU.......Uxx..U.......UU.......Uxx..U.......UU.......Ux
+x...U.....U..U.....U.xx...U.....U..U.....U.xx...U.....U..U.....U.xx...U.....U..U.....U.x
+xOP..U...U....U...U..xxOP..U...U....U...U..xxOP..U...U....U...U..xxOP..U...U....U...U..x
+x.....U.U......U.U...xx.....U.U......U.U...xx.....U.U......U.U...xx.....U.U......U.U...x
+x......U........U....xx......U........U....xx......U........U....xx......U........U....x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+x..U.......UU.......Uxx..U.......UU.......Uxx..U.......UU.......Uxx..U.......UU.......Ux
+x...U.....U..U.....U.xx...U.....U..U.....U.xx...U.....U..U.....U.xx...U.....U..U.....U.x
+xOP..U...U....U...U..xxOP..U...U....U...U..xxOP..U...U....U...U..xxOP..U...U....U...U..x
+x.....U.U......U.U...xx.....U.U......U.U...xx.....U.U......U.U...xx.....U.U......U.U...x
+x......U........U....xx......U........U....xx......U........U....xx......U........U....x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+x..U.......UU.......Uxx..U.......UU.......Uxx..U.......UU.......Uxx..U.......UU.......Ux
+x...U.....U..U.....U.xx...U.....U..U.....U.xx...U.....U..U.....U.xx...U.....U..U.....U.x
+xOP..U...U....U...U..xxOP..U...U....U...U..xxOP..U...U....U...U..xxOP..U...U....U...U..x
+x.....U.U......U.U...xx.....U.U......U.U...xx.....U.U......U.U...xx.....U.U......U.U...x
+x......U........U....xx......U........U....xx......U........U....xx......U........U....x
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
