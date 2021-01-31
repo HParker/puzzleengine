@@ -183,7 +183,7 @@ Color colorFromSprite(Runtime * rt, int objId, int cellIndex) {
     return TRANSPARENT;
 
   }
-  fprintf(stderr, "FAILED TO MATCH A COLOR CODE id %i (%c)\n", objId, cell);
+  fprintf(stderr, "(rayrender.c) FAILED TO MATCH A COLOR CODE id %i (%c)\n", objId, cell);
   for (int i = 0; i < 25; i++) {
     fprintf(stderr, "%c", objectSpriteCell(objId, i));
   }
@@ -239,7 +239,7 @@ Color colorFromList(char * colors[10], char cell) {
     return TRANSPARENT;
 
   }
-  fprintf(stderr, "FAILED TO MATCH A COLOR CODE id (%c)\n", cell);
+  fprintf(stderr, "(rayrender.c 2) FAILED TO MATCH A COLOR CODE id (%i)\n", cell);
   return PINK;
 }
 
@@ -369,7 +369,7 @@ int topMargin(Runtime * rt) {
   return ((windowSize() - (tileWidthY(rt) * pixelSize(rt) * SPRITE_WIDTH)) / 2);
 }
 
-void drawSprite(Runtime * rt, int sprite[25], char * colors[10], int x, int y) {
+void drawSprite(Runtime * rt, char sprite[25], char * colors[10], int x, int y) {
   // TODO: for now app sprites are 25 long, but we can make this more generic
   for (int i = 0; i < 25; i++) {
     Color cellColor = colorFromList(colors, sprite[i]);
@@ -507,15 +507,19 @@ void debugRender(Runtime * rt, Match * match) {
   int awaitInput = 0;
   int pressed = 0;
   if (match->partCount > 0) {
-    awaitInput = 1;
+    awaitInput = 0;
   }
 
   if (rt->levelType == SQUARES && rt->pd->verboseLogging) {
-    if (awaitInput) {
+    if (awaitInput || 1) {
       while (pressed == 0) {
-        if (IsKeyPressed(KEY_PERIOD)) {
+        if (awaitInput && IsKeyPressed(KEY_PERIOD)) {
           pressed = 1;
         }
+        if (awaitInput == 0) {
+          pressed = 1;
+        }
+
         BeginDrawing();
 
         ClearBackground(bkColor());

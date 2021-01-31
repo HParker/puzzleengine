@@ -9,7 +9,7 @@ typedef struct Object {
   char legendKey;
   int height;
   int width;
-  int sprite[25];
+  char sprite[25];
   int colorCount;
   char * colors[10];
 } Object;

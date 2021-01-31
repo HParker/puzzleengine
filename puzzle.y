@@ -205,6 +205,9 @@ object_definition: any_object_eol object_name some_object_eol colors some_object
     incObject();
 }
                  | any_object_eol object_name some_object_eol colors some_object_eol {
+  for (int j = 0; j < 25; j++) {
+    pd.objects[pd.objectCount].sprite[j] = '0';
+  }
   incObject();
 }
 

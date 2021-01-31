@@ -198,12 +198,12 @@ void incLayer() {
 }
 
 void addObjectsToLayer(char * name) {
-  if (pd.layers[pd.layerCount].width + 1 >= pd.layers[pd.layerCount].objectCapacity) {
-    pd.layers[pd.layerCount].objectCapacity += PUZZLE_MALLOC_INC;
+  int legId = aliasLegendId(name);
+  if (pd.layers[pd.layerCount].width + pd.aliasLegend[legId].objectCount + 1 >= pd.layers[pd.layerCount].objectCapacity) {
+    pd.layers[pd.layerCount].objectCapacity += pd.aliasLegend[legId].objectCount + PUZZLE_MALLOC_INC;
     pd.layers[pd.layerCount].objectIds = realloc(pd.layers[pd.layerCount].objectIds, sizeof(int) * pd.layers[pd.layerCount].objectCapacity);
   }
 
-  int legId = aliasLegendId(name);
   for (int i = 0; i < pd.aliasLegend[legId].objectCount; i++) {
     pd.layers[pd.layerCount].objectIds[pd.layers[pd.layerCount].width] = pd.aliasLegend[legId].objects[i];
     pd.layers[pd.layerCount].width++;
@@ -267,6 +267,23 @@ char * ruleString(int ruleId) {
   return ruleStr;
 }
 
+void printObjects() {
+  for (int objectId = 0; objectId < pd.objectCount; objectId++) {
+    printf("%s (%i)\n", pd.objects[objectId].name, objectId);
+  }
+}
+
+void printLegends() {
+  for (int legendId = 0; legendId < pd.aliasLegendCount; legendId++) {
+    printf("%s (%i): ", pd.aliasLegend[legendId].key, legendId);
+    // TODO: we can print the relation here: `and/or`
+    for (int objectId = 0; objectId < pd.aliasLegend[legendId].objectCount; objectId++) {
+      printf("%s (%i) ", objectName(pd.aliasLegend[legendId].objects[objectId]), pd.aliasLegend[legendId].objects[objectId]);
+    }
+    printf("\n");
+  }
+}
+
 void printRules() {
   char * rstr;
   for (int ruleId = 0; ruleId < pd.ruleCount; ruleId++) {
@@ -275,6 +292,30 @@ void printRules() {
     free(rstr);
   }
 }
+
+void printLayers() {
+  for (int layerId = 0; layerId < pd.layerCount; layerId++) {
+    printf("%i: ", layerId);
+    for (int layerObjectId = 0; layerObjectId < pd.layers[layerId].width; layerObjectId++) {
+      printf("%s (%i) ", objectName(pd.layers[layerId].objectIds[layerObjectId]), pd.layers[layerId].objectIds[layerObjectId]);
+    }
+    printf("\n");
+  }
+}
+
+void printDebug() {
+  printf("Objects:\n");
+  printObjects();
+  printf("Legend:\n");
+  printLegends();
+  printf("Layers:\n");
+  printLayers();
+  printf("Rules:\n");
+  printRules();
+  // printWinConditions();
+  // printLevels();
+}
+
 
 void initRuleIdentity(RuleIdentity * ruleIdent) {
   ruleIdent->direction = UNSPECIFIED;
@@ -859,7 +900,7 @@ PuzzleData * parsePuzzle(FILE * file) {
   expandRules();
 
   if (pd.debug) {
-    printRules();
+    printDebug();
   }
 
   return &pd;
@@ -978,8 +1019,8 @@ int idForGlyph(char glyph) {
 }
 
 int objectLayer(int objId) {
-  if (aliasLegendContains(aliasLegendId("_Empty_"), objId) || objId == -1) {
-    // TODO: we should catch this earlier
+  // TODO: we should catch this earlier
+  if (objId == -1 || aliasLegendContains(aliasLegendId("_Empty_"), objId)) {
     return -1;
   }
 

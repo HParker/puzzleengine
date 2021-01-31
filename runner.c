@@ -110,6 +110,7 @@ int matchesDirection(Direction ruleDir, Direction applicationDir, Direction dir,
 }
 
 void addToMove(Runtime * rt, int objIndex, Direction direction) {
+  /* printf("Adding %i %s\n", objIndex, dirName(direction)); */
   for (int i = 0; i < rt->toMoveCount; i++) {
     if (rt->toMove[i].objIndex == objIndex) {
       rt->objects[objIndex].moving = direction;
@@ -400,7 +401,8 @@ void applyMatch(Runtime * rt, Match * match) {
   for (int i = 0; i < match->partCount; i++) {
     if (match->parts[i].newObject && match->parts[i].goalId != EMPTY_ID) {
       addObj(rt, specificLegendId(rt, match->parts[i].goalId, match), match->parts[i].goalX, match->parts[i].goalY);
-      if (match->parts[i].goalDirection != -1 || match->parts[i].goalDirection != UNSPECIFIED) {
+      if (match->parts[i].goalDirection != -1 && (match->parts[i].goalDirection != UNSPECIFIED && match->parts[i].goalDirection != NONE)) {
+        /* printf("adding movement to new object\n"); */
         addToMove(rt, rt->objectCount - 1,  match->parts[i].goalDirection);
       }
     } else {
@@ -409,7 +411,7 @@ void applyMatch(Runtime * rt, Match * match) {
         rt->objects[match->parts[i].objIndex].deleted = 1;
         rt->deadCount++;
         /* rt->removedId = match->parts[i].objIndex; */
-      } else if (match->parts[i].goalId == -1) {
+      } else if (match->parts[i].goalId == -1 && match->parts[i].goalDirection != UNSPECIFIED) {
         addToMove(rt, match->parts[i].objIndex,  match->parts[i].goalDirection);
       }
     }
@@ -580,7 +582,6 @@ void replaceCell(Runtime * rt, Rule * rule, int stateId, int partId, Direction a
         int objId = legendObjId(rt, legendId, match->targetX, match->targetY);
         if (objId == -1) {
           match->parts[match->partCount].newObject = 1;
-          // TODO: this should be ok all the time, but feels wrong.
           match->parts[match->partCount].goalId = legendId; // specificLegendId(rt, legendId, match);
           match->parts[match->partCount].goalX = match->targetX;
           match->parts[match->partCount].goalY = match->targetY;
@@ -588,8 +589,22 @@ void replaceCell(Runtime * rt, Rule * rule, int stateId, int partId, Direction a
           match->parts[match->partCount].goalDirection = absoluteDirection(appDir, ruleDir);
           match->partCount++;
         } else {
-          // TODO: I think this case should always be the above case now
-          if (ruleDir != UNSPECIFIED || matchDir != UNSPECIFIED) {
+          if ((((matchDir == UP ||
+               matchDir == DOWN ||
+               matchDir == LEFT ||
+                matchDir == RIGHT) &&
+               ruleDir == UNSPECIFIED) ||
+              (ruleDir == UP ||
+               ruleDir == DOWN ||
+               ruleDir == LEFT ||
+               ruleDir == RIGHT)) &&
+              ruleDir != matchDir
+              ) {
+            if (absoluteDirection(appDir, ruleDir) == NONE || 1) {
+              /* printf("rule: %s\n", ruleString(rule->id)); */
+              /* printf("-- rule %i Going to add direction %s rule %s match %s\n", rule->lineNo, dirName(absoluteDirection(appDir, ruleDir)), dirName(ruleDir), dirName(matchDir)); */
+            }
+
             match->parts[match->partCount].newObject = 0;
             match->parts[match->partCount].goalId = -1; //aliasLegendObjectId(legendId, 0);
             match->parts[match->partCount].goalX = match->targetX;
@@ -797,6 +812,7 @@ void applyRules(Runtime * rt, ExecutionTime execTime) {
 }
 
 void moveObjects(Runtime * rt) {
+  /* printf("To move %i\n", rt->toMoveCount); */
   int moveApplied[rt->toMoveCount];
   for (int i = 0; i < rt->toMoveCount; i++) {
     moveApplied[i] = 0;
@@ -809,6 +825,8 @@ void moveObjects(Runtime * rt) {
       if (rt->toMove[i].objIndex != -1 && rt->objects[rt->toMove[i].objIndex].moving != UNSPECIFIED) {
         int x = rt->objects[rt->toMove[i].objIndex].x;
         int y = rt->objects[rt->toMove[i].objIndex].y;
+
+        /* printf("moving %i dir %s\n", rt->toMove[i].objIndex, dirName(rt->objects[rt->toMove[i].objIndex].moving)); */
 
         int layerIndex = objectLayer(rt->objects[rt->toMove[i].objIndex].objId);
         int movingToX = x + deltaX(rt->objects[rt->toMove[i].objIndex].moving);
@@ -947,6 +965,7 @@ void loadLevel(Runtime * rt) {
   if (rt->pd->runRulesOnLevelStart && rt->levelType == SQUARES) {
     rt->doAgain = 1;
     while (rt->doAgain == 1) {
+      /* printf("repeating due to due again\n"); */
       rt->doAgain = 0;
       applyRules(rt, NORMAL);
       moveObjects(rt);

@@ -25,7 +25,7 @@ int dimensionCount = 0;
 %s LEVELS
 
 glyph [\+\-\!\?:\"\{\}\[\];\.0-9a-zA-Z\*#,@`\'~\%&\/\|_\>\$]
-hexcode #([a-fA-F0-9]{6}|[a-fA-F0-9]{3})
+hexcode #([a-fA-F0-9]{8}|[a-fA-F0-9]{6}|[a-fA-F0-9]{3})
 
 name ([a-zA-Z0-9_#]*[a-zA-Z][a-zA-Z0-9_]*){2,}
 

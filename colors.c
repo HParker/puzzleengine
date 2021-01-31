@@ -165,7 +165,7 @@ Color colorFromSprite(Runtime * rt, int objId, int cellIndex) {
     return TRANSPARENT;
 
   }
-  fprintf(stderr, "FAILED TO MATCH A COLOR CODE id %i (%c)\n", objId, cell);
+  fprintf(stderr, "(colors.c) FAILED TO MATCH A COLOR CODE id %i (%c)\n", objId, cell);
   for (int i = 0; i < 25; i++) {
     fprintf(stderr, "%c", objectSpriteCell(objId, i));
   }
