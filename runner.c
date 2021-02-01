@@ -412,6 +412,7 @@ void applyMatch(Runtime * rt, Match * match) {
         rt->deadCount++;
         /* rt->removedId = match->parts[i].objIndex; */
       } else if (match->parts[i].goalId == -1 && match->parts[i].goalDirection != UNSPECIFIED) {
+        /* printf("Adding movement %s to %i\n",  dirName(match->parts[i].goalDirection), match->parts[i].objIndex); */
         addToMove(rt, match->parts[i].objIndex,  match->parts[i].goalDirection);
       }
     }
@@ -738,8 +739,8 @@ int applyState(Runtime * rt, Rule * rule, int stateId, Match * match) {
   int applied;
   int matched = 0;
 
-  for (int y = 0; y < rt->height; y++) {
-    for (int x = 0; x < rt->width; x++) {
+  for (int x = 0; x < rt->width; x++) {
+    for (int y = 0; y < rt->height; y++) {
       match->targetX = match->cursorX = x;
       match->targetY = match->cursorY = y;
       if (hasSpace(rt, rule, &rule->matchStates[stateId], match)) {

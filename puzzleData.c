@@ -167,6 +167,7 @@ void incAliasLegendObject(int legendId) {
 
 void addObjectsToAliasLegend(char * name) {
   int legId = aliasLegendId(name);
+
   for (int i = 0; i < pd.aliasLegend[legId].objectCount; i++) {
     pd.aliasLegend[pd.aliasLegendCount].objects[pd.aliasLegend[pd.aliasLegendCount].objectCount] = pd.aliasLegend[legId].objects[i];
     incAliasLegendObject(pd.aliasLegendCount);
