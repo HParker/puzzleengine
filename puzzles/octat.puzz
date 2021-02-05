@@ -2,7 +2,7 @@ title Octat
 author Stephen Lavelle
 homepage www.increpare.com
 
-noundo
+(noundo)
 require_player_movement
 
 (A port of a flash game I made.  The original's here:

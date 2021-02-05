@@ -894,9 +894,8 @@ void expandRules() {
 }
 
 void makeLegendMasks() {
-  // TODO: we can probably do this instead of making the array to begin with...
   for (int legendId = 0; legendId < pd.aliasLegendCount; legendId++) {
-    pd.aliasLegend[legendId].mask = calloc(pd.objectCount, 1);
+    pd.aliasLegend[legendId].mask = calloc(pd.objectCount/8+1, 1);
     for (int objectId = 0; objectId < pd.aliasLegend[legendId].objectCount; objectId++) {
       unsigned int element = pd.aliasLegend[legendId].objects[objectId];
       unsigned int byte_index = element/8;
@@ -937,8 +936,13 @@ void freePuzzle() {
   /*   free(pd.aliasLegend[i].key); */
   /* } */
 
+  // TODO: lets not allocate objects to capacity...
   for (int i = 0; i < pd.aliasLegendCapacity; i++) {
     free(pd.aliasLegend[i].objects);
+  }
+
+  for (int i = 0; i < pd.aliasLegendCount; i++) {
+    free(pd.aliasLegend[i].mask);
   }
   free(pd.aliasLegend);
 

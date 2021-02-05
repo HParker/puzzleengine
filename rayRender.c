@@ -434,7 +434,7 @@ void renderTiles(Runtime * rt) {
   int x, y, layer, cellIndex;
   for (y = startTileY(rt); y < endTileY(rt); y++) {
     for (x = startTileX(rt); x < endTileX(rt); x++) {
-      drawObject(rt, rt->backgroundId, x, y);
+      drawObject(rt, rt->pd->aliasLegend[rt->backgroundId].objects[0], x, y);
       for (layer = 0; layer < rt->pd->layerCount; layer++) {
         cellIndex = (layer * rt->width * rt->height) + (y * rt->width) + x;
         if (rt->map[cellIndex] != -1) {
@@ -442,24 +442,6 @@ void renderTiles(Runtime * rt) {
         }
       }
     }
-  }
-}
-
-void renderLevel(Runtime * rt) {
-  int objLayer;
-  renderBackground(rt);
-  int count = rt->pd->layerCount;
-  for (int layer = 0; layer < count; layer++) {
-    for (int i = 0; i < rt->objectCount; i++) {
-      objLayer = objectLayer(rt->objects[i].objId);
-      if (layer == objLayer) {
-        drawObj(rt, i);
-      }
-    }
-  }
-  if (rt->pd->verboseLogging) {
-    Rectangle rec = { 0, 0, WINDOW_SIZE, WINDOW_SIZE };
-    DrawRectangleLinesEx(rec, 10, RED);
   }
 }
 
@@ -515,6 +497,9 @@ void renderRule(Match * match) {
 }
 
 void debugRender(Runtime * rt, Match * match) {
+  /* if (rt->pd->rules[match->ruleIndex].lineNo != 236) { */
+  /*   return; */
+  /* } */
   int awaitInput = 0;
   int pressed = 0;
   if (match->partCount > 0) {
@@ -524,18 +509,14 @@ void debugRender(Runtime * rt, Match * match) {
   if (rt->levelType == SQUARES && rt->pd->verboseLogging) {
     if (awaitInput || 1) {
       while (pressed == 0) {
-        if (awaitInput && IsKeyPressed(KEY_PERIOD)) {
-          pressed = 1;
-        }
-        if (awaitInput == 0) {
+        if (IsKeyPressed(KEY_PERIOD)) {
           pressed = 1;
         }
 
         BeginDrawing();
 
         ClearBackground(bkColor());
-
-        renderLevel(rt);
+        renderTiles(rt);
         drawMatch(rt, match);
         drawToMove(rt);
         renderRule(match);
@@ -548,7 +529,6 @@ void debugRender(Runtime * rt, Match * match) {
 
 void render(Runtime * rt) {
   BeginDrawing();
-
   ClearBackground(bkColor());
   DrawFPS(0,0);
   switch (rt->levelType) {

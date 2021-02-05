@@ -298,6 +298,7 @@ typedef struct Runtime {
   time_t randomSeed;
   int gameWon;
   int doAgain;
+  int didUndo;
   int deadCount;
   int levelIndex;
   int backgroundId;
@@ -321,6 +322,9 @@ typedef struct Runtime {
 
   int hasMap;
   int * map;
+
+  int hasOMap;
+  char * oMap;
 
   int statesCount;
   int statesCapacity;

@@ -18,15 +18,15 @@ int onBoard(Runtime * rt, int x, int y) {
 }
 
 int legendObjId(Runtime * rt, int legendId, int x, int y) {
-    int cellIndex;
-    for (int i = 0; i < rt->pd->layerCount; i++) {
-      cellIndex = (i * rt->width * rt->height) + (y * rt->width) + x;
+  int cellIndex;
+  for (int i = 0; i < rt->pd->layerCount; i++) {
+    cellIndex = (i * rt->width * rt->height) + (y * rt->width) + x;
 
-      if (rt->map[cellIndex] != -1 &&
-          aliasLegendContains(legendId, rt->objects[rt->map[cellIndex]].objId)) {
-        return rt->map[cellIndex];
-      }
+    if (rt->map[cellIndex] != -1 &&
+        aliasLegendContains(legendId, rt->objects[rt->map[cellIndex]].objId)) {
+      return rt->map[cellIndex];
     }
+  }
   return -1;
 }
 
@@ -129,6 +129,73 @@ void addToMove(Runtime * rt, int objIndex, Direction direction) {
   rt->toMoveCount++;
 }
 
+// MAPS
+void buildOMap(Runtime * rt) {
+  int width = rt->width;
+  int bytePerRecord = rt->pd->objectCount/8+1;
+
+  if (rt->hasOMap) {
+    free(rt->oMap);
+  }
+  rt->hasOMap = 1;
+  rt->oMap = calloc(rt->height * rt->width * bytePerRecord, 1);
+
+  for (int x = 0; x < rt->width; x++) {
+    for (int y = 0; y < rt->height; y++) {
+      for (int layerId = 0; layerId < rt->pd->layerCount; layerId++) {
+        int cellIndex = (layerId * rt->width * rt->height) + (y * rt->width) + x;
+        if (rt->map[cellIndex] != -1 &&
+            rt->objects[rt->map[cellIndex]].deleted == 0) {
+          int element =
+            (y * width * bytePerRecord * 8) + (x * bytePerRecord * 8) + rt->objects[rt->map[cellIndex]].objId;
+          /* printf("(%i,%i, o%i) adding %i\n", x, y, rt->objects[rt->map[cellIndex]].objId, element); */
+          unsigned int byte_index = element/8;
+          unsigned int bit_index = element % 8;
+          /* printf("byte: %i, bit: %i\n", byte_index, bit_index); */
+          unsigned int bit_mask = (1 << bit_index);
+
+          rt->oMap[byte_index] |= bit_mask;
+        }
+      }
+    }
+  }
+}
+
+void clearMap(Runtime * rt) {
+  for (int i = 0; i < (rt->pd->layerCount * rt->height * rt->width); i++) {
+    rt->map[i] = -1;
+  }
+}
+
+void buildMap(Runtime * rt) {
+  if (rt->hasMap) {
+    free(rt->map);
+  }
+  rt->hasMap = 1;
+  rt->map = malloc((sizeof(int) * rt->height * rt->width * rt->pd->layerCount));
+
+  clearMap(rt);
+}
+
+void updateObjInOMap(Runtime * rt, int objIndex) {
+  int x, y;
+
+  int width = rt->width;
+  int bytePerRecord = rt->pd->objectCount/8+1;
+  x = rt->objects[objIndex].x;
+  y = rt->objects[objIndex].y;
+
+  /* printf("updating (%i,%i,%i)[%i] = %i\n", layerId, x, y, cellIndex, objIndex); */
+
+  int element = (y * width * bytePerRecord * 8) + (x * bytePerRecord * 8) + rt->objects[objIndex].objId;
+
+  unsigned int byte_index = element/8;
+  unsigned int bit_index = element % 8;
+  /* printf("\nbyte: %i, bit: %i\n", byte_index, bit_index); */
+  unsigned int bit_mask = (1 << bit_index);
+  rt->oMap[byte_index] |= bit_mask;
+}
+
 void updateObjInMap(Runtime * rt, int objIndex) {
   int layerId, x, y, cellIndex;
 
@@ -136,13 +203,28 @@ void updateObjInMap(Runtime * rt, int objIndex) {
   x = rt->objects[objIndex].x;
   y = rt->objects[objIndex].y;
 
-
-
   cellIndex = (layerId * rt->width * rt->height) + (y * rt->width) + x;
 
   /* printf("updating (%i,%i,%i)[%i] = %i\n", layerId, x, y, cellIndex, objIndex); */
 
   rt->map[cellIndex] = objIndex;
+  updateObjInOMap(rt, objIndex);
+}
+
+void removeObjFromOMap(Runtime * rt, int objIndex) {
+  int x, y;
+
+  int width = rt->width;
+  int bytePerRecord = rt->pd->objectCount/8+1;
+  x = rt->objects[objIndex].x;
+  y = rt->objects[objIndex].y;
+
+  int element = (y * width * bytePerRecord * 8) + (x * bytePerRecord * 8) + rt->objects[objIndex].objId;
+
+  unsigned int byte_index = element/8;
+  unsigned int bit_index = element % 8;
+  unsigned int bit_mask = (1 << bit_index);
+  rt->oMap[byte_index] &= ~(bit_mask);
 }
 
 void removeObjFromMap(Runtime * rt, int objIndex) {
@@ -154,13 +236,7 @@ void removeObjFromMap(Runtime * rt, int objIndex) {
   cellIndex = (layerId * rt->width * rt->height) + (y * rt->width) + x;
 
   rt->map[cellIndex] = -1;
-}
-
-
-void clearMap(Runtime * rt) {
-  for (int i = 0; i < (rt->pd->layerCount * rt->height * rt->width); i++) {
-    rt->map[i] = -1;
-  }
+  removeObjFromOMap(rt, objIndex);
 }
 
 void updateMap(Runtime * rt) {
@@ -175,6 +251,7 @@ void updateMap(Runtime * rt) {
     }
   }
 }
+// END MAPS
 
 void cleanup(Runtime * rt) {
   int newObjCursor = 0;
@@ -259,6 +336,7 @@ void initGame(Runtime * rt) {
 
   rt->removedId = -1;
   rt->hasMap = 0;
+  rt->hasOMap = 0;
 }
 
 void endGame(Runtime * rt) {
@@ -278,11 +356,20 @@ void endGame(Runtime * rt) {
   }
   rt->hasMap = 0;
 
+  if (rt->hasOMap) {
+    free(rt->oMap);
+  }
+  rt->hasOMap = 0;
+
   freePuzzle();
 }
 
 
 void undo(Runtime * rt, int partial) {
+  if (rt->didUndo) {
+    // Don't undo more then once per update
+    return;
+  }
   if (rt->states[rt->statesCount].objectCount > 0) {
     free(rt->states[rt->statesCount].objects);
     rt->states[rt->statesCount].objectCount = 0;
@@ -301,9 +388,11 @@ void undo(Runtime * rt, int partial) {
   memcpy(rt->objects, rt->states[rt->statesCount - 1].objects, sizeof(Obj) * rt->objectCapacity);
 
   updateMap(rt);
+  buildOMap(rt);
 
   rt->statesCount--;
   rt->historyCount--;
+  rt->didUndo = 1;
 }
 
 int isMovable(Runtime * rt, int x, int y, int layerIndex) {
@@ -324,26 +413,21 @@ int isMovable(Runtime * rt, int x, int y, int layerIndex) {
 }
 
 int ruleApplies(Runtime * rt, int ruleIndex, ExecutionTime execTime) {
-  // TODO: this should check global direction constraints
-  if (rule(ruleIndex)->executionTime != execTime) {
-    return 0;
-  }
-  return 1;
+  return (rt->pd->rules[ruleIndex].executionTime == execTime);
 }
 
 int deltaX(Direction dir) {
   switch (dir) {
   case UP:
   case DOWN:
+  case USE:
+  case NONE:
     return 0;
   case LEFT:
     return -1;
   case RIGHT:
     return 1;
-  case USE:
-    return 0;
-  case NONE:
-    return 0;
+
   default:
     fprintf(stderr, "Err: deltaX bad direction %i\n", dir);
     return 0;
@@ -358,9 +442,7 @@ int deltaY(Direction dir) {
     return 1;
   case LEFT:
   case RIGHT:
-    return 0;
   case USE:
-    return 0;
   case NONE:
     return 0;
   default:
@@ -410,6 +492,7 @@ void applyMatch(Runtime * rt, Match * match) {
         removeObjFromMap(rt, match->parts[i].objIndex);
         rt->objects[match->parts[i].objIndex].deleted = 1;
         rt->deadCount++;
+        /* printf("removed object %s", objectName(rt->objects[match->parts[i].objIndex].objId)); */
         /* rt->removedId = match->parts[i].objIndex; */
       } else if (match->parts[i].goalId == -1 && match->parts[i].goalDirection != UNSPECIFIED) {
         /* printf("Adding movement %s to %i\n",  dirName(match->parts[i].goalDirection), match->parts[i].objIndex); */
@@ -460,12 +543,94 @@ int matchAtDistance(Direction dir, int x, int y, int targetX, int targetY) {
   }
 }
 
-int alreadyResultIdentity(Runtime * rt, Rule * rule, int stateId, int partId, int identId, Direction appDir, int x, int y) {
-  int ignoreUnspecified;
+int directionMatches(Runtime * rt, Rule * rule, int stateId, int partId, Direction appDir, int x, int y) {
   int matched = 0;
-  int legendId = rule->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId;
-  int ruleDir = rule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction;
+  int foundMoving = 0;
+  for (int identId = 0; identId < rule->matchStates[stateId].parts[partId].ruleIdentityCount; identId++) {
+    matched = 0;
+    Direction ruleDir = rule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
+    int legendId = rule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
 
+    if (legendId == EMPTY_ID || legendId == aliasLegendId("Background") || ruleDir == COND_NO) {
+      // TODO: this is incorrect we should check the rest of the idents, but it fails
+      return 1;
+    } else {
+      for (int i = 0; i < rt->toMoveCount; i++) {
+        if (rt->objects[rt->toMove[i].objIndex].x == x &&
+            rt->objects[rt->toMove[i].objIndex].y == y &&
+            aliasLegendContains(legendId, rt->objects[rt->toMove[i].objIndex].objId)) {
+          foundMoving = 1;
+          if (matchesDirection(ruleDir, appDir, rt->objects[rt->toMove[i].objIndex].moving, 1)) {
+            /*** printf("Matched moving %s\n", aliasLegendKey(legendId)); ***/
+            matched = 1;
+          }
+        }
+        if (matched) {
+          // TODO: this is incorrect we should check the rest of the idents, but it fails
+          return 1;
+        }
+      }
+      // TODO: we should track if we found it, but it was moving the wrong way above
+      if (foundMoving == 0 && (ruleDir == STATIONARY || ruleDir == UNSPECIFIED)) {
+        matched = 1;
+        /* printf("Matched stationary %s\n", aliasLegendKey(legendId)); */
+        return 1;
+      }
+    }
+    if (matched == 0) {
+      /* printf("failed to match %s\n", aliasLegendKey(legendId)); */
+      return 0;
+    }
+  }
+  return 1;
+}
+
+int resultDirectionMatches(Runtime * rt, Rule * rule, int stateId, int partId, Direction appDir, int x, int y, int ignoreUnspecified) {
+  int matched = 0;
+  int foundMoving = 0;
+  for (int identId = 0; identId < rule->resultStates[stateId].parts[partId].ruleIdentityCount; identId++) {
+    matched = 0;
+    Direction ruleDir = rule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction;
+    int legendId = rule->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+
+    if (legendId == EMPTY_ID || legendId == aliasLegendId("Background") || ruleDir == COND_NO) {
+      return 1;
+    } else {
+      for (int i = 0; i < rt->toMoveCount; i++) {
+        if (rt->objects[rt->toMove[i].objIndex].x == x &&
+            rt->objects[rt->toMove[i].objIndex].y == y &&
+            aliasLegendContains(legendId, rt->objects[rt->toMove[i].objIndex].objId)) {
+          foundMoving = 1;
+          if (matchesDirection(ruleDir, appDir, rt->objects[rt->toMove[i].objIndex].moving, ignoreUnspecified)) {
+            matched = 1;
+          }
+        }
+      }
+      // TODO: we should track if we found it, but it was moving the wrong way above
+      if (foundMoving == 0 && (ruleDir == STATIONARY || (ignoreUnspecified && ruleDir == UNSPECIFIED))) {
+        matched = 1;
+      }
+    }
+    if (matched == 0) {
+      return 0;
+    }
+  }
+  return 1;
+}
+
+int alreadyResultIdentity(Runtime * rt, Rule * rule, int stateId, int partId, int identId, Direction appDir, int x, int y) {
+    // bit/byte math
+  int width = rt->width;
+  int bytePerRecord = rt->pd->objectCount/8+1;
+
+  Direction ruleDir = rule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction;
+  int legendId = rule->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+
+  // TODO: this shouldn't work
+  //       we can't just grab the ident at the same index and get the right thing
+  //       semantically it tends to work because humans are likely to list the idents in the same order,
+  //       but we shouldn't rely on that behavior
+  int ignoreUnspecified;
   if (ruleDir == UNSPECIFIED &&
       rule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction != UNSPECIFIED) {
     ignoreUnspecified = 0;
@@ -473,15 +638,30 @@ int alreadyResultIdentity(Runtime * rt, Rule * rule, int stateId, int partId, in
     ignoreUnspecified = 1;
   }
 
-  int objId = legendObjId(rt, legendId, x, y);
-  if (ruleDir == COND_NO && objId == -1) {
-    matched = 1;
-  } else if (ruleDir != COND_NO &&
-             objId != -1 &&
-             matchesDirection(ruleDir, appDir, directionMoving(rt, objId), ignoreUnspecified)) {
-    matched = 1;
+  int matched = 0;
+  if (legendId == EMPTY_ID || legendId == rt->backgroundId) {
+    return 1;
+  } else {
+    // legend mask & cell
+    int byte_index = ((y * width * bytePerRecord * 8) + (x * bytePerRecord * 8))/8;
+
+    if (ruleDir != COND_NO) {
+      for (int byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
+        if ((rt->pd->aliasLegend[legendId].mask[byteOffset] & rt->oMap[byte_index + byteOffset]) != 0 &&
+            (rule->executionTime == LATE || resultDirectionMatches(rt, rule, stateId, partId, appDir, x, y, ignoreUnspecified))) {
+          matched = 1;
+        }
+      }
+    } else {
+      matched = 1;
+      for (int byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
+        if ((rt->pd->aliasLegend[legendId].mask[byteOffset] & rt->oMap[byte_index + byteOffset]) != 0) {
+          matched = 0;
+        }
+      }
+    }
+    return matched;
   }
-  return matched;
 }
 
 Direction matchLegendDirection(Rule * rule, int stateId, int partId, int legendId) {
@@ -511,13 +691,11 @@ int resultHasLegendId(Rule * rule, int stateId, int partId, int legendId, int ob
 }
 
 int alreadyResult(Runtime * rt, Rule * rule, int stateId, int partId, Direction appDir, int x, int y) {
-  int matched = 0;
   if (rule->resultStates[stateId].parts[partId].ruleIdentityCount <= 0) {
     return 0;
   }
   for (int i = 0; i < rule->resultStates[stateId].parts[partId].ruleIdentityCount; i++) {
-    matched = alreadyResultIdentity(rt, rule, stateId, partId, i, appDir, x, y);
-    if (matched == 0) {
+    if (alreadyResultIdentity(rt, rule, stateId, partId, i, appDir, x, y) == 0) {
       return 0;
     }
   }
@@ -537,7 +715,6 @@ void replaceCell(Runtime * rt, Rule * rule, int stateId, int partId, Direction a
   // remove things in the match side
   int matchIdentCount = rule->matchStates[stateId].parts[partId].ruleIdentityCount;
   for (int identId = 0; identId < matchIdentCount; identId++) {
-
     Direction ruleDir = rule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
     int legendId = rule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
     // TODO: we must have looked this up already, can we reuse?
@@ -549,6 +726,7 @@ void replaceCell(Runtime * rt, Rule * rule, int stateId, int partId, Direction a
           legendId != EMPTY_ID &&
           resultIncludesSelf == 0
           ) {
+        /* printf("Making %s for deletion\n", objectName(rt->objects[objId].objId)); */
         match->parts[match->partCount].newObject = 0;
         match->parts[match->partCount].goalId = EMPTY_ID;
         match->parts[match->partCount].objIndex = objId;
@@ -566,8 +744,7 @@ void replaceCell(Runtime * rt, Rule * rule, int stateId, int partId, Direction a
 
     return;
   } else {
-    int isResult = alreadyResult(rt, rule, stateId, partId, appDir, match->targetX, match->targetY);
-    if (isResult) {
+    if (alreadyResult(rt, rule, stateId, partId, appDir, match->targetX, match->targetY)) {
       return;
     }
   }
@@ -601,11 +778,6 @@ void replaceCell(Runtime * rt, Rule * rule, int stateId, int partId, Direction a
                ruleDir == RIGHT)) &&
               ruleDir != matchDir
               ) {
-            if (absoluteDirection(appDir, ruleDir) == NONE || 1) {
-              /* printf("rule: %s\n", ruleString(rule->id)); */
-              /* printf("-- rule %i Going to add direction %s rule %s match %s\n", rule->lineNo, dirName(absoluteDirection(appDir, ruleDir)), dirName(ruleDir), dirName(matchDir)); */
-            }
-
             match->parts[match->partCount].newObject = 0;
             match->parts[match->partCount].goalId = -1; //aliasLegendObjectId(legendId, 0);
             match->parts[match->partCount].goalX = match->targetX;
@@ -622,29 +794,43 @@ void replaceCell(Runtime * rt, Rule * rule, int stateId, int partId, Direction a
 }
 
 int partIdentity(Runtime * rt, Rule * rule, int stateId, int partId, int identId, Direction appDir, Match * match) {
+  // bit/byte math
+  int width = rt->width;
+  int bytePerRecord = rt->pd->objectCount/8+1;
+
   Direction ruleDir = rule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
   int legendId = rule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
-
+  int matched = 0;
   if (legendId == EMPTY_ID || legendId == rt->backgroundId) {
     return 1;
   } else {
-    int objId = legendObjId(rt, legendId, match->targetX, match->targetY);
-    if (ruleDir == COND_NO && objId == -1) {
-      return 1;
-    } else if (ruleDir != COND_NO && objId != -1) {
-      if (matchesDirection(ruleDir, appDir, directionMoving(rt, objId), 1) == 1) {
-        return 1;
+    // legend mask & cell
+    int x = match->targetX;
+    int y = match->targetY;
+    int byte_index = ((y * width * bytePerRecord * 8) + (x * bytePerRecord * 8))/8;
+
+    if (ruleDir != COND_NO) {
+      for (int byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
+        if ((rt->pd->aliasLegend[legendId].mask[byteOffset] & rt->oMap[byte_index + byteOffset]) != 0 &&
+            (rule->executionTime == LATE || directionMatches(rt, rule, stateId, partId, appDir, x, y))) {
+          matched = 1;
+        }
+      }
+    } else {
+      matched = 1;
+      for (int byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
+        if ((rt->pd->aliasLegend[legendId].mask[byteOffset] & rt->oMap[byte_index + byteOffset]) != 0) {
+          matched = 0;
+        }
       }
     }
+    return matched;
   }
-  return 0;
 }
 
 int partIdentitys(Runtime * rt, Rule * rule, int stateId, int partId, Direction appDir, Match * match) {
-  int success = 0;
   for (int i = 0; i < rule->matchStates[stateId].parts[partId].ruleIdentityCount; i++) {
-    success = partIdentity(rt, rule, stateId, partId, i, appDir, match);
-    if (success == 0) {
+    if  (partIdentity(rt, rule, stateId, partId, i, appDir, match) == 0) {
       return 0;
     }
   }
@@ -697,7 +883,7 @@ int completeMatch(Runtime * rt, Rule * rule, int stateId, Direction appDir, Matc
           success = 1;
         }
       }
-      // TODO: why would we do this if we aren't successful?
+
       if (success) {
         replaceCell(rt, rule, stateId, partId, appDir, match);
       }
@@ -778,7 +964,7 @@ int applyRule(Runtime * rt, Rule * rule, Match * match) {
 
 void applyRules(Runtime * rt, ExecutionTime execTime) {
   int applied = 1;
-  int maxAttempts = 1000;
+  int maxAttempts = 10000;
   int attempts = 0;
 
   Match match;
@@ -893,7 +1079,7 @@ void markPlayerAsMoving(Runtime * rt, Direction dir) {
   int legendId = aliasLegendId("Player");
 
   for (int i = 0; i < rt->objectCount; i++) {
-    if (aliasLegendContains(legendId, rt->objects[i].objId)) {
+    if (rt->objects[i].deleted == 0 && aliasLegendContains(legendId, rt->objects[i].objId)) {
       addToMove(rt, i, dir);
     }
   }
@@ -939,21 +1125,24 @@ void addState(Runtime * rt) {
 }
 
 void loadLevel(Runtime * rt) {
-  rt->levelType = levelType(rt->levelIndex);
 
+  rt->levelType = levelType(rt->levelIndex);
   if (rt->levelType == SQUARES) {
+
     rt->height = levelHeight(rt->levelIndex);
     rt->width = levelWidth(rt->levelIndex);
     rt->toMoveCount = 0;
     rt->objectCount = 0;
 
-    if (rt->hasMap) {
-      free(rt->map);
-    }
-    rt->hasMap = 1;
-    rt->map = malloc((sizeof(int) * rt->height * rt->width * rt->pd->layerCount));
+    buildMap(rt);
 
-    clearMap(rt);
+    int bytePerRecord = rt->pd->objectCount/8+1;
+    if (rt->hasOMap) {
+      free(rt->oMap);
+    }
+    rt->hasOMap = 1;
+    rt->oMap = rt->oMap = calloc(rt->height * rt->width * bytePerRecord, 1);
+
 
     int count = levelCellCount(rt->levelIndex);
     for (int i = 0; i < count; i++) {
@@ -961,16 +1150,18 @@ void loadLevel(Runtime * rt) {
       int y = i / rt->width;
       loadCell(rt, levelCell(rt->levelIndex, i), x, y);
     }
-  }
 
-  if (rt->pd->runRulesOnLevelStart && rt->levelType == SQUARES) {
-    rt->doAgain = 1;
-    while (rt->doAgain == 1) {
-      /* printf("repeating due to due again\n"); */
-      rt->doAgain = 0;
-      applyRules(rt, NORMAL);
-      moveObjects(rt);
-      applyRules(rt, LATE);
+    /* buildOMap(rt); */
+
+    if (rt->pd->runRulesOnLevelStart) {
+      rt->doAgain = 1;
+      while (rt->doAgain == 1) {
+        /* printf("repeating due to due again\n"); */
+        rt->doAgain = 0;
+        applyRules(rt, NORMAL);
+        moveObjects(rt);
+        applyRules(rt, LATE);
+      }
     }
   }
 }
@@ -995,19 +1186,20 @@ void startGame(Runtime * rt, FILE * file) {
   rt->backgroundId = aliasLegendId("Background");
   loadLevel(rt);
 
-
   if (rt->pd->verboseLogging) {
     printRules();
   }
-
 }
 
 void tick(Runtime * rt) {
   rt->doAgain = 0;
+  rt->didUndo = 0;
+  rt->toMoveCount = 0;
   if (rt->deadCount > 300) {
     cleanup(rt);
     rt->deadCount = 0;
   }
+
   applyRules(rt, NORMAL);
   moveObjects(rt);
   applyRules(rt, LATE);
@@ -1015,6 +1207,9 @@ void tick(Runtime * rt) {
 
 void update(Runtime * rt, Direction dir) {
   rt->doAgain = 0;
+  rt->didUndo = 0;
+  rt->toMoveCount = 0;
+
   if (dir == NONE) {
     return;
   }

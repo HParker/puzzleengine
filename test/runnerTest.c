@@ -43,7 +43,7 @@ void test_solution_file(Runtime * rt, char * puzzleFileName, char * solutionFile
   /* if (rt->gameWon == 0) { */
   /*   fprintf(stderr, "Game incomplete %i/%i\n", rt->levelIndex, rt->pd->levelCount); */
   /* } */
-  printf(".\n");
+  printf(".👍\n");
   /* endGame(rt); */
 }
 
