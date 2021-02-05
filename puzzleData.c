@@ -936,7 +936,6 @@ void freePuzzle() {
   /*   free(pd.aliasLegend[i].key); */
   /* } */
 
-  // TODO: lets not allocate objects to capacity...
   for (int i = 0; i < pd.aliasLegendCapacity; i++) {
     free(pd.aliasLegend[i].objects);
   }
@@ -1019,9 +1018,8 @@ int legendIdForGlyph(char glyph) {
 }
 
 int aliasLegendContains(int legendId, int objId) {
-    int element = objId;
-  int byte_index = element/8;
-  int bit_index = element % 8;
+  int byte_index = objId/8;
+  int bit_index = objId % 8;
   int bit_mask = (1 << bit_index);
   return ((pd.aliasLegend[legendId].mask[byte_index] & bit_mask) != 0);
 }

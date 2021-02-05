@@ -42,10 +42,6 @@ int playerLocation(Runtime * rt) {
   return -1;
 }
 
-Direction directionMoving(Runtime * rt, int objIndex) {
-  return rt->objects[objIndex].moving;
-}
-
 Direction absoluteDirection(Direction applicationDirection, Direction ruleDir) {
   switch (ruleDir) {
   case UP:
@@ -55,14 +51,6 @@ Direction absoluteDirection(Direction applicationDirection, Direction ruleDir) {
   case NONE:
   case USE:
     return ruleDir;
-  case REL_RIGHT:
-    return (Direction)((applicationDirection + 0) % 4);
-  case REL_UP:
-    return (Direction)((applicationDirection + 1) % 4);
-  case REL_LEFT:
-    return (Direction)((applicationDirection + 2) % 4);
-  case REL_DOWN:
-    return (Direction)((applicationDirection + 3) % 4);
   case COND_NO:
   case UNSPECIFIED:
   case STATIONARY:
@@ -146,12 +134,9 @@ void buildOMap(Runtime * rt) {
         int cellIndex = (layerId * rt->width * rt->height) + (y * rt->width) + x;
         if (rt->map[cellIndex] != -1 &&
             rt->objects[rt->map[cellIndex]].deleted == 0) {
-          int element =
-            (y * width * bytePerRecord * 8) + (x * bytePerRecord * 8) + rt->objects[rt->map[cellIndex]].objId;
-          /* printf("(%i,%i, o%i) adding %i\n", x, y, rt->objects[rt->map[cellIndex]].objId, element); */
+          int element = (y * width * bytePerRecord * 8) + (x * bytePerRecord * 8) + rt->objects[rt->map[cellIndex]].objId;
           unsigned int byte_index = element/8;
           unsigned int bit_index = element % 8;
-          /* printf("byte: %i, bit: %i\n", byte_index, bit_index); */
           unsigned int bit_mask = (1 << bit_index);
 
           rt->oMap[byte_index] |= bit_mask;
@@ -178,20 +163,14 @@ void buildMap(Runtime * rt) {
 }
 
 void updateObjInOMap(Runtime * rt, int objIndex) {
-  int x, y;
-
   int width = rt->width;
   int bytePerRecord = rt->pd->objectCount/8+1;
-  x = rt->objects[objIndex].x;
-  y = rt->objects[objIndex].y;
-
-  /* printf("updating (%i,%i,%i)[%i] = %i\n", layerId, x, y, cellIndex, objIndex); */
+  int x = rt->objects[objIndex].x;
+  int y = rt->objects[objIndex].y;
 
   int element = (y * width * bytePerRecord * 8) + (x * bytePerRecord * 8) + rt->objects[objIndex].objId;
-
   unsigned int byte_index = element/8;
   unsigned int bit_index = element % 8;
-  /* printf("\nbyte: %i, bit: %i\n", byte_index, bit_index); */
   unsigned int bit_mask = (1 << bit_index);
   rt->oMap[byte_index] |= bit_mask;
 }
@@ -204,8 +183,6 @@ void updateObjInMap(Runtime * rt, int objIndex) {
   y = rt->objects[objIndex].y;
 
   cellIndex = (layerId * rt->width * rt->height) + (y * rt->width) + x;
-
-  /* printf("updating (%i,%i,%i)[%i] = %i\n", layerId, x, y, cellIndex, objIndex); */
 
   rt->map[cellIndex] = objIndex;
   updateObjInOMap(rt, objIndex);
@@ -240,7 +217,6 @@ void removeObjFromMap(Runtime * rt, int objIndex) {
 }
 
 void updateMap(Runtime * rt) {
-  /* printf("Doing full map update\n"); */
   if (rt->levelType == SQUARES) {
     clearMap(rt);
 
@@ -412,10 +388,6 @@ int isMovable(Runtime * rt, int x, int y, int layerIndex) {
   return 0;
 }
 
-int ruleApplies(Runtime * rt, int ruleIndex, ExecutionTime execTime) {
-  return (rt->pd->rules[ruleIndex].executionTime == execTime);
-}
-
 int deltaX(Direction dir) {
   switch (dir) {
   case UP:
@@ -436,15 +408,15 @@ int deltaX(Direction dir) {
 
 int deltaY(Direction dir) {
   switch (dir) {
-  case UP:
-    return -1;
-  case DOWN:
-    return 1;
   case LEFT:
   case RIGHT:
   case USE:
   case NONE:
     return 0;
+  case UP:
+    return -1;
+  case DOWN:
+    return 1;
   default:
     fprintf(stderr, "Err: deltaY bad direction %i\n", dir);
     return 0;
@@ -484,7 +456,6 @@ void applyMatch(Runtime * rt, Match * match) {
     if (match->parts[i].newObject && match->parts[i].goalId != EMPTY_ID) {
       addObj(rt, specificLegendId(rt, match->parts[i].goalId, match), match->parts[i].goalX, match->parts[i].goalY);
       if (match->parts[i].goalDirection != -1 && (match->parts[i].goalDirection != UNSPECIFIED && match->parts[i].goalDirection != NONE)) {
-        /* printf("adding movement to new object\n"); */
         addToMove(rt, rt->objectCount - 1,  match->parts[i].goalDirection);
       }
     } else {
@@ -492,10 +463,7 @@ void applyMatch(Runtime * rt, Match * match) {
         removeObjFromMap(rt, match->parts[i].objIndex);
         rt->objects[match->parts[i].objIndex].deleted = 1;
         rt->deadCount++;
-        /* printf("removed object %s", objectName(rt->objects[match->parts[i].objIndex].objId)); */
-        /* rt->removedId = match->parts[i].objIndex; */
       } else if (match->parts[i].goalId == -1 && match->parts[i].goalDirection != UNSPECIFIED) {
-        /* printf("Adding movement %s to %i\n",  dirName(match->parts[i].goalDirection), match->parts[i].objIndex); */
         addToMove(rt, match->parts[i].objIndex,  match->parts[i].goalDirection);
       }
     }
@@ -513,20 +481,8 @@ int distance(int i, int j) {
 
 int matchAtDistance(Direction dir, int x, int y, int targetX, int targetY) {
   switch (dir) {
-  case UP:
-    if (x == targetX && targetY < y) {
-      return 1;
-    } else {
-      return 0;
-    }
   case DOWN:
     if (x == targetX && targetY > y) {
-      return 1;
-    } else {
-      return 0;
-    }
-  case LEFT:
-    if (y == targetY && targetX < x) {
       return 1;
     } else {
       return 0;
@@ -981,7 +937,7 @@ void applyRules(Runtime * rt, ExecutionTime execTime) {
     while (match.cancel == 0 && applied && attempts < maxAttempts) {
       applied = 0;
       match.partCount = 0;
-      if (ruleApplies(rt, ruleIndex, execTime)) {
+      if (rt->pd->rules[ruleIndex].executionTime == execTime) {
         applied = applyRule(rt, rule(ruleIndex), &match);
         /* fprintf(stderr, "ruleIdex (%i/%i) applied (%i) && (match.partCount (%i) > 0 || match.cancel (%i))\n", ruleIndex, rt->pd->ruleCount, applied, match.partCount, match.cancel); */
         if (applied && (match.partCount > 0 || match.cancel)) {

@@ -287,17 +287,6 @@ int startTileY(Runtime * rt) {
     } else {
       return 0;
     }
-
-
-    /* if (rt->height > rt->pd->zoomScreenY) { */
-    /*   dist = playerY(rt) - rt->pd->zoomScreenY/2; */
-    /*   if (dist > 0) { */
-    /*     if (dist + rt->pd->zoomScreenY > rt->height) { */
-    /*       return rt->height - rt->pd->zoomScreenY; */
-    /*     } */
-    /*     return dist; */
-    /*   } */
-    /* } */
   }
   return 0;
 }
@@ -497,9 +486,7 @@ void renderRule(Match * match) {
 }
 
 void debugRender(Runtime * rt, Match * match) {
-  /* if (rt->pd->rules[match->ruleIndex].lineNo != 236) { */
-  /*   return; */
-  /* } */
+  // TODO: allow specific rule targeting
   int awaitInput = 0;
   int pressed = 0;
   if (match->partCount > 0) {
