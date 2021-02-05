@@ -31,14 +31,21 @@ int legendObjId(Runtime * rt, int legendId, int x, int y) {
 }
 
 int playerLocation(Runtime * rt) {
-  int legendId = aliasLegendId("Player");
+  int x, y, byteIndex, byteOffset;
+  int width = rt->width;
+  int bytePerRecord = rt->pd->objectCount/8+1;
+  int legendId = rt->playerId;
 
-  for (int i = 0; i < rt->objectCount; i++) {
-    if (rt->objects[i].deleted == 0 && aliasLegendContains(legendId, rt->objects[i].objId)) {
-      return (rt->objects[i].x + rt->objects[i].y * rt->width);
+  for (x = 0; x < rt->width; x++) {
+    for (y = 0; y < rt->height; y++) {
+      byteIndex = ((y * width * bytePerRecord * 8) + (x * bytePerRecord * 8))/8;
+      for (byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
+        if ((rt->pd->aliasLegend[legendId].mask[byteOffset] & rt->oMap[byteIndex + byteOffset]) != 0) {
+          return (y * width + x);
+        }
+      }
     }
   }
-  /* fprintf(stderr, "Err: failed to find player location\n"); */
   return -1;
 }
 
@@ -1140,6 +1147,7 @@ void startGame(Runtime * rt, FILE * file) {
   initGame(rt);
   rt->pd = parsePuzzle(file);
   rt->backgroundId = aliasLegendId("Background");
+  rt->playerId = aliasLegendId("Player");
   loadLevel(rt);
 
   if (rt->pd->verboseLogging) {

@@ -302,6 +302,7 @@ typedef struct Runtime {
   int deadCount;
   int levelIndex;
   int backgroundId;
+  int playerId;
   int height;
   int width;
 
