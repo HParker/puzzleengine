@@ -406,7 +406,6 @@ int deltaX(Direction dir) {
     return -1;
   case RIGHT:
     return 1;
-
   default:
     fprintf(stderr, "Err: deltaX bad direction %i\n", dir);
     return 0;
@@ -431,6 +430,7 @@ int deltaY(Direction dir) {
 }
 
 int specificLegendId(Runtime * rt, int legendId, Match * match) {
+  // TODO: we should know this when we match, we shouldn't need this
   int objId;
   for (int i = 0; i < match->partCount; i++) {
     if (match->parts[i].newObject == 0) {
@@ -1039,11 +1039,19 @@ Direction handleInput(Runtime * rt, Direction input) {
 }
 
 void markPlayerAsMoving(Runtime * rt, Direction dir) {
-  int legendId = aliasLegendId("Player");
+  int x, y, byteIndex, byteOffset;
+  int width = rt->width;
+  int bytePerRecord = rt->pd->objectCount/8+1;
+  int legendId = rt->playerId;
 
-  for (int i = 0; i < rt->objectCount; i++) {
-    if (rt->objects[i].deleted == 0 && aliasLegendContains(legendId, rt->objects[i].objId)) {
-      addToMove(rt, i, dir);
+  for (x = 0; x < rt->width; x++) {
+    for (y = 0; y < rt->height; y++) {
+      byteIndex = ((y * width * bytePerRecord * 8) + (x * bytePerRecord * 8))/8;
+      for (byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
+        if ((rt->pd->aliasLegend[legendId].mask[byteOffset] & rt->oMap[byteIndex + byteOffset]) != 0) {
+          addToMove(rt, legendObjId(rt, legendId, x, y), dir);
+        }
+      }
     }
   }
 }
@@ -1217,62 +1225,69 @@ void update(Runtime * rt, Direction dir) {
   }
 }
 
-int verifyOne(Runtime * rt, int thingId, int container, int hasOnQualifier) {
-  for (int i = 0; i < rt->objectCount; i++) {
-    if (rt->objects[i].deleted == 0 && aliasLegendContains(thingId, rt->objects[i].objId) == 1) {
-      if (hasOnQualifier == 0) {
-        return 1;
-      }
-      for (int j = 0; j < rt->objectCount; j++) {
-        if (rt->objects[j].objId == container && rt->objects[i].x == rt->objects[j].x && rt->objects[i].y == rt->objects[j].y) {
-          return 1;
+int verifyOne(Runtime * rt, int legendId, int containerId, int hasOnQualifier) {
+  int x, y, byteIndex, byteOffset, matched;
+  int width = rt->width;
+  int bytePerRecord = rt->pd->objectCount/8+1;
+
+  for (x = 0; x < rt->width; x++) {
+    for (y = 0; y < rt->height; y++) {
+      matched = 0;
+      byteIndex = ((y * width * bytePerRecord * 8) + (x * bytePerRecord * 8))/8;
+      for (byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
+        if ((rt->pd->aliasLegend[legendId].mask[byteOffset] & rt->oMap[byteIndex + byteOffset]) != 0) {
+          matched = 1;
+          if (hasOnQualifier == 0) {
+            return 1;
+          }
+
         }
       }
+      if (matched) {
+        for (byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
+          if ((rt->pd->aliasLegend[containerId].mask[byteOffset] & rt->oMap[byteIndex + byteOffset]) != 0) {
+            return 1;
+          }
+        }
+      }
+
     }
   }
   return 0;
 }
 
 int verifyNone(Runtime * rt, int thingId, int containerId, int hasOnQualifier) {
-  for (int i = 0; i < rt->objectCount; i++) {
-    if (rt->objects[i].deleted == 0 && aliasLegendContains(thingId, rt->objects[i].objId) == 1) {
-      if (hasOnQualifier) {
-        for (int j = 0; j < rt->objectCount; j++) {
-          if (aliasLegendContains(containerId, rt->objects[j].objId) &&
-              rt->objects[i].x == rt->objects[j].x &&
-              rt->objects[i].y == rt->objects[j].y) {
-            return 0;
+  return !(verifyOne(rt, thingId, containerId, hasOnQualifier));
+}
+
+int verifyAll(Runtime * rt, int legendId, int containerId, int hasOnQualifier) {
+  int x, y, byteIndex, byteOffset, thingMatched, containerMatched;
+  int width = rt->width;
+  int bytePerRecord = rt->pd->objectCount/8+1;
+
+  for (x = 0; x < rt->width; x++) {
+    for (y = 0; y < rt->height; y++) {
+      thingMatched = 0;
+      containerMatched = 0;
+      byteIndex = ((y * width * bytePerRecord * 8) + (x * bytePerRecord * 8))/8;
+      for (byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
+        if ((rt->pd->aliasLegend[legendId].mask[byteOffset] & rt->oMap[byteIndex + byteOffset]) != 0) {
+          thingMatched = 1;
+        }
+      }
+      if (thingMatched) {
+        for (byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
+          if ((rt->pd->aliasLegend[containerId].mask[byteOffset] & rt->oMap[byteIndex + byteOffset]) != 0) {
+            containerMatched = 1;
           }
         }
-      } else {
+      }
+      if (thingMatched ^ containerMatched) {
         return 0;
       }
     }
   }
   return 1;
-}
-
-int verifyAll(Runtime * rt, int thingId, int containerId, int hasOnQualifier) {
-  int satisfied = 1;
-  for (int i = 0; i < rt->objectCount; i++) {
-    if (rt->objects[i].deleted == 0 && aliasLegendContains(thingId, rt->objects[i].objId) == 1) {
-      satisfied = 0;
-      for (int j = 0; j < rt->objectCount; j++) {
-        if (rt->objects[j].deleted == 0 &&
-            aliasLegendContains(containerId, rt->objects[j].objId) &&
-            rt->objects[i].x == rt->objects[j].x &&
-            rt->objects[i].y == rt->objects[j].y) {
-          satisfied = 1;
-        }
-      }
-      if (satisfied == 0) {
-        return 0;
-      }
-    }
-
-  }
-
-  return satisfied;
 }
 
 int checkWinCondition(Runtime * rt, int winConditionIndex) {
@@ -1301,6 +1316,5 @@ int checkWinConditions(Runtime * rt) {
       return 0;
     }
   }
-
   return satisfied;
 }
