@@ -1,22 +1,19 @@
 make BISON=/usr/local/opt/bison/bin/bison FLEX=/usr/local/opt/flex/bin/flex
 
-optimzations:
-- check for each rule at each square rather then the other way around
--
+[SendModePerm][ action Player ][ Selector Block ][       Filler       ] ->
+[SendModePerm][ action Player ][ Wall Selector  ][ RIGHT Filler Block ]
+
+what does this rule actually do:
+- move `Selector Block` to `Filler Block`
+- item at `state 3 part 1 ident 2` moves to state 3 part 1 location.
 
 TODO:
-
-
+- movement mask
+- mark rule states that are 100% identical
+- move replace cell completely after checking the WHOLE match
 - smooth movement for a new demo
-- should `ObjectGlyph` be ncurses renderer specific?
-  seems unlikely we would need to show the character in any other context.
-- validate object names used in rules exist or are `...`
-- validate has background
-- make sure all objects are in a layer
+- add any validations other then syntax
 - sounds
-- validate "levels must be rectangular" We don't have to do this, but can.
-- There are some helpful errors we can add like direction in `late` rules will never match.
-- When applying directions, the last rule that applies the direction always wins. This can be confusing and could give a warning. It might be hard to warn about because it has to be proved that the match is identical
 
 3d api:
 - transfer levels with `lift` and `lower`
@@ -32,42 +29,3 @@ TODO:
 # O #
 #   #
 #####
-
-
-legacy apply match debugging
-  if (rt->pd->verboseLogging) {
-    if (match->cancel == 0) {
-      fprintf(stderr, "applying count %i\n", match->partCount);
-      for (int i = 0; i < match->partCount; i++) {
-        if (match->parts[i].newObject == 1) {
-          fprintf(stderr, "Applying rule (%i): %i new: %i id: '%s' (%i) location (%i, %i) goalMovment: %s\n",
-                 rule(match->ruleIndex)->lineNo,
-                 match->ruleIndex,
-                 match->parts[i].newObject,
-                 objectName(match->parts[i].goalId),
-                 match->parts[i].goalId,
-                 match->parts[i].goalX,
-                 match->parts[i].goalY,
-                 dirName(match->parts[i].goalDirection)
-                 );
-        } else {
-          fprintf(stderr, "Applying rule (): %i new: %i, objIndex: %i, (%i) id: '%s' (%i) -> '%s' (%i) location: (%i, %i) -> (%i, %i) goalMovment: %s\n",
-                 match->ruleIndex,
-                 match->parts[i].newObject,
-                 match->parts[i].objIndex,
-                 i,
-                 objectName(rt->objects[match->parts[i].objIndex].objId),
-                 rt->objects[match->parts[i].objIndex].objId,
-                 objectName(match->parts[i].goalId),
-                 match->parts[i].goalId,
-                 rt->objects[match->parts[i].objIndex].x,
-                 rt->objects[match->parts[i].objIndex].y,
-                 match->parts[i].goalX,
-                 match->parts[i].goalY,
-                 dirName(match->parts[i].goalDirection));
-        }
-      }
-    } else {
-      fprintf(stderr, "Applying rule: %i cancel\n", match->ruleIndex);
-    }
-  }

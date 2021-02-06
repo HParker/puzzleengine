@@ -166,6 +166,7 @@ typedef struct MatchData {
   int actualDirection;
   // goal
   int goalId;
+  int objectId;
   int goalX;
   int goalY;
   int goalDirection;

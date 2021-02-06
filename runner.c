@@ -429,6 +429,11 @@ int deltaY(Direction dir) {
   }
 }
 
+// This is require for things like,
+// [ Selector Block ] [ EmptyCell ] -> [ Selector ] [ FilledCell Block]
+// assume Block is `Block = RedBlock or BlueBlock`
+// In rules like this `Block` has to refer to the same specific block that was matched
+// Even if the rule that part that matched it is in a different position.
 int specificLegendId(Runtime * rt, int legendId, Match * match) {
   // TODO: we should know this when we match, we shouldn't need this
   int objId;
@@ -442,7 +447,6 @@ int specificLegendId(Runtime * rt, int legendId, Match * match) {
   }
   return rt->pd->aliasLegend[legendId].objects[0];
 }
-
 
 void debugRuleApplication(Runtime * rt, Match * match) {
   printf("Rule: %s\n", ruleString(match->ruleIndex));
@@ -462,6 +466,7 @@ void applyMatch(Runtime * rt, Match * match) {
   for (int i = 0; i < match->partCount; i++) {
     if (match->parts[i].newObject && match->parts[i].goalId != EMPTY_ID) {
       addObj(rt, specificLegendId(rt, match->parts[i].goalId, match), match->parts[i].goalX, match->parts[i].goalY);
+
       if (match->parts[i].goalDirection != -1 && (match->parts[i].goalDirection != UNSPECIFIED && match->parts[i].goalDirection != NONE)) {
         addToMove(rt, rt->objectCount - 1,  match->parts[i].goalDirection);
       }
@@ -660,19 +665,20 @@ void replaceCell(Runtime * rt, Rule * rule, int stateId, int partId, Direction a
     Direction ruleDir = rule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
     int legendId = rule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
     // TODO: we must have looked this up already, can we reuse?
-    int objId = legendObjId(rt, legendId, match->targetX, match->targetY);
+    int objIndex = legendObjId(rt, legendId, match->targetX, match->targetY);
 
-    if (objId != -1) {
-      int resultIncludesSelf = resultHasLegendId(rule, stateId, partId, legendId, rt->objects[objId].objId);
+    if (objIndex != -1) {
+      int resultIncludesSelf = resultHasLegendId(rule, stateId, partId, legendId, rt->objects[objIndex].objId);
       if (ruleDir != COND_NO &&
           legendId != EMPTY_ID &&
-          resultIncludesSelf == 0
-          ) {
+          resultIncludesSelf == 0) {
         match->parts[match->partCount].newObject = 0;
         match->parts[match->partCount].goalId = EMPTY_ID;
-        match->parts[match->partCount].objIndex = objId;
-        match->parts[match->partCount].goalX = rt->objects[objId].x;
-        match->parts[match->partCount].goalY = rt->objects[objId].y;
+        match->parts[match->partCount].objIndex = objIndex;
+        // TODO: get this from the board instead
+        match->parts[match->partCount].objectId = rt->objects[objIndex].objId;
+        match->parts[match->partCount].goalX = rt->objects[objIndex].x;
+        match->parts[match->partCount].goalY = rt->objects[objIndex].y;
         match->parts[match->partCount].goalDirection = UNSPECIFIED;
         match->partCount++;
       }
@@ -698,10 +704,12 @@ void replaceCell(Runtime * rt, Rule * rule, int stateId, int partId, Direction a
     Direction matchDir = matchLegendDirection(rule, stateId, partId, legendId);
     if (legendId != EMPTY_ID) {
       if (ruleDir != COND_NO) {
-        int objId = legendObjId(rt, legendId, match->targetX, match->targetY);
-        if (objId == -1) {
+        int objIndex = legendObjId(rt, legendId, match->targetX, match->targetY);
+        if (objIndex == -1) {
           match->parts[match->partCount].newObject = 1;
-          match->parts[match->partCount].goalId = legendId; // specificLegendId(rt, legendId, match);
+          match->parts[match->partCount].goalId = legendId;
+          // TODO: we need to get this from the board
+          /* match->parts[match->partCount].objectId = specificLegendId(rt, legendId, match); */
           match->parts[match->partCount].goalX = match->targetX;
           match->parts[match->partCount].goalY = match->targetY;
 
@@ -724,7 +732,8 @@ void replaceCell(Runtime * rt, Rule * rule, int stateId, int partId, Direction a
             match->parts[match->partCount].goalX = match->targetX;
             match->parts[match->partCount].goalY = match->targetY;
 
-            match->parts[match->partCount].objIndex = objId;
+            match->parts[match->partCount].objIndex = objIndex;
+            match->parts[match->partCount].objectId = rt->objects[objIndex].objId;
             match->parts[match->partCount].goalDirection = absoluteDirection(appDir, ruleDir);
             match->partCount++;
           }
