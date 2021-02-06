@@ -191,7 +191,7 @@ void incLayer() {
     pd.layerCapacity += PUZZLE_MALLOC_INC;
     pd.layers = realloc(pd.layers, sizeof(Layer) * pd.layerCapacity);
     for (int i = pd.layerCount + 1; i < pd.layerCapacity; i++) {
-      pd.layers[i].width = 0;
+      pd.layers[i].count = 0;
       pd.layers[i].objectCapacity = 100;
       pd.layers[i].objectIds = malloc(sizeof(int) * pd.layers[i].objectCapacity);
     }
@@ -201,14 +201,14 @@ void incLayer() {
 
 void addObjectsToLayer(char * name) {
   int legId = aliasLegendId(name);
-  if (pd.layers[pd.layerCount].width + pd.aliasLegend[legId].objectCount + 1 >= pd.layers[pd.layerCount].objectCapacity) {
+  if (pd.layers[pd.layerCount].count + pd.aliasLegend[legId].objectCount + 1 >= pd.layers[pd.layerCount].objectCapacity) {
     pd.layers[pd.layerCount].objectCapacity += pd.aliasLegend[legId].objectCount + PUZZLE_MALLOC_INC;
     pd.layers[pd.layerCount].objectIds = realloc(pd.layers[pd.layerCount].objectIds, sizeof(int) * pd.layers[pd.layerCount].objectCapacity);
   }
 
   for (int i = 0; i < pd.aliasLegend[legId].objectCount; i++) {
-    pd.layers[pd.layerCount].objectIds[pd.layers[pd.layerCount].width] = pd.aliasLegend[legId].objects[i];
-    pd.layers[pd.layerCount].width++;
+    pd.layers[pd.layerCount].objectIds[pd.layers[pd.layerCount].count] = pd.aliasLegend[legId].objects[i];
+    pd.layers[pd.layerCount].count++;
   }
 }
 
@@ -298,7 +298,7 @@ void printRules() {
 void printLayers() {
   for (int layerId = 0; layerId < pd.layerCount; layerId++) {
     printf("%i: ", layerId);
-    for (int layerObjectId = 0; layerObjectId < pd.layers[layerId].width; layerObjectId++) {
+    for (int layerObjectId = 0; layerObjectId < pd.layers[layerId].count; layerObjectId++) {
       printf("%s (%i) ", objectName(pd.layers[layerId].objectIds[layerObjectId]), pd.layers[layerId].objectIds[layerObjectId]);
     }
     printf("\n");
@@ -571,7 +571,7 @@ void initPuzzleData() {
   pd.layerCapacity = 100;
   pd.layers = malloc(sizeof(Layer) * pd.layerCapacity);
   for (int i = 0; i < pd.layerCapacity; i++) {
-    pd.layers[i].width = 0;
+    pd.layers[i].count = 0;
     pd.layers[i].objectCapacity = 10;
     pd.layers[i].objectIds = malloc(sizeof(int) * pd.layers[i].objectCapacity);
   }
@@ -1046,7 +1046,7 @@ int objectLayer(int objId) {
   }
 
   for (int i = 0; i < pd.layerCount; i++) {
-    for (int j = 0; j < pd.layers[i].width; j++) {
+    for (int j = 0; j < pd.layers[i].count; j++) {
       if (objId == pd.layers[i].objectIds[j]) {
         return i;
       }
@@ -1073,7 +1073,7 @@ char * levelMessage(int levelIndex) {
 }
 
 int layerIncludes(int layerId, int objId) {
-  for (int i = 0; i < pd.layers[layerId].width; i++) {
+  for (int i = 0; i < pd.layers[layerId].count; i++) {
     if (pd.layers[layerId].objectIds[i] == objId) {
       return 1;
     }

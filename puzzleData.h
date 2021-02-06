@@ -6,7 +6,6 @@
 // Object
 typedef struct Object {
   char * name;
-  char legendKey;
   int height;
   int width;
   char sprite[25];
@@ -14,12 +13,11 @@ typedef struct Object {
   char * colors[10];
 } Object;
 
-typedef enum LegendRelation
-  {
+typedef enum LegendRelation {
    LEGEND_RELATION_UNKNOWN = 0,
    LEGEND_RELATION_AND = 1,
    LEGEND_RELATION_OR = 2
-  } LegendRelation;
+} LegendRelation;
 
 typedef struct GlyphLegend {
   char key;
@@ -39,7 +37,7 @@ typedef struct AliasLegend {
 } AliasLegend;
 
 typedef struct Layer {
-  int width;
+  int count;
   int objectCapacity;
   int * objectIds;
 } Layer;
@@ -79,8 +77,7 @@ typedef enum Command
    WIN = 14,
   } Command;
 
-typedef enum Direction
-  {
+typedef enum Direction {
    RIGHT         = 0,
    UP            = 1,
    LEFT          = 2,
