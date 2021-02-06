@@ -35,7 +35,6 @@ int main(int argc, char ** argv) {
     }
 
     inputDir = handleInput(&rt, input());
-
     if (inputDir != UNSPECIFIED) {
       if (inputDir == QUIT) {
         break;

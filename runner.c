@@ -1146,6 +1146,8 @@ void startGame(Runtime * rt, FILE * file) {
   rt->playerId = aliasLegendId("Player");
   loadLevel(rt);
 
+  rt->doAgain = 0;
+
   if (rt->pd->verboseLogging) {
     printRules();
   }
