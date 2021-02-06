@@ -8,6 +8,7 @@
 extern PuzzleData pd;
 
 #define PUZZLE_MALLOC_INC 10;
+#define EMPTY_ID 1
 
 void verboseLoggingOn() {
   if (pd.verboseLogging) {
@@ -1040,7 +1041,7 @@ int idForGlyph(char glyph) {
 
 int objectLayer(int objId) {
   // TODO: we should catch this earlier
-  if (objId == -1 || aliasLegendContains(aliasLegendId("_Empty_"), objId)) {
+  if (objId == -1 || aliasLegendContains(EMPTY_ID, objId)) {
     return -1;
   }
 
@@ -1053,24 +1054,6 @@ int objectLayer(int objId) {
   }
   fprintf(stderr, "err: layer not found for objid: '%s' (%i) \n", objectName(objId), objId);
   return -1;
-}
-
-int levelHeight(int levelIndex) {
-  if (levelIndex < pd.levelCount) {
-    return pd.levels[levelIndex].height;
-  } else {
-    fprintf(stderr, "err: asked for level out of bounds\n");
-    return -1;
-  }
-}
-
-int levelWidth(int levelIndex) {
-  if (levelIndex < pd.levelCount) {
-    return pd.levels[levelIndex].width;
-  } else {
-    fprintf(stderr, "err: asked for level out of bounds\n");
-    return -1;
-  }
 }
 
 int levelCellCount(int levelIndex) {
@@ -1125,11 +1108,6 @@ char glyphLegendKey(int id) {
 int ruleCount() {
   return pd.ruleCount;
 }
-
-Rule * rule(int index) {
-  return &pd.rules[index];
-}
-
 
 int levelCount() {
   return pd.levelCount;

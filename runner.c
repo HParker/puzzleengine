@@ -365,8 +365,8 @@ void undo(Runtime * rt, int partial) {
 
   rt->levelIndex = rt->states[rt->statesCount - 1].levelIndex;
   rt->levelType = levelType(rt->levelIndex);
-  rt->height = levelHeight(rt->levelIndex);
-  rt->width = levelWidth(rt->levelIndex);
+  rt->height = rt->pd->levels[rt->levelIndex].height;
+  rt->width = rt->pd->levels[rt->levelIndex].width;
 
   memcpy(rt->objects, rt->states[rt->statesCount - 1].objects, sizeof(Obj) * rt->objectCapacity);
 
@@ -506,46 +506,25 @@ int matchAtDistance(Direction dir, int x, int y, int targetX, int targetY) {
   }
 }
 
-int directionMatches(Runtime * rt, Rule * rule, int stateId, int partId, Direction appDir, int x, int y) {
-  int matched = 0;
+int directionMatches(Runtime * rt, Rule * rule, int stateId, int partId, int identId, Direction appDir, int x, int y) {
   int foundMoving = 0;
-  for (int identId = 0; identId < rule->matchStates[stateId].parts[partId].ruleIdentityCount; identId++) {
-    matched = 0;
-    Direction ruleDir = rule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
-    int legendId = rule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+  Direction ruleDir = rule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
+  int legendId = rule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
 
-    if (legendId == EMPTY_ID || legendId == aliasLegendId("Background") || ruleDir == COND_NO) {
-      // TODO: this is incorrect we should check the rest of the idents, but it fails
-      return 1;
-    } else {
-      for (int i = 0; i < rt->toMoveCount; i++) {
-        if (rt->objects[rt->toMove[i].objIndex].x == x &&
-            rt->objects[rt->toMove[i].objIndex].y == y &&
-            aliasLegendContains(legendId, rt->objects[rt->toMove[i].objIndex].objId)) {
-          foundMoving = 1;
-          if (matchesDirection(ruleDir, appDir, rt->objects[rt->toMove[i].objIndex].moving, 1)) {
-            /*** printf("Matched moving %s\n", aliasLegendKey(legendId)); ***/
-            matched = 1;
-          }
-        }
-        if (matched) {
-          // TODO: this is incorrect we should check the rest of the idents, but it fails
-          return 1;
-        }
-      }
-      // TODO: we should track if we found it, but it was moving the wrong way above
-      if (foundMoving == 0 && (ruleDir == STATIONARY || ruleDir == UNSPECIFIED)) {
-        matched = 1;
-        /* printf("Matched stationary %s\n", aliasLegendKey(legendId)); */
+  for (int i = 0; i < rt->toMoveCount; i++) {
+    if (rt->objects[rt->toMove[i].objIndex].x == x &&
+        rt->objects[rt->toMove[i].objIndex].y == y &&
+        aliasLegendContains(legendId, rt->objects[rt->toMove[i].objIndex].objId)) {
+      foundMoving = 1;
+      if (matchesDirection(ruleDir, appDir, rt->objects[rt->toMove[i].objIndex].moving, 1)) {
         return 1;
       }
     }
-    if (matched == 0) {
-      /* printf("failed to match %s\n", aliasLegendKey(legendId)); */
-      return 0;
-    }
   }
-  return 1;
+  if (foundMoving == 0 && (ruleDir == STATIONARY || ruleDir == UNSPECIFIED)) {
+    return 1;
+  }
+  return 0;
 }
 
 int resultDirectionMatches(Runtime * rt, Rule * rule, int stateId, int partId, Direction appDir, int x, int y, int ignoreUnspecified) {
@@ -689,7 +668,6 @@ void replaceCell(Runtime * rt, Rule * rule, int stateId, int partId, Direction a
           legendId != EMPTY_ID &&
           resultIncludesSelf == 0
           ) {
-        /* printf("Making %s for deletion\n", objectName(rt->objects[objId].objId)); */
         match->parts[match->partCount].newObject = 0;
         match->parts[match->partCount].goalId = EMPTY_ID;
         match->parts[match->partCount].objIndex = objId;
@@ -756,34 +734,29 @@ void replaceCell(Runtime * rt, Rule * rule, int stateId, int partId, Direction a
   }
 }
 
-int partIdentity(Runtime * rt, Rule * rule, int stateId, int partId, int identId, Direction appDir, Match * match) {
+int partIdentity(Runtime * rt, Rule * rule, int stateId, int partId, int identId, Direction appDir, int byteIndex, Match * match) {
   // bit/byte math
-  int width = rt->width;
+  int x = match->targetX;
+  int y = match->targetY;
   int bytePerRecord = rt->pd->objectCount/8+1;
-
   Direction ruleDir = rule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
   int legendId = rule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
   int matched = 0;
   if (legendId == EMPTY_ID || legendId == rt->backgroundId) {
     return 1;
   } else {
-    // legend mask & cell
-    int x = match->targetX;
-    int y = match->targetY;
-    int byte_index = ((y * width * bytePerRecord * 8) + (x * bytePerRecord * 8))/8;
-
     if (ruleDir != COND_NO) {
       for (int byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
-        if ((rt->pd->aliasLegend[legendId].mask[byteOffset] & rt->oMap[byte_index + byteOffset]) != 0 &&
-            (rule->executionTime == LATE || directionMatches(rt, rule, stateId, partId, appDir, x, y))) {
-          matched = 1;
+        if ((rt->pd->aliasLegend[legendId].mask[byteOffset] & rt->oMap[byteIndex + byteOffset]) != 0 &&
+            (rule->executionTime == LATE || directionMatches(rt, rule, stateId, partId, identId, appDir, x, y))) {
+          return 1;
         }
       }
     } else {
       matched = 1;
       for (int byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
-        if ((rt->pd->aliasLegend[legendId].mask[byteOffset] & rt->oMap[byte_index + byteOffset]) != 0) {
-          matched = 0;
+        if ((rt->pd->aliasLegend[legendId].mask[byteOffset] & rt->oMap[byteIndex + byteOffset]) != 0) {
+          return 0;
         }
       }
     }
@@ -792,8 +765,14 @@ int partIdentity(Runtime * rt, Rule * rule, int stateId, int partId, int identId
 }
 
 int partIdentitys(Runtime * rt, Rule * rule, int stateId, int partId, Direction appDir, Match * match) {
+  int width = rt->width;
+  int bytePerRecord = rt->pd->objectCount/8+1;
+  int x = match->targetX;
+  int y = match->targetY;
+  int byteIndex = ((y * width * bytePerRecord * 8) + (x * bytePerRecord * 8))/8;
+
   for (int i = 0; i < rule->matchStates[stateId].parts[partId].ruleIdentityCount; i++) {
-    if  (partIdentity(rt, rule, stateId, partId, i, appDir, match) == 0) {
+    if  (partIdentity(rt, rule, stateId, partId, i, appDir, byteIndex, match) == 0) {
       return 0;
     }
   }
@@ -945,7 +924,7 @@ void applyRules(Runtime * rt, ExecutionTime execTime) {
       applied = 0;
       match.partCount = 0;
       if (rt->pd->rules[ruleIndex].executionTime == execTime) {
-        applied = applyRule(rt, rule(ruleIndex), &match);
+        applied = applyRule(rt, &rt->pd->rules[ruleIndex], &match);
         /* fprintf(stderr, "ruleIdex (%i/%i) applied (%i) && (match.partCount (%i) > 0 || match.cancel (%i))\n", ruleIndex, rt->pd->ruleCount, applied, match.partCount, match.cancel); */
         if (applied && (match.partCount > 0 || match.cancel)) {
           applyMatch(rt, &match);
@@ -1100,8 +1079,8 @@ void loadLevel(Runtime * rt) {
   rt->levelType = levelType(rt->levelIndex);
   if (rt->levelType == SQUARES) {
 
-    rt->height = levelHeight(rt->levelIndex);
-    rt->width = levelWidth(rt->levelIndex);
+    rt->height = rt->pd->levels[rt->levelIndex].height;
+    rt->width = rt->pd->levels[rt->levelIndex].width;
     rt->toMoveCount = 0;
     rt->objectCount = 0;
 
@@ -1115,6 +1094,7 @@ void loadLevel(Runtime * rt) {
     rt->oMap = rt->oMap = calloc(rt->height * rt->width * bytePerRecord, 1);
 
 
+
     int count = levelCellCount(rt->levelIndex);
     for (int i = 0; i < count; i++) {
       int x = i % rt->width;
@@ -1122,12 +1102,11 @@ void loadLevel(Runtime * rt) {
       loadCell(rt, levelCell(rt->levelIndex, i), x, y);
     }
 
-    /* buildOMap(rt); */
+
 
     if (rt->pd->runRulesOnLevelStart) {
       rt->doAgain = 1;
       while (rt->doAgain == 1) {
-        /* printf("repeating due to due again\n"); */
         rt->doAgain = 0;
         applyRules(rt, NORMAL);
         moveObjects(rt);
@@ -1163,7 +1142,7 @@ void startGame(Runtime * rt, FILE * file) {
   }
 }
 
-void tick(Runtime * rt) {
+void preUpdate(Runtime * rt) {
   rt->doAgain = 0;
   rt->didUndo = 0;
   rt->toMoveCount = 0;
@@ -1171,27 +1150,22 @@ void tick(Runtime * rt) {
     cleanup(rt);
     rt->deadCount = 0;
   }
+}
 
+void tick(Runtime * rt) {
+  preUpdate(rt);
   applyRules(rt, NORMAL);
   moveObjects(rt);
   applyRules(rt, LATE);
 }
 
 void update(Runtime * rt, Direction dir) {
-  rt->doAgain = 0;
-  rt->didUndo = 0;
-  rt->toMoveCount = 0;
+  preUpdate(rt);
 
   if (dir == NONE) {
     return;
   }
 
-  if (rt->deadCount > 300) {
-    cleanup(rt);
-    rt->deadCount = 0;
-  }
-
-  int startingPlayerLocation = playerLocation(rt);
   addHistory(rt, dir);
   addState(rt);
   rt->toMoveCount = 0;
@@ -1204,6 +1178,8 @@ void update(Runtime * rt, Direction dir) {
 
   // TODO: remove deleted objects?
   if (rt->levelType == SQUARES) {
+    int startingPlayerLocation = playerLocation(rt);
+
     // mark player for moving
     markPlayerAsMoving(rt, dir);
 
