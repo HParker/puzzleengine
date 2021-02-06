@@ -8,6 +8,7 @@
 extern PuzzleData pd;
 
 #define PUZZLE_MALLOC_INC 10;
+#define EMPTY_ID 1
 
 void verboseLoggingOn() {
   if (pd.verboseLogging) {
@@ -893,12 +894,29 @@ void expandRules() {
   pd.rules = rules;
 }
 
+void makeLegendMasks() {
+  for (int legendId = 0; legendId < pd.aliasLegendCount; legendId++) {
+    pd.aliasLegend[legendId].mask = calloc(pd.objectCount/8+1, 1);
+    for (int objectId = 0; objectId < pd.aliasLegend[legendId].objectCount; objectId++) {
+      unsigned int element = pd.aliasLegend[legendId].objects[objectId];
+      unsigned int byte_index = element/8;
+      unsigned int bit_index = element % 8;
+      unsigned int bit_mask = (1 << bit_index);
+
+      if ((pd.aliasLegend[legendId].mask[byte_index] & bit_mask) == 0) {
+        pd.aliasLegend[legendId].mask[byte_index] |= bit_mask;
+      }
+    }
+  }
+}
+
 PuzzleData * parsePuzzle(FILE * file) {
   initPuzzleData();
   yyin = file;
   yyparse();
 
   expandRules();
+  makeLegendMasks();
 
   if (pd.debug) {
     printDebug();
@@ -921,6 +939,10 @@ void freePuzzle() {
 
   for (int i = 0; i < pd.aliasLegendCapacity; i++) {
     free(pd.aliasLegend[i].objects);
+  }
+
+  for (int i = 0; i < pd.aliasLegendCount; i++) {
+    free(pd.aliasLegend[i].mask);
   }
   free(pd.aliasLegend);
 
@@ -997,12 +1019,10 @@ int legendIdForGlyph(char glyph) {
 }
 
 int aliasLegendContains(int legendId, int objId) {
-  for (int i = 0; i < pd.aliasLegend[legendId].objectCount; i++) {
-    if (objId == pd.aliasLegend[legendId].objects[i]) {
-      return 1;
-    }
-  }
-  return 0;
+  int byte_index = objId/8;
+  int bit_index = objId % 8;
+  int bit_mask = (1 << bit_index);
+  return ((pd.aliasLegend[legendId].mask[byte_index] & bit_mask) != 0);
 }
 
 int idForGlyph(char glyph) {
@@ -1021,7 +1041,7 @@ int idForGlyph(char glyph) {
 
 int objectLayer(int objId) {
   // TODO: we should catch this earlier
-  if (objId == -1 || aliasLegendContains(aliasLegendId("_Empty_"), objId)) {
+  if (objId == -1 || aliasLegendContains(EMPTY_ID, objId)) {
     return -1;
   }
 
@@ -1034,24 +1054,6 @@ int objectLayer(int objId) {
   }
   fprintf(stderr, "err: layer not found for objid: '%s' (%i) \n", objectName(objId), objId);
   return -1;
-}
-
-int levelHeight(int levelIndex) {
-  if (levelIndex < pd.levelCount) {
-    return pd.levels[levelIndex].height;
-  } else {
-    fprintf(stderr, "err: asked for level out of bounds\n");
-    return -1;
-  }
-}
-
-int levelWidth(int levelIndex) {
-  if (levelIndex < pd.levelCount) {
-    return pd.levels[levelIndex].width;
-  } else {
-    fprintf(stderr, "err: asked for level out of bounds\n");
-    return -1;
-  }
 }
 
 int levelCellCount(int levelIndex) {
@@ -1106,11 +1108,6 @@ char glyphLegendKey(int id) {
 int ruleCount() {
   return pd.ruleCount;
 }
-
-Rule * rule(int index) {
-  return &pd.rules[index];
-}
-
 
 int levelCount() {
   return pd.levelCount;

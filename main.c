@@ -24,14 +24,12 @@ int main(int argc, char ** argv) {
   initRenderer();
 
   while (1) {
-    if (rt.pd->realTimeInterval*60.0f < frameCounter) {
+    if (rt.pd->realTimeInterval > 0 && rt.pd->realTimeInterval*60.0f < frameCounter) {
       tick(&rt);
       frameCounter = 0;
     }
-
     render(&rt);
     frameCounter++;
-
     if (rt.doAgain) {
       continue;
     }

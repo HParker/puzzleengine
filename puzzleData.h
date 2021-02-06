@@ -35,6 +35,7 @@ typedef struct AliasLegend {
   int objectCount;
   int objectCapacity;
   int * objects;
+  char * mask;
 } AliasLegend;
 
 typedef struct Layer {
@@ -297,9 +298,11 @@ typedef struct Runtime {
   time_t randomSeed;
   int gameWon;
   int doAgain;
+  int didUndo;
   int deadCount;
   int levelIndex;
   int backgroundId;
+  int playerId;
   int height;
   int width;
 
@@ -320,6 +323,9 @@ typedef struct Runtime {
 
   int hasMap;
   int * map;
+
+  int hasOMap;
+  char * oMap;
 
   int statesCount;
   int statesCapacity;
@@ -361,8 +367,6 @@ extern int layerWidth(int layerId);
 extern int layerObjectId(int layerId, int objectIndex);
 
 // level
-extern int levelHeight(int levelIndex);
-extern int levelWidth(int levelIndex);
 extern int levelCellCount(int levelIndex);
 extern int levelCell(int levelIndex, int cellIndex);
 extern LevelType levelType(int levelIndex);
@@ -374,7 +378,6 @@ int objectId(char * name);
 
 //rules
 extern int ruleCount();
-extern Rule * rule(int index);
 
 // runner
 // Levels
