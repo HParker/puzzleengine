@@ -494,7 +494,7 @@ void incLevel() {
   pd.levelCount++;
 }
 
-void incCellIndex(int levelId) {
+void incTileIndex(int levelId) {
   if (pd.levels[levelId].tileIndex + 1 >= pd.levels[levelId].tileCapacity) {
     pd.levels[levelId].tileCapacity += PUZZLE_MALLOC_INC;
     pd.levels[levelId].tiles = realloc(pd.levels[levelId].tiles, sizeof(char) * pd.levels[levelId].tileCapacity);
@@ -975,7 +975,7 @@ char * objectName(int id) {
   return pd.objects[id].name;
 }
 
-int objectSpriteCell(int id, int i) {
+int objectSpriteTile(int id, int i) {
   return pd.objects[id].sprite[i];
 }
 
@@ -1056,11 +1056,11 @@ int objectLayer(int objId) {
   return -1;
 }
 
-int levelCellCount(int levelIndex) {
+int levelTileCount(int levelIndex) {
   return pd.levels[levelIndex].tileIndex;
 }
 
-int levelCell(int levelIndex, int tileIndex) {
+int levelTile(int levelIndex, int tileIndex) {
   return pd.levels[levelIndex].tiles[tileIndex];
 }
 
@@ -1102,15 +1102,6 @@ char * aliasLegendKey(int id) {
 
 char glyphLegendKey(int id) {
   return pd.glyphLegend[id].key;
-}
-
-
-int ruleCount() {
-  return pd.ruleCount;
-}
-
-int levelCount() {
-  return pd.levelCount;
 }
 
 int winConditionCount() {

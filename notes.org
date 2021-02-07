@@ -10,7 +10,7 @@ what does this rule actually do:
 TODO:
 - movement mask
 - mark rule states that are 100% identical
-- move replace cell completely after checking the WHOLE match
+- move replace tile completely after checking the WHOLE match
 - smooth movement for a new demo
 - add any validations other then syntax
 - sounds

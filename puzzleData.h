@@ -335,7 +335,7 @@ extern void freePuzzle();
 extern char objectGlyph(int objId);
 extern Object * object(int id);
 extern char * objectName(int id);
-extern int objectSpriteCell(int id, int index);
+extern int objectSpriteTile(int id, int index);
 extern char * objectColor(int id, int colorIndex);
 
 // legend
@@ -363,8 +363,8 @@ extern int layerWidth(int layerId);
 extern int layerObjectId(int layerId, int objectIndex);
 
 // level
-extern int levelCellCount(int levelIndex);
-extern int levelCell(int levelIndex, int tileIndex);
+extern int levelTileCount(int levelIndex);
+extern int levelTile(int levelIndex, int tileIndex);
 extern LevelType levelType(int levelIndex);
 extern char * levelMessage(int levelIndex);
 
@@ -372,16 +372,12 @@ extern char * levelMessage(int levelIndex);
 int layerIncludes(int layerId, int objId);
 int objectId(char * name);
 
-//rules
-extern int ruleCount();
-
 // runner
 // Levels
 extern void startGame(Runtime * rt, FILE * file);
 extern void endGame(Runtime * rt);
 extern void nextLevel(Runtime * rt);
-extern void undo(Runtime * rt, int partial);
-extern int levelCount();
+extern void undo(Runtime * rt);
 
 // Winning
 extern int checkWinCondition(Runtime * rt, int winConditionIndex);
@@ -428,7 +424,7 @@ extern int ruleCommandContains(Rule * rule, Command cmd);
 
 extern void incWinCondition();
 extern void incLevel();
-extern void incCellIndex(int levelId);
+extern void incTileIndex(int levelId);
 extern FILE * yyin;
 extern int yyparse();
 

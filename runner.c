@@ -242,8 +242,8 @@ void cleanup(Runtime * rt) {
   free(oldObjs);
 }
 
-void loadCell(Runtime * rt, char cell, int x, int y) {
-  int id = legendIdForGlyph(cell);
+void loadTile(Runtime * rt, char tile, int x, int y) {
+  int id = legendIdForGlyph(tile);
 
   for (int i = 0; i < rt->pd->glyphLegend[id].objectCount; i++) {
     int objId = rt->pd->glyphLegend[id].objects[i];
@@ -317,7 +317,7 @@ void endGame(Runtime * rt) {
 }
 
 
-void undo(Runtime * rt, int partial) {
+void undo(Runtime * rt) {
   if (rt->didUndo) {
     // Don't undo more then once per update
     return;
@@ -396,7 +396,7 @@ int deltaY(Direction dir) {
 }
 
 // This is require for things like,
-// [ Selector Block ] [ EmptyCell ] -> [ Selector ] [ FilledCell Block]
+// [ Selector Block ] [ EmptyTile ] -> [ Selector ] [ FilledTile Block]
 // assume Block is `Block = RedBlock or BlueBlock`
 // In rules like this `Block` has to refer to the same specific block that was matched
 // Even if the rule that part that matched it is in a different position.
@@ -425,7 +425,7 @@ void applyMatch(Runtime * rt, Match * match) {
 
   if (match->cancel) {
     rt->toMoveCount = 0;
-    undo(rt, 1);
+    undo(rt);
     return;
   }
 
@@ -555,7 +555,7 @@ int alreadyResultIdentity(Runtime * rt, Rule * rule, int stateId, int partId, in
   if (legendId == EMPTY_ID || legendId == rt->backgroundId) {
     return 1;
   } else {
-    // legend mask & cell
+    // legend mask & tile
     int byte_index = ((y * width * bytePerRecord * 8) + (x * bytePerRecord * 8))/8;
 
     if (ruleDir != COND_NO) {
@@ -615,7 +615,7 @@ int alreadyResult(Runtime * rt, Rule * rule, int stateId, int partId, Direction 
   return 1;
 }
 
-void replaceCell(Runtime * rt, Rule * rule, int stateId, int partId, Direction appDir, Match * match) {
+void replaceTile(Runtime * rt, Rule * rule, int stateId, int partId, Direction appDir, Match * match) {
   if (rule->resultPaternCount == 0) {
     if (ruleCommandContains(rule, CANCEL)) {
       match->cancel = 1;
@@ -801,7 +801,7 @@ int completeMatch(Runtime * rt, Rule * rule, int stateId, Direction appDir, Matc
       }
 
       if (success) {
-        replaceCell(rt, rule, stateId, partId, appDir, match);
+        replaceTile(rt, rule, stateId, partId, appDir, match);
       }
     }
 
@@ -883,8 +883,7 @@ void applyRules(Runtime * rt, ExecutionTime execTime) {
   match.partCount = 0;
   match.cancel = 0;
 
-  int count = ruleCount();
-  for (int ruleIndex = 0; ruleIndex < count; ruleIndex++) {
+  for (int ruleIndex = 0; ruleIndex < rt->pd->ruleCount; ruleIndex++) {
     match.ruleIndex = ruleIndex;
 
     applied = 1;
@@ -1058,11 +1057,11 @@ void loadLevel(Runtime * rt) {
 
 
 
-    int count = levelCellCount(rt->levelIndex);
+    int count = levelTileCount(rt->levelIndex);
     for (int i = 0; i < count; i++) {
       int x = i % rt->width;
       int y = i / rt->width;
-      loadCell(rt, levelCell(rt->levelIndex, i), x, y);
+      loadTile(rt, levelTile(rt->levelIndex, i), x, y);
     }
 
     if (rt->pd->runRulesOnLevelStart) {
@@ -1078,7 +1077,7 @@ void loadLevel(Runtime * rt) {
 }
 
 void nextLevel(Runtime * rt) {
-  if (rt->levelIndex < levelCount() - 1) {
+  if (rt->levelIndex < rt->pd->levelCount - 1) {
     rt->prevHistoryCount = rt->historyCount;
     rt->levelIndex++;
     if (rt->hasMap) {
@@ -1145,7 +1144,7 @@ void update(Runtime * rt, Direction dir) {
 
     if (rt->pd->requirePlayerMovement &&
         (startingPlayerLocation == playerLocation(rt))) {
-      undo(rt, 1);
+      undo(rt);
       return;
     }
 

@@ -51,14 +51,14 @@ void drawObj(Runtime * rt, int objIndex) {
 
   // TODO: for now app sprites are 25 long, but we can make this more generic
   for (int i = 0; i < 25; i++) {
-    Color cellColor = colorFromSprite(rt, objectId, i);
-    if (cellColor.a != 0) {
+    Color tileColor = colorFromSprite(rt, objectId, i);
+    if (tileColor.a != 0) {
       sdlRect.x = (rt->objects[objIndex].x * pixelSize * width) + ((i % 5) * pixelSize);
       sdlRect.y = (rt->objects[objIndex].y * pixelSize * height) + ((i / 5) * pixelSize);
       sdlRect.w = pixelSize;
       sdlRect.h = pixelSize;
 
-      SDL_SetRenderDrawColor(renderer, cellColor.r, cellColor.g, cellColor.b, cellColor.a);
+      SDL_SetRenderDrawColor(renderer, tileColor.r, tileColor.g, tileColor.b, tileColor.a);
       SDL_RenderFillRect(renderer, &sdlRect);
     }
   }
@@ -91,17 +91,17 @@ void renderBackground(Runtime * rt) {
   int height = 5;
   SDL_Rect sdlRect;
 
-  int count = levelCellCount(rt->levelIndex);
-  for (int cell = 0; cell < count; cell++) {
+  int count = levelTileCount(rt->levelIndex);
+  for (int tile = 0; tile < count; tile++) {
     for (int i = 0; i < 25; i++) {
-      Color cellColor = colorFromSprite(rt, rt->backgroundId, i);
-      if (cellColor.a != 0) {
-        sdlRect.x = (cell % rt->width * pixelSize * width) + ((i % 5) * pixelSize);
-        sdlRect.y = (cell / rt->width * pixelSize * height) + ((i / 5) * pixelSize);
+      Color tileColor = colorFromSprite(rt, rt->backgroundId, i);
+      if (tileColor.a != 0) {
+        sdlRect.x = (tile % rt->width * pixelSize * width) + ((i % 5) * pixelSize);
+        sdlRect.y = (tile / rt->width * pixelSize * height) + ((i / 5) * pixelSize);
         sdlRect.w = pixelSize;
         sdlRect.h = pixelSize;
 
-        SDL_SetRenderDrawColor(renderer, cellColor.r, cellColor.g, cellColor.b, cellColor.a);
+        SDL_SetRenderDrawColor(renderer, tileColor.r, tileColor.g, tileColor.b, tileColor.a);
         SDL_RenderFillRect(renderer, &sdlRect);
       }
     }

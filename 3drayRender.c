@@ -94,8 +94,8 @@ Color colorFromName(char * name) {
 }
 
 Color colorFromSprite(Runtime * rt, int objId, int tileIndex) {
-  int cell = objectSpriteCell(objId, tileIndex);
-  switch (cell) {
+  int tile = objectSpriteTile(objId, tileIndex);
+  switch (tile) {
   case '0':
     return colorFromName(objectColor(objId, 0));
     break;
@@ -131,9 +131,9 @@ Color colorFromSprite(Runtime * rt, int objId, int tileIndex) {
     return TRANSPARENT;
 
   }
-  fprintf(stderr, "FAILED TO MATCH A COLOR CODE id %i (%c)\n", objId, cell);
+  fprintf(stderr, "FAILED TO MATCH A COLOR CODE id %i (%c)\n", objId, tile);
   for (int i = 0; i < 25; i++) {
-    fprintf(stderr, "%c", objectSpriteCell(objId, i));
+    fprintf(stderr, "%c", objectSpriteTile(objId, i));
   }
   fprintf(stderr, "\n");
   return PINK;
@@ -173,22 +173,22 @@ void renderBackground(Runtime * rt) {
   int width = 5;
   int height = 5;
 
-  int count = levelCellCount(rt->levelIndex);
-  for (int cell = 0; cell < count; cell++) {
+  int count = levelTileCount(rt->levelIndex);
+  for (int tile = 0; tile < count; tile++) {
     for (int i = 0; i < 25; i++) {
-      Color cellColor = colorFromSprite(rt, rt->backgroundId, i);
+      Color tileColor = colorFromSprite(rt, rt->backgroundId, i);
 
-      if (cellColor.a != 0) {
+      if (tileColor.a != 0) {
         Vector3 cubePosition;
-        cubePosition.x = -(cell % rt->width * pixelSize * width) + ((i % 5) * pixelSize);
-        cubePosition.y = (cell / rt->width * pixelSize * height) + ((i / 5) * pixelSize);
+        cubePosition.x = -(tile % rt->width * pixelSize * width) + ((i % 5) * pixelSize);
+        cubePosition.y = (tile / rt->width * pixelSize * height) + ((i / 5) * pixelSize);
         cubePosition.z = 0.0f;
 
         int w = pixelSize;
         int h = pixelSize;
         int l = pixelSize;
 
-        DrawCube(cubePosition, w, h, l, cellColor);
+        DrawCube(cubePosition, w, h, l, tileColor);
       }
     }
   }
@@ -213,8 +213,8 @@ void drawObj(Runtime * rt, int objIndex) {
 
   // TODO: for now app sprites are 25 long, but we can make this more generic
   for (int i = 0; i < 25; i++) {
-    Color cellColor = colorFromSprite(rt, objectId, i);
-    if (cellColor.a != 0) {
+    Color tileColor = colorFromSprite(rt, objectId, i);
+    if (tileColor.a != 0) {
       Vector3 cubePosition;
       cubePosition.x = -(rt->objects[objIndex].x * pixelSize * width) + ((i % 5) * pixelSize);
       cubePosition.y = (rt->objects[objIndex].y * pixelSize * height) + ((i / 5) * pixelSize);
@@ -223,7 +223,7 @@ void drawObj(Runtime * rt, int objIndex) {
       int h = pixelSize;
       float l = pixelSize * 2.5f;
 
-      DrawCube(cubePosition, w, h, l, cellColor);
+      DrawCube(cubePosition, w, h, l, tileColor);
     }
   }
 }

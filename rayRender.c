@@ -147,8 +147,8 @@ Color colorFromName(char * name) {
 }
 
 Color colorFromSprite(Runtime * rt, int objId, int tileIndex) {
-  int cell = objectSpriteCell(objId, tileIndex);
-  switch (cell) {
+  int tile = objectSpriteTile(objId, tileIndex);
+  switch (tile) {
   case '0':
     return colorFromName(objectColor(objId, 0));
 
@@ -183,9 +183,9 @@ Color colorFromSprite(Runtime * rt, int objId, int tileIndex) {
     return TRANSPARENT;
 
   }
-  fprintf(stderr, "(rayrender.c) FAILED TO MATCH A COLOR CODE id %i (%c)\n", objId, cell);
+  fprintf(stderr, "(rayrender.c) FAILED TO MATCH A COLOR CODE id %i (%c)\n", objId, tile);
   for (int i = 0; i < 25; i++) {
-    fprintf(stderr, "%c", objectSpriteCell(objId, i));
+    fprintf(stderr, "%c", objectSpriteTile(objId, i));
   }
   fprintf(stderr, "\n");
   return PINK;
@@ -203,8 +203,8 @@ void closeRenderer() {
   CloseWindow();
 }
 
-Color colorFromList(char * colors[10], char cell) {
-  switch (cell) {
+Color colorFromList(char * colors[10], char tile) {
+  switch (tile) {
   case '0':
     return colorFromName(colors[0]);
 
@@ -239,7 +239,7 @@ Color colorFromList(char * colors[10], char cell) {
     return TRANSPARENT;
 
   }
-  fprintf(stderr, "(rayrender.c 2) FAILED TO MATCH A COLOR CODE id (%i)\n", cell);
+  fprintf(stderr, "(rayrender.c 2) FAILED TO MATCH A COLOR CODE id (%i)\n", tile);
   return PINK;
 }
 
@@ -372,11 +372,11 @@ int topMargin(Runtime * rt) {
 void drawSprite(Runtime * rt, char sprite[25], char * colors[10], int x, int y) {
   // TODO: for now app sprites are 25 long, but we can make this more generic
   for (int i = 0; i < 25; i++) {
-    Color cellColor = colorFromList(colors, sprite[i]);
-    if (cellColor.a != 0) {
+    Color tileColor = colorFromList(colors, sprite[i]);
+    if (tileColor.a != 0) {
       int realX = leftMargin(rt) + ((x - startTileX(rt)) * pixelSize(rt) * SPRITE_WIDTH) + ((i % SPRITE_WIDTH) * pixelSize(rt));
       int realY = topMargin(rt) + ((y - startTileY(rt)) * pixelSize(rt) * SPRITE_WIDTH) + ((i / SPRITE_WIDTH) * pixelSize(rt));
-      DrawRectangle(realX, realY, pixelSize(rt), pixelSize(rt), cellColor);
+      DrawRectangle(realX, realY, pixelSize(rt), pixelSize(rt), tileColor);
     }
   }
 }
@@ -384,12 +384,12 @@ void drawSprite(Runtime * rt, char sprite[25], char * colors[10], int x, int y) 
 void debugDrawSprite(Runtime * rt, int sprite[25], char * colors[10], int x, int y) {
   // TODO: for now app sprites are 25 long, but we can make this more generic
   for (int i = 0; i < 25; i++) {
-    Color cellColor = colorFromList(colors, sprite[i]);
-    if (cellColor.a != 0) {
+    Color tileColor = colorFromList(colors, sprite[i]);
+    if (tileColor.a != 0) {
       int realX = leftMargin(rt) + (x * pixelSize(rt) * SPRITE_WIDTH) + ((i % SPRITE_WIDTH) * pixelSize(rt));
       int realY = topMargin(rt)  + (y * pixelSize(rt) * SPRITE_WIDTH) + ((i / SPRITE_WIDTH) * pixelSize(rt));
 
-      DrawRectangle(realX, realY, pixelSize(rt), pixelSize(rt), cellColor);
+      DrawRectangle(realX, realY, pixelSize(rt), pixelSize(rt), tileColor);
     }
   }
 }
@@ -411,10 +411,10 @@ void drawObj(Runtime * rt, int objIndex) {
 }
 
 void renderBackground(Runtime * rt) {
-  int count = levelCellCount(rt->levelIndex);
-  for (int cell = 0; cell < count; cell++) {
-    int x = cell % rt->width;
-    int y = cell / rt->width;
+  int count = levelTileCount(rt->levelIndex);
+  for (int tile = 0; tile < count; tile++) {
+    int x = tile % rt->width;
+    int y = tile / rt->width;
     drawObject(rt, rt->backgroundId, x, y);
   }
 }

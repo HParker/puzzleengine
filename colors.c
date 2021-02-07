@@ -128,8 +128,8 @@ Color colorFromName(char * name) {
 }
 
 Color colorFromSprite(Runtime * rt, int objId, int tileIndex) {
-  int cell = objectSpriteCell(objId, tileIndex);
-  switch (cell) {
+  int tile = objectSpriteTile(objId, tileIndex);
+  switch (tile) {
   case '0':
     return colorFromName(objectColor(objId, 0));
     break;
@@ -165,9 +165,9 @@ Color colorFromSprite(Runtime * rt, int objId, int tileIndex) {
     return TRANSPARENT;
 
   }
-  fprintf(stderr, "(colors.c) FAILED TO MATCH A COLOR CODE id %i (%c)\n", objId, cell);
+  fprintf(stderr, "(colors.c) FAILED TO MATCH A COLOR CODE id %i (%c)\n", objId, tile);
   for (int i = 0; i < 25; i++) {
-    fprintf(stderr, "%c", objectSpriteCell(objId, i));
+    fprintf(stderr, "%c", objectSpriteTile(objId, i));
   }
   fprintf(stderr, "\n");
   return PINK;

@@ -156,7 +156,7 @@ color (color|colour)
 }
 
 <OBJECTS>{glyph} {
-  yylval.cell = yytext[0];
+  yylval.tile = yytext[0];
   return GLYPH;
 }
 
@@ -166,7 +166,7 @@ color (color|colour)
 }
 
 <LEGEND>^{glyph} {
-  yylval.cell = yytext[0];
+  yylval.tile = yytext[0];
   return LEGEND_GLYPH;
 }
 
@@ -359,7 +359,7 @@ message[ ]+ {
 }
 
 <LEVELS>{glyph} {
-  yylval.cell = yytext[0];
+  yylval.tile = yytext[0];
   return GLYPH;
 }
 

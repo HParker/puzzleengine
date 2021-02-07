@@ -62,7 +62,7 @@ int rowWidth = 0;
 
 %union {
   char * identifier;
-  char cell;
+  char tile;
   float decimal;
   int enumValue;
   int number;
@@ -86,7 +86,7 @@ int rowWidth = 0;
 %token MOVE_RIGHT MOVE_UP MOVE_LEFT MOVE_DOWN
 %token OPEN_SQUARE CLOSE_SQUARE VERTICAL_PIPE ARROW
 %token LEVEL_EOL LEVEL_EMPTY_LINE
-%token <cell> GLYPH LEGEND_GLYPH
+%token <tile> GLYPH LEGEND_GLYPH
 %token <enumValue> LOGIC_WORD LOGIC_ON DIRECTION EXECUTION_TIME
 
 %%
@@ -248,9 +248,9 @@ sprite: sprite_row some_object_eol sprite_row some_object_eol sprite_row some_ob
   spriteIndex = 0;
 }
 
-sprite_row: sprite_cell sprite_cell sprite_cell sprite_cell sprite_cell
+sprite_row: sprite_tile sprite_tile sprite_tile sprite_tile sprite_tile
 
-sprite_cell: GLYPH {
+sprite_tile: GLYPH {
     pd.objects[pd.objectCount].sprite[spriteIndex] = $1;
     spriteIndex++;
 }
@@ -595,11 +595,11 @@ row: tiles LEVEL_EOL {
   rowWidth = 0;
 }
 
-tiles: cell tiles | cell
+tiles: tile tiles | tile
 
-cell: GLYPH {
+tile: GLYPH {
   rowWidth++;
   pd.levels[pd.levelCount].tiles[pd.levels[pd.levelCount].tileIndex] = $1;
-  incCellIndex(pd.levelCount);
+  incTileIndex(pd.levelCount);
 }
 %%
