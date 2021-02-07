@@ -127,8 +127,8 @@ Color colorFromName(char * name) {
   return PINK;
 }
 
-Color colorFromSprite(Runtime * rt, int objId, int cellIndex) {
-  int cell = objectSpriteCell(objId, cellIndex);
+Color colorFromSprite(Runtime * rt, int objId, int tileIndex) {
+  int cell = objectSpriteCell(objId, tileIndex);
   switch (cell) {
   case '0':
     return colorFromName(objectColor(objId, 0));

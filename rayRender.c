@@ -146,8 +146,8 @@ Color colorFromName(char * name) {
   return PINK;
 }
 
-Color colorFromSprite(Runtime * rt, int objId, int cellIndex) {
-  int cell = objectSpriteCell(objId, cellIndex);
+Color colorFromSprite(Runtime * rt, int objId, int tileIndex) {
+  int cell = objectSpriteCell(objId, tileIndex);
   switch (cell) {
   case '0':
     return colorFromName(objectColor(objId, 0));
@@ -420,14 +420,14 @@ void renderBackground(Runtime * rt) {
 }
 
 void renderTiles(Runtime * rt) {
-  int x, y, layer, cellIndex;
+  int x, y, layer, tileIndex;
   for (y = startTileY(rt); y < endTileY(rt); y++) {
     for (x = startTileX(rt); x < endTileX(rt); x++) {
       drawObject(rt, rt->pd->aliasLegend[rt->backgroundId].objects[0], x, y);
       for (layer = 0; layer < rt->pd->layerCount; layer++) {
-        cellIndex = (layer * rt->width * rt->height) + (y * rt->width) + x;
-        if (rt->map[cellIndex] != -1) {
-          drawObj(rt, rt->map[cellIndex]);
+        tileIndex = (layer * rt->width * rt->height) + (y * rt->width) + x;
+        if (rt->map[tileIndex] != -1) {
+          drawObj(rt, rt->map[tileIndex]);
         }
       }
     }

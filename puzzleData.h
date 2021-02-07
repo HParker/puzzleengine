@@ -104,12 +104,10 @@ typedef enum Direction {
    PERPENDICULAR = 23
   } Direction;
 
-typedef enum ExecutionTime
-  {
-   NORMAL = 0,
-   LATE = 1
-  } ExecutionTime;
-
+typedef enum ExecutionTime {
+  NORMAL = 0,
+  LATE = 1
+} ExecutionTime;
 
 typedef struct RuleIdentity {
   Direction direction;
@@ -118,26 +116,25 @@ typedef struct RuleIdentity {
 
 // parts are split by `|`
 typedef struct RulePart {
-  int ruleIdentityCount;
-  int ruleIdentityCapacity;
+  int identityCount;
+  int identityCapacity;
   int isSpread;
-  int resultIncludesSelf; // TODO: use this optimization
-  RuleIdentity * ruleIdentity;
+  RuleIdentity * identity;
 } RulePart;
 
-typedef struct RuleState {
+typedef struct Pattern {
   int partCount;
   int partCapacity;
   RulePart * parts;
-} RuleState;
+} Pattern;
 
 typedef struct Rule {
   int id;
   int lineNo;
   int hasSpread;
   int hasRelativeDirection;
-  int hasMultipleParts;
   int hasCompoundDirection;
+  int hasMultipleParts;
 
   int commandCount;
   Command commands[10];
@@ -145,13 +142,13 @@ typedef struct Rule {
   Direction directionConstraint;
   ExecutionTime executionTime;
 
-  int matchStateCount;
-  int matchStateCapacity;
-  RuleState * matchStates;
+  int matchPaternCount;
+  int matchPaternCapacity;
+  Pattern * matchPaterns;
 
-  int resultStateCount;
-  int resultStateCapacity;
-  RuleState * resultStates;
+  int resultPaternCount;
+  int resultPaternCapacity;
+  Pattern * resultPaterns;
 } Rule;
 
 typedef struct MatchData {
@@ -170,9 +167,10 @@ typedef struct MatchData {
 } MatchData;
 
 typedef struct Match {
-  int cancel;
   int ruleIndex;
   int partCount;
+
+  int cancel;
   int cursorX;
   int cursorY;
   int targetX;
@@ -191,9 +189,9 @@ typedef struct Level {
   LevelType levelType;
   int height;
   int width;
-  int cellIndex;
-  int cellCapacity;
-  char * cells;
+  int tileIndex;
+  int tileCapacity;
+  char * tiles;
   char * message;
 } Level;
 
@@ -366,7 +364,7 @@ extern int layerObjectId(int layerId, int objectIndex);
 
 // level
 extern int levelCellCount(int levelIndex);
-extern int levelCell(int levelIndex, int cellIndex);
+extern int levelCell(int levelIndex, int tileIndex);
 extern LevelType levelType(int levelIndex);
 extern char * levelMessage(int levelIndex);
 
@@ -422,7 +420,7 @@ extern void addObjectsToLayer(char * name);
 extern void incRule();
 extern void incRuleMatchState(Rule * rule);
 extern void incRuleResultState(Rule * rule);
-extern void incRulePart(RuleState * ruleState);
+extern void incRulePart(Pattern * ruleState);
 extern void incRuleIdent(RulePart * part);
 
 extern int ruleCommandCount(int ruleId);

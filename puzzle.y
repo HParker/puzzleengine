@@ -421,7 +421,7 @@ match_state_internals: match_state_internals VERTICAL_PIPE match_state_part
 
 match_state_part: match_on_square {
   Rule * r = &pd.rules[pd.ruleCount];
-  RuleState * rs = &r->matchStates[r->matchStateCount];
+  Pattern * rs = &r->matchPaterns[r->matchPaternCount];
   incRulePart(rs);
   if (rs->partCount > 1) {
       r->hasMultipleParts = 1;
@@ -430,11 +430,11 @@ match_state_part: match_on_square {
 }
                 | %empty {
   Rule * r = &pd.rules[pd.ruleCount];
-  RuleState * rs = &r->matchStates[r->matchStateCount];
+  Pattern * rs = &r->matchPaterns[r->matchPaternCount];
   RulePart * rsp = &rs->parts[rs->partCount];
 
-  rsp->ruleIdentity[rsp->ruleIdentityCount].direction = UNSPECIFIED;
-  rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId("_EMPTY_");
+  rsp->identity[rsp->identityCount].direction = UNSPECIFIED;
+  rsp->identity[rsp->identityCount].legendId = aliasLegendId("_EMPTY_");
 
   incRuleIdent(rsp);
   incRulePart(rs);
@@ -445,9 +445,9 @@ match_on_square: match_on_square match_object_part | match_object_part;
 
 match_object_part: OBJID {
     Rule * r = &pd.rules[pd.ruleCount];
-    RuleState * rs = &r->matchStates[r->matchStateCount];
+    Pattern * rs = &r->matchPaterns[r->matchPaternCount];
     RulePart * rsp = &rs->parts[rs->partCount];
-    RuleIdentity * rid = &rsp->ruleIdentity[rsp->ruleIdentityCount];
+    RuleIdentity * rid = &rsp->identity[rsp->identityCount];
 
     if (strcasecmp("...", $1) == 0 ) {
       r->hasSpread = 1;
@@ -463,9 +463,9 @@ match_object_part: OBJID {
 }
                  | DIRECTION OBJID {
     Rule * r = &pd.rules[pd.ruleCount];
-    RuleState * rs = &r->matchStates[r->matchStateCount];
+    Pattern * rs = &r->matchPaterns[r->matchPaternCount];
     RulePart * rsp = &rs->parts[rs->partCount];
-    RuleIdentity * rid = &rsp->ruleIdentity[rsp->ruleIdentityCount];
+    RuleIdentity * rid = &rsp->identity[rsp->identityCount];
 
 
 
@@ -499,17 +499,17 @@ result_state_internals: result_state_internals VERTICAL_PIPE result_state_part
 
 result_state_part: result_on_square {
   Rule * r = &pd.rules[pd.ruleCount];
-  RuleState * rs = &r->resultStates[r->resultStateCount];
+  Pattern * rs = &r->resultPaterns[r->resultPaternCount];
 
   incRulePart(rs);
 }
         |       %empty {
   Rule * r = &pd.rules[pd.ruleCount];
-  RuleState * rs = &r->resultStates[r->resultStateCount];
+  Pattern * rs = &r->resultPaterns[r->resultPaternCount];
   RulePart * rsp = &rs->parts[rs->partCount];
 
-  rsp->ruleIdentity[rsp->ruleIdentityCount].direction = UNSPECIFIED;
-  rsp->ruleIdentity[rsp->ruleIdentityCount].legendId = aliasLegendId("_EMPTY_");
+  rsp->identity[rsp->identityCount].direction = UNSPECIFIED;
+  rsp->identity[rsp->identityCount].legendId = aliasLegendId("_EMPTY_");
 
   incRuleIdent(rsp);
   incRulePart(rs);
@@ -519,9 +519,9 @@ result_on_square: result_on_square result_object_part | result_object_part;
 
 result_object_part: OBJID {
     Rule * r = &pd.rules[pd.ruleCount];
-    RuleState * rs = &r->resultStates[r->resultStateCount];
+    Pattern * rs = &r->resultPaterns[r->resultPaternCount];
     RulePart * rsp = &rs->parts[rs->partCount];
-    RuleIdentity * rid = &rsp->ruleIdentity[rsp->ruleIdentityCount];
+    RuleIdentity * rid = &rsp->identity[rsp->identityCount];
 
     rid->direction = UNSPECIFIED;
     rid->legendId = aliasLegendId($1);
@@ -530,9 +530,9 @@ result_object_part: OBJID {
 }
                  | DIRECTION OBJID {
     Rule * r = &pd.rules[pd.ruleCount];
-    RuleState * rs = &r->resultStates[r->resultStateCount];
+    Pattern * rs = &r->resultPaterns[r->resultPaternCount];
     RulePart * rsp = &rs->parts[rs->partCount];
-    RuleIdentity * rid = &rsp->ruleIdentity[rsp->ruleIdentityCount];
+    RuleIdentity * rid = &rsp->identity[rsp->identityCount];
 
     if ($1 == PARALLEL ||
         $1 == PERPENDICULAR) {
@@ -589,17 +589,17 @@ message_level:  MESSAGE ID {
 }
 
 rows: rows row | row { pd.levels[pd.levelCount].levelType = SQUARES; }
-row: cells LEVEL_EOL {
+row: tiles LEVEL_EOL {
   pd.levels[pd.levelCount].height++;
   pd.levels[pd.levelCount].width = rowWidth;
   rowWidth = 0;
 }
 
-cells: cell cells | cell
+tiles: cell tiles | cell
 
 cell: GLYPH {
   rowWidth++;
-  pd.levels[pd.levelCount].cells[pd.levels[pd.levelCount].cellIndex] = $1;
+  pd.levels[pd.levelCount].tiles[pd.levels[pd.levelCount].tileIndex] = $1;
   incCellIndex(pd.levelCount);
 }
 %%

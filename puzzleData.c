@@ -221,19 +221,19 @@ char * ruleString(int ruleId) {
 
   strcat(ruleStr, dirName(pd.rules[ruleId].directionConstraint));
   strcat(ruleStr, " ");
-  for (int stateId = 0; stateId < pd.rules[ruleId].matchStateCount; stateId++) {
+  for (int stateId = 0; stateId < pd.rules[ruleId].matchPaternCount; stateId++) {
     strcat(ruleStr, "[ ");
-    for (int partId = 0; partId < pd.rules[ruleId].matchStates[stateId].partCount; partId++) {
-      for (int identId = 0; identId < pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentityCount; identId++) {
-        Direction ruleDir = pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
-        int legendId = pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+    for (int partId = 0; partId < pd.rules[ruleId].matchPaterns[stateId].partCount; partId++) {
+      for (int identId = 0; identId < pd.rules[ruleId].matchPaterns[stateId].parts[partId].identityCount; identId++) {
+        Direction ruleDir = pd.rules[ruleId].matchPaterns[stateId].parts[partId].identity[identId].direction;
+        int legendId = pd.rules[ruleId].matchPaterns[stateId].parts[partId].identity[identId].legendId;
         if (ruleDir != UNSPECIFIED) {
           strcat(ruleStr, dirName(ruleDir));
           strcat(ruleStr, " ");
         }
         strcat(ruleStr, aliasLegendKey(legendId));
 
-        if (partId + 1 < pd.rules[ruleId].matchStates[stateId].partCount) {
+        if (partId + 1 < pd.rules[ruleId].matchPaterns[stateId].partCount) {
           strcat(ruleStr, " | ");
         }
       }
@@ -243,19 +243,19 @@ char * ruleString(int ruleId) {
 
   strcat(ruleStr, " -> ");
 
-  for (int stateId = 0; stateId < pd.rules[ruleId].resultStateCount; stateId++) {
+  for (int stateId = 0; stateId < pd.rules[ruleId].resultPaternCount; stateId++) {
     strcat(ruleStr, "[ ");
-    for (int partId = 0; partId < pd.rules[ruleId].resultStates[stateId].partCount; partId++) {
-      for (int identId = 0; identId < pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentityCount; identId++) {
-        Direction ruleDir = pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity[identId].direction;
-        int legendId = pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+    for (int partId = 0; partId < pd.rules[ruleId].resultPaterns[stateId].partCount; partId++) {
+      for (int identId = 0; identId < pd.rules[ruleId].resultPaterns[stateId].parts[partId].identityCount; identId++) {
+        Direction ruleDir = pd.rules[ruleId].resultPaterns[stateId].parts[partId].identity[identId].direction;
+        int legendId = pd.rules[ruleId].resultPaterns[stateId].parts[partId].identity[identId].legendId;
         if (ruleDir != UNSPECIFIED) {
           strcat(ruleStr, dirName(ruleDir));
           strcat(ruleStr, " ");
         }
         strcat(ruleStr, aliasLegendKey(legendId));
 
-        if (partId + 1 < pd.rules[ruleId].resultStates[stateId].partCount) {
+        if (partId + 1 < pd.rules[ruleId].resultPaterns[stateId].partCount) {
           strcat(ruleStr, " | ");
         }
       }
@@ -325,16 +325,16 @@ void initRuleIdentity(RuleIdentity * ruleIdent) {
 }
 
 void initPart(RulePart * part) {
-  part->ruleIdentityCount = 0;
-  part->ruleIdentityCapacity = 1;
+  part->identityCount = 0;
+  part->identityCapacity = 1;
   part->isSpread = 0;
-  part->ruleIdentity = malloc(sizeof(RuleIdentity) * part->ruleIdentityCapacity);
-  for (int ident = 0; ident < part->ruleIdentityCapacity; ident++) {
-    initRuleIdentity(&part->ruleIdentity[ident]);
+  part->identity = malloc(sizeof(RuleIdentity) * part->identityCapacity);
+  for (int ident = 0; ident < part->identityCapacity; ident++) {
+    initRuleIdentity(&part->identity[ident]);
   }
 }
 
-void initState(RuleState * ruleState) {
+void initState(Pattern * ruleState) {
   ruleState->partCount = 0;
   ruleState->partCapacity = 1;
   ruleState->parts = malloc(sizeof(RulePart) * ruleState->partCapacity);
@@ -352,19 +352,19 @@ void initRule(Rule * rule) {
 
   rule->directionConstraint = NONE;
   rule->executionTime = NORMAL;
-  rule->matchStateCount = 0;
-  rule->matchStateCapacity = 1;
+  rule->matchPaternCount = 0;
+  rule->matchPaternCapacity = 1;
   rule->commandCount = 0;
-  rule->matchStates = malloc(sizeof(RuleState) * rule->matchStateCapacity);
-  for (int stateId = 0; stateId < rule->matchStateCapacity; stateId++) {
-    initState(&rule->matchStates[stateId]);
+  rule->matchPaterns = malloc(sizeof(Pattern) * rule->matchPaternCapacity);
+  for (int stateId = 0; stateId < rule->matchPaternCapacity; stateId++) {
+    initState(&rule->matchPaterns[stateId]);
   }
 
-  rule->resultStateCount = 0;
-  rule->resultStateCapacity = 1;
-  rule->resultStates = malloc(sizeof(RuleState) * rule->resultStateCapacity);
-  for (int stateId = 0; stateId < rule->resultStateCapacity; stateId++) {
-    initState(&rule->resultStates[stateId]);
+  rule->resultPaternCount = 0;
+  rule->resultPaternCapacity = 1;
+  rule->resultPaterns = malloc(sizeof(Pattern) * rule->resultPaternCapacity);
+  for (int stateId = 0; stateId < rule->resultPaternCapacity; stateId++) {
+    initState(&rule->resultPaterns[stateId]);
   }
 }
 
@@ -374,21 +374,21 @@ void resetRule(Rule * rule) {
 
   rule->directionConstraint = NONE;
   rule->executionTime = NORMAL;
-  rule->matchStateCount = 0;
-  rule->matchStateCapacity = 1;
+  rule->matchPaternCount = 0;
+  rule->matchPaternCapacity = 1;
   rule->commandCount = 0;
-  free(rule->matchStates);
-  rule->matchStates = malloc(sizeof(RuleState) * rule->matchStateCapacity);
-  for (int stateId = 0; stateId < rule->matchStateCapacity; stateId++) {
-    initState(&rule->matchStates[stateId]);
+  free(rule->matchPaterns);
+  rule->matchPaterns = malloc(sizeof(Pattern) * rule->matchPaternCapacity);
+  for (int stateId = 0; stateId < rule->matchPaternCapacity; stateId++) {
+    initState(&rule->matchPaterns[stateId]);
   }
 
-  rule->resultStateCount = 0;
-  rule->resultStateCapacity = 1;
-  free(rule->resultStates);
-  rule->resultStates = malloc(sizeof(RuleState) * rule->resultStateCapacity);
-  for (int stateId = 0; stateId < rule->resultStateCapacity; stateId++) {
-    initState(&rule->resultStates[stateId]);
+  rule->resultPaternCount = 0;
+  rule->resultPaternCapacity = 1;
+  free(rule->resultPaterns);
+  rule->resultPaterns = malloc(sizeof(Pattern) * rule->resultPaternCapacity);
+  for (int stateId = 0; stateId < rule->resultPaternCapacity; stateId++) {
+    initState(&rule->resultPaterns[stateId]);
   }
 }
 
@@ -411,29 +411,29 @@ void incRule() {
 }
 
 void incRuleMatchState(Rule * rule) {
-  if (rule->matchStateCount + 1 >= rule->matchStateCapacity) {
-    rule->matchStateCapacity += PUZZLE_MALLOC_INC;
-    rule->matchStates = realloc(rule->matchStates, sizeof(RuleState) * rule->matchStateCapacity);
-    for (int stateId = rule->matchStateCount + 1; stateId < rule->matchStateCapacity; stateId++) {
-      initState(&rule->matchStates[stateId]);
+  if (rule->matchPaternCount + 1 >= rule->matchPaternCapacity) {
+    rule->matchPaternCapacity += PUZZLE_MALLOC_INC;
+    rule->matchPaterns = realloc(rule->matchPaterns, sizeof(Pattern) * rule->matchPaternCapacity);
+    for (int stateId = rule->matchPaternCount + 1; stateId < rule->matchPaternCapacity; stateId++) {
+      initState(&rule->matchPaterns[stateId]);
     }
   }
-  rule->matchStateCount++;
+  rule->matchPaternCount++;
 }
 
 void incRuleResultState(Rule * rule) {
-  if (rule->resultStateCount + 1 >= rule->resultStateCapacity) {
-    rule->resultStateCapacity += PUZZLE_MALLOC_INC;
-    rule->resultStates = realloc(rule->resultStates, sizeof(RuleState) * rule->resultStateCapacity);
+  if (rule->resultPaternCount + 1 >= rule->resultPaternCapacity) {
+    rule->resultPaternCapacity += PUZZLE_MALLOC_INC;
+    rule->resultPaterns = realloc(rule->resultPaterns, sizeof(Pattern) * rule->resultPaternCapacity);
 
-    for (int stateId = rule->resultStateCount + 1; stateId < rule->resultStateCapacity; stateId++) {
-      initState(&rule->resultStates[stateId]);
+    for (int stateId = rule->resultPaternCount + 1; stateId < rule->resultPaternCapacity; stateId++) {
+      initState(&rule->resultPaterns[stateId]);
     }
   }
-  rule->resultStateCount++;
+  rule->resultPaternCount++;
 }
 
-void incRulePart(RuleState * ruleState) {
+void incRulePart(Pattern * ruleState) {
   if (ruleState->partCount + 1 >= ruleState->partCapacity) {
     ruleState->partCapacity += PUZZLE_MALLOC_INC;
     ruleState->parts = realloc(ruleState->parts, sizeof(RulePart) * ruleState->partCapacity);
@@ -445,14 +445,14 @@ void incRulePart(RuleState * ruleState) {
 }
 
 void incRuleIdent(RulePart * part) {
-  if (part->ruleIdentityCount + 1 >= part->ruleIdentityCapacity) {
-    part->ruleIdentityCapacity += PUZZLE_MALLOC_INC;
-    part->ruleIdentity = realloc(part->ruleIdentity, sizeof(RuleIdentity) * part->ruleIdentityCapacity);
-    for (int ident = part->ruleIdentityCount + 1; ident < part->ruleIdentityCapacity; ident++) {
-      initRuleIdentity(&part->ruleIdentity[ident]);
+  if (part->identityCount + 1 >= part->identityCapacity) {
+    part->identityCapacity += PUZZLE_MALLOC_INC;
+    part->identity = realloc(part->identity, sizeof(RuleIdentity) * part->identityCapacity);
+    for (int ident = part->identityCount + 1; ident < part->identityCapacity; ident++) {
+      initRuleIdentity(&part->identity[ident]);
     }
   }
-  part->ruleIdentityCount++;
+  part->identityCount++;
 }
 
 int ruleCommandCount(int ruleId) {
@@ -484,9 +484,9 @@ void incLevel() {
     pd.levelCapacity += PUZZLE_MALLOC_INC;
     pd.levels = realloc(pd.levels, sizeof(Level) * pd.levelCapacity);
     for (int i = pd.levelCount + 1; i < pd.levelCapacity; i++) {
-      pd.levels[i].cellIndex = 0;
-      pd.levels[i].cellCapacity = 100;
-      pd.levels[i].cells = malloc(sizeof(char) * pd.levels[i].cellCapacity);
+      pd.levels[i].tileIndex = 0;
+      pd.levels[i].tileCapacity = 100;
+      pd.levels[i].tiles = malloc(sizeof(char) * pd.levels[i].tileCapacity);
       pd.levels[i].height = 0;
       pd.levels[i].width = 0;
     }
@@ -495,11 +495,11 @@ void incLevel() {
 }
 
 void incCellIndex(int levelId) {
-  if (pd.levels[levelId].cellIndex + 1 >= pd.levels[levelId].cellCapacity) {
-    pd.levels[levelId].cellCapacity += PUZZLE_MALLOC_INC;
-    pd.levels[levelId].cells = realloc(pd.levels[levelId].cells, sizeof(char) * pd.levels[levelId].cellCapacity);
+  if (pd.levels[levelId].tileIndex + 1 >= pd.levels[levelId].tileCapacity) {
+    pd.levels[levelId].tileCapacity += PUZZLE_MALLOC_INC;
+    pd.levels[levelId].tiles = realloc(pd.levels[levelId].tiles, sizeof(char) * pd.levels[levelId].tileCapacity);
   }
-  pd.levels[levelId].cellIndex++;
+  pd.levels[levelId].tileIndex++;
 }
 
 void initStarterObjects() {
@@ -591,9 +591,9 @@ void initPuzzleData() {
   pd.levelCapacity = 100;
   pd.levels = malloc(sizeof(Level) * pd.levelCapacity);
   for (int i = 0; i < pd.levelCapacity; i++) {
-    pd.levels[i].cellIndex = 0;
-    pd.levels[i].cellCapacity = 1;
-    pd.levels[i].cells = malloc(sizeof(char) * pd.levels[i].cellCapacity);
+    pd.levels[i].tileIndex = 0;
+    pd.levels[i].tileCapacity = 1;
+    pd.levels[i].tiles = malloc(sizeof(char) * pd.levels[i].tileCapacity);
     pd.levels[i].height = 0;
     pd.levels[i].width = 0;
   }
@@ -673,40 +673,40 @@ int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule *
       targetRule->commands[commandId] = sourceRule->commands[commandId];
     }
 
-    for (int stateId = 0; stateId < sourceRule->matchStateCount; stateId++) {
-      if ((appDir == UP || appDir == LEFT) && sourceRule->matchStates[stateId].partCount > 0) {
+    for (int stateId = 0; stateId < sourceRule->matchPaternCount; stateId++) {
+      if ((appDir == UP || appDir == LEFT) && sourceRule->matchPaterns[stateId].partCount > 0) {
         x = 0;
-        for (int partId = sourceRule->matchStates[stateId].partCount - 1; partId >= 0; partId--) {
-          targetRule->matchStates[stateId].parts[x].isSpread = sourceRule->matchStates[stateId].parts[partId].isSpread;
-          for (int identId = 0; identId < sourceRule->matchStates[stateId].parts[partId].ruleIdentityCount; identId++) {
-            Direction ruleDir = sourceRule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
-            int legendId = sourceRule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+        for (int partId = sourceRule->matchPaterns[stateId].partCount - 1; partId >= 0; partId--) {
+          targetRule->matchPaterns[stateId].parts[x].isSpread = sourceRule->matchPaterns[stateId].parts[partId].isSpread;
+          for (int identId = 0; identId < sourceRule->matchPaterns[stateId].parts[partId].identityCount; identId++) {
+            Direction ruleDir = sourceRule->matchPaterns[stateId].parts[partId].identity[identId].direction;
+            int legendId = sourceRule->matchPaterns[stateId].parts[partId].identity[identId].legendId;
             if (rotate && ruleDir != UNSPECIFIED) {
-              targetRule->matchStates[stateId].parts[x].ruleIdentity[identId].direction = ((realDirection(appDir, ruleDir) + 2) % 4);
+              targetRule->matchPaterns[stateId].parts[x].identity[identId].direction = ((realDirection(appDir, ruleDir) + 2) % 4);
             } else {
-              targetRule->matchStates[stateId].parts[x].ruleIdentity[identId].direction = realDirection(appDir, ruleDir);
+              targetRule->matchPaterns[stateId].parts[x].identity[identId].direction = realDirection(appDir, ruleDir);
             }
-            targetRule->matchStates[stateId].parts[x].ruleIdentity[identId].legendId = legendId;
-            incRuleIdent(&targetRule->matchStates[stateId].parts[x]);
+            targetRule->matchPaterns[stateId].parts[x].identity[identId].legendId = legendId;
+            incRuleIdent(&targetRule->matchPaterns[stateId].parts[x]);
           }
-          incRulePart(&targetRule->matchStates[stateId]);
+          incRulePart(&targetRule->matchPaterns[stateId]);
           x++;
         }
       } else {
-        for (int partId = 0; partId < sourceRule->matchStates[stateId].partCount; partId++) {
-          targetRule->matchStates[stateId].parts[partId].isSpread = sourceRule->matchStates[stateId].parts[partId].isSpread;
-          for (int identId = 0; identId < sourceRule->matchStates[stateId].parts[partId].ruleIdentityCount; identId++) {
-            int legendId = sourceRule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId;
-            Direction ruleDir = sourceRule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction;
+        for (int partId = 0; partId < sourceRule->matchPaterns[stateId].partCount; partId++) {
+          targetRule->matchPaterns[stateId].parts[partId].isSpread = sourceRule->matchPaterns[stateId].parts[partId].isSpread;
+          for (int identId = 0; identId < sourceRule->matchPaterns[stateId].parts[partId].identityCount; identId++) {
+            int legendId = sourceRule->matchPaterns[stateId].parts[partId].identity[identId].legendId;
+            Direction ruleDir = sourceRule->matchPaterns[stateId].parts[partId].identity[identId].direction;
             if (rotate && ruleDir != UNSPECIFIED) {
-              targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction = ((realDirection(appDir, ruleDir) + 2) % 4);
+              targetRule->matchPaterns[stateId].parts[partId].identity[identId].direction = ((realDirection(appDir, ruleDir) + 2) % 4);
             } else {
-              targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].direction = realDirection(appDir, ruleDir);
+              targetRule->matchPaterns[stateId].parts[partId].identity[identId].direction = realDirection(appDir, ruleDir);
             }
-            targetRule->matchStates[stateId].parts[partId].ruleIdentity[identId].legendId = legendId;
-            incRuleIdent(&targetRule->matchStates[stateId].parts[partId]);
+            targetRule->matchPaterns[stateId].parts[partId].identity[identId].legendId = legendId;
+            incRuleIdent(&targetRule->matchPaterns[stateId].parts[partId]);
           }
-          incRulePart(&targetRule->matchStates[stateId]);
+          incRulePart(&targetRule->matchPaterns[stateId]);
           x++;
         }
       }
@@ -714,44 +714,44 @@ int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule *
       incRuleMatchState(targetRule);
     }
 
-    if (sourceRule->resultStateCount == 0) {
+    if (sourceRule->resultPaternCount == 0) {
       return 1;
     }
 
-    for (int stateId = 0; stateId < sourceRule->resultStateCount; stateId++) {
-      if ((appDir == UP || appDir == LEFT) && sourceRule->resultStates[stateId].partCount > 0) {
+    for (int stateId = 0; stateId < sourceRule->resultPaternCount; stateId++) {
+      if ((appDir == UP || appDir == LEFT) && sourceRule->resultPaterns[stateId].partCount > 0) {
         x = 0;
-        for (int partId = sourceRule->resultStates[stateId].partCount - 1; partId >= 0; partId--) {
-          targetRule->resultStates[stateId].parts[x].isSpread = sourceRule->resultStates[stateId].parts[partId].isSpread;
-          for (int identId = 0; identId < sourceRule->resultStates[stateId].parts[partId].ruleIdentityCount; identId++) {
-            Direction ruleDir = sourceRule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction;
-            int legendId = sourceRule->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+        for (int partId = sourceRule->resultPaterns[stateId].partCount - 1; partId >= 0; partId--) {
+          targetRule->resultPaterns[stateId].parts[x].isSpread = sourceRule->resultPaterns[stateId].parts[partId].isSpread;
+          for (int identId = 0; identId < sourceRule->resultPaterns[stateId].parts[partId].identityCount; identId++) {
+            Direction ruleDir = sourceRule->resultPaterns[stateId].parts[partId].identity[identId].direction;
+            int legendId = sourceRule->resultPaterns[stateId].parts[partId].identity[identId].legendId;
             if (rotate && ruleDir != UNSPECIFIED) {
-              targetRule->resultStates[stateId].parts[x].ruleIdentity[identId].direction = ((realDirection(appDir, ruleDir) + 2) % 4);
+              targetRule->resultPaterns[stateId].parts[x].identity[identId].direction = ((realDirection(appDir, ruleDir) + 2) % 4);
             } else {
-              targetRule->resultStates[stateId].parts[x].ruleIdentity[identId].direction = realDirection(appDir, ruleDir);
+              targetRule->resultPaterns[stateId].parts[x].identity[identId].direction = realDirection(appDir, ruleDir);
             }
-            targetRule->resultStates[stateId].parts[x].ruleIdentity[identId].legendId = legendId;
-            incRuleIdent(&targetRule->resultStates[stateId].parts[x]);
+            targetRule->resultPaterns[stateId].parts[x].identity[identId].legendId = legendId;
+            incRuleIdent(&targetRule->resultPaterns[stateId].parts[x]);
           }
-          incRulePart(&targetRule->resultStates[stateId]);
+          incRulePart(&targetRule->resultPaterns[stateId]);
           x++;
         }
       } else {
-        for (int partId = 0; partId < sourceRule->resultStates[stateId].partCount; partId++) {
-          targetRule->resultStates[stateId].parts[partId].isSpread = sourceRule->resultStates[stateId].parts[partId].isSpread;
-          for (int identId = 0; identId < sourceRule->resultStates[stateId].parts[partId].ruleIdentityCount; identId++) {
-            Direction ruleDir = sourceRule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction;
-            int legendId = sourceRule->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId;
+        for (int partId = 0; partId < sourceRule->resultPaterns[stateId].partCount; partId++) {
+          targetRule->resultPaterns[stateId].parts[partId].isSpread = sourceRule->resultPaterns[stateId].parts[partId].isSpread;
+          for (int identId = 0; identId < sourceRule->resultPaterns[stateId].parts[partId].identityCount; identId++) {
+            Direction ruleDir = sourceRule->resultPaterns[stateId].parts[partId].identity[identId].direction;
+            int legendId = sourceRule->resultPaterns[stateId].parts[partId].identity[identId].legendId;
             if (rotate && ruleDir != UNSPECIFIED) {
-              targetRule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction = ((realDirection(appDir, ruleDir) + 2) % 4);
+              targetRule->resultPaterns[stateId].parts[partId].identity[identId].direction = ((realDirection(appDir, ruleDir) + 2) % 4);
             } else {
-              targetRule->resultStates[stateId].parts[partId].ruleIdentity[identId].direction = realDirection(appDir, ruleDir);
+              targetRule->resultPaterns[stateId].parts[partId].identity[identId].direction = realDirection(appDir, ruleDir);
             }
-            targetRule->resultStates[stateId].parts[partId].ruleIdentity[identId].legendId = legendId;
-            incRuleIdent(&targetRule->resultStates[stateId].parts[partId]);
+            targetRule->resultPaterns[stateId].parts[partId].identity[identId].legendId = legendId;
+            incRuleIdent(&targetRule->resultPaterns[stateId].parts[partId]);
           }
-          incRulePart(&targetRule->resultStates[stateId]);
+          incRulePart(&targetRule->resultPaterns[stateId]);
         }
       }
 
@@ -764,21 +764,21 @@ int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule *
 
 void freeRules() {
   for (int ruleId = 0; ruleId < pd.ruleCapacity; ruleId++) {
-    for (int stateId = 0; stateId < pd.rules[ruleId].matchStateCapacity; stateId++) {
-      for (int partId = 0; partId < pd.rules[ruleId].matchStates[stateId].partCapacity; partId++) {
-        free(pd.rules[ruleId].matchStates[stateId].parts[partId].ruleIdentity);
+    for (int stateId = 0; stateId < pd.rules[ruleId].matchPaternCapacity; stateId++) {
+      for (int partId = 0; partId < pd.rules[ruleId].matchPaterns[stateId].partCapacity; partId++) {
+        free(pd.rules[ruleId].matchPaterns[stateId].parts[partId].identity);
       }
-      free(pd.rules[ruleId].matchStates[stateId].parts);
+      free(pd.rules[ruleId].matchPaterns[stateId].parts);
     }
-    free(pd.rules[ruleId].matchStates);
+    free(pd.rules[ruleId].matchPaterns);
 
-    for (int stateId = 0; stateId < pd.rules[ruleId].resultStateCapacity; stateId++) {
-      for (int partId = 0; partId < pd.rules[ruleId].resultStates[stateId].partCapacity; partId++) {
-        free(pd.rules[ruleId].resultStates[stateId].parts[partId].ruleIdentity);
+    for (int stateId = 0; stateId < pd.rules[ruleId].resultPaternCapacity; stateId++) {
+      for (int partId = 0; partId < pd.rules[ruleId].resultPaterns[stateId].partCapacity; partId++) {
+        free(pd.rules[ruleId].resultPaterns[stateId].parts[partId].identity);
       }
-        free(pd.rules[ruleId].resultStates[stateId].parts);
+        free(pd.rules[ruleId].resultPaterns[stateId].parts);
     }
-    free(pd.rules[ruleId].resultStates);
+    free(pd.rules[ruleId].resultPaterns);
   }
   free(pd.rules);
   pd.ruleCapacity = 0;
@@ -959,7 +959,7 @@ void freePuzzle() {
   freeRules();
 
   for (int i = 0; i < pd.levelCapacity; i++) {
-    free(pd.levels[i].cells);
+    free(pd.levels[i].tiles);
   }
   free(pd.levels);
 
@@ -1057,11 +1057,11 @@ int objectLayer(int objId) {
 }
 
 int levelCellCount(int levelIndex) {
-  return pd.levels[levelIndex].cellIndex;
+  return pd.levels[levelIndex].tileIndex;
 }
 
-int levelCell(int levelIndex, int cellIndex) {
-  return pd.levels[levelIndex].cells[cellIndex];
+int levelCell(int levelIndex, int tileIndex) {
+  return pd.levels[levelIndex].tiles[tileIndex];
 }
 
 LevelType levelType(int levelIndex) {
