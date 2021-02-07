@@ -322,6 +322,7 @@ void undo(Runtime * rt) {
     // Don't undo more then once per update
     return;
   }
+
   if (rt->states[rt->statesCount].objectCount > 0) {
     free(rt->states[rt->statesCount].objects);
     rt->states[rt->statesCount].objectCount = 0;
@@ -338,6 +339,11 @@ void undo(Runtime * rt) {
   rt->width = rt->pd->levels[rt->levelIndex].width;
 
   memcpy(rt->objects, rt->states[rt->statesCount - 1].objects, sizeof(Obj) * rt->objectCapacity);
+
+  if (rt->levelType == SQUARES) {
+    rt->map = rt->states[rt->statesCount - 1].map;
+    rt->oMap = rt->states[rt->statesCount - 1].oMap;
+  }
 
   rt->statesCount--;
   rt->historyCount--;
@@ -450,7 +456,6 @@ void applyMatch(Runtime * rt, Match * match) {
     rt->doAgain = 1;
   }
   match->partCount = 0;
-
 }
 
 int distance(int i, int j) {
@@ -1033,6 +1038,16 @@ void addState(Runtime * rt) {
 
   rt->states[rt->statesCount].objects = malloc(sizeof(Obj) * rt->objectCapacity);
   memcpy(rt->states[rt->statesCount].objects, rt->objects, sizeof(Obj) * rt->objectCapacity);
+
+  if (rt->levelType == SQUARES) {
+    rt->states[rt->statesCount].map = malloc((sizeof(int) * rt->height * rt->width * rt->pd->layerCount));
+    memcpy(rt->states[rt->statesCount].map, rt->map, (sizeof(int) * rt->height * rt->width * rt->pd->layerCount));
+
+    int bytePerRecord = rt->pd->objectCount/8+1;
+    rt->states[rt->statesCount].oMap = malloc((rt->height * rt->width * bytePerRecord));
+    memcpy(rt->states[rt->statesCount].oMap, rt->oMap, (rt->height * rt->width * bytePerRecord));
+  }
+
 
   rt->statesCount++;
 }

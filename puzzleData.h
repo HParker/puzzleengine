@@ -287,6 +287,8 @@ typedef struct State {
   int objectCount;
   int objectCapacity;
   Obj * objects;
+  int * map;
+  char * oMap;
 } State;
 
 typedef struct Runtime {

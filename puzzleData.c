@@ -334,7 +334,7 @@ void initPart(RulePart * part) {
   }
 }
 
-void initState(Pattern * ruleState) {
+void initPatern(Pattern * ruleState) {
   ruleState->partCount = 0;
   ruleState->partCapacity = 1;
   ruleState->parts = malloc(sizeof(RulePart) * ruleState->partCapacity);
@@ -357,14 +357,14 @@ void initRule(Rule * rule) {
   rule->commandCount = 0;
   rule->matchPaterns = malloc(sizeof(Pattern) * rule->matchPaternCapacity);
   for (int stateId = 0; stateId < rule->matchPaternCapacity; stateId++) {
-    initState(&rule->matchPaterns[stateId]);
+    initPatern(&rule->matchPaterns[stateId]);
   }
 
   rule->resultPaternCount = 0;
   rule->resultPaternCapacity = 1;
   rule->resultPaterns = malloc(sizeof(Pattern) * rule->resultPaternCapacity);
   for (int stateId = 0; stateId < rule->resultPaternCapacity; stateId++) {
-    initState(&rule->resultPaterns[stateId]);
+    initPatern(&rule->resultPaterns[stateId]);
   }
 }
 
@@ -380,7 +380,7 @@ void resetRule(Rule * rule) {
   free(rule->matchPaterns);
   rule->matchPaterns = malloc(sizeof(Pattern) * rule->matchPaternCapacity);
   for (int stateId = 0; stateId < rule->matchPaternCapacity; stateId++) {
-    initState(&rule->matchPaterns[stateId]);
+    initPatern(&rule->matchPaterns[stateId]);
   }
 
   rule->resultPaternCount = 0;
@@ -388,7 +388,7 @@ void resetRule(Rule * rule) {
   free(rule->resultPaterns);
   rule->resultPaterns = malloc(sizeof(Pattern) * rule->resultPaternCapacity);
   for (int stateId = 0; stateId < rule->resultPaternCapacity; stateId++) {
-    initState(&rule->resultPaterns[stateId]);
+    initPatern(&rule->resultPaterns[stateId]);
   }
 }
 
@@ -415,7 +415,7 @@ void incRuleMatchState(Rule * rule) {
     rule->matchPaternCapacity += PUZZLE_MALLOC_INC;
     rule->matchPaterns = realloc(rule->matchPaterns, sizeof(Pattern) * rule->matchPaternCapacity);
     for (int stateId = rule->matchPaternCount + 1; stateId < rule->matchPaternCapacity; stateId++) {
-      initState(&rule->matchPaterns[stateId]);
+      initPatern(&rule->matchPaterns[stateId]);
     }
   }
   rule->matchPaternCount++;
@@ -427,7 +427,7 @@ void incRuleResultState(Rule * rule) {
     rule->resultPaterns = realloc(rule->resultPaterns, sizeof(Pattern) * rule->resultPaternCapacity);
 
     for (int stateId = rule->resultPaternCount + 1; stateId < rule->resultPaternCapacity; stateId++) {
-      initState(&rule->resultPaterns[stateId]);
+      initPatern(&rule->resultPaterns[stateId]);
     }
   }
   rule->resultPaternCount++;

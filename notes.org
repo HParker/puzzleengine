@@ -9,11 +9,15 @@ what does this rule actually do:
 
 TODO:
 - movement mask
+- don't preallocate for things that are setup at the beginning of the puzzle
+  rules can allocate while they are building performance doesn't matter as much
+  and it might help with the memory leak when expanding rules.
 - mark rule states that are 100% identical
 - move replace tile completely after checking the WHOLE match
 - smooth movement for a new demo
 - add any validations other then syntax
 - sounds
+
 
 3d api:
 - transfer levels with `lift` and `lower`
