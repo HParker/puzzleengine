@@ -32,8 +32,10 @@ int main(int argc, char ** argv) {
     render(&rt);
     frameCounter++;
     if (rt.doAgain) {
+      printf("Doing again\n");
       continue;
     }
+
 
     inputDir = handleInput(&rt, input());
     if (inputDir != UNSPECIFIED) {
@@ -43,6 +45,8 @@ int main(int argc, char ** argv) {
       if (inputDir == UNDO && rt.statesCount > 0) {
         undo(&rt);
         rt.didUndo = 0;
+      } else if (inputDir == NEXT_LEVEL) {
+        nextLevel(&rt);
       } else {
         update(&rt, inputDir);
       }

@@ -34,6 +34,10 @@ void test_solution_file(Runtime * rt, char * puzzleFileName, char * solutionFile
 
     update(rt, dir);
     render(rt);
+    while (rt->doAgain) {
+      update(rt, dir);
+      tick(rt);
+    }
 
     if (rt->levelIndex > currentLevel) {
       currentLevel = rt->levelIndex;
@@ -213,7 +217,7 @@ START_TEST (test_runs_enqueue)
 {
   Runtime rt;
   test_solution_file(&rt, "./puzzles/enqueue.puzz", "./solutions/enqueue.solution");
-  ck_assert_int_eq(11, rt.levelIndex);
+  ck_assert_int_eq(1, rt.gameWon);
   endGame(&rt);
 }
 END_TEST

@@ -29,7 +29,7 @@ void renderLevel(Runtime * rt) {
   clear();
   int row = 0;
   int col = 0;
-  int count = levelCellCount(rt->levelIndex);
+  int count = levelTileCount(rt->levelIndex);
   char map[count];
   for (int i = 0; i < count; i++) {
     map[i] = charForLoc(rt, i);

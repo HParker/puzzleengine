@@ -101,7 +101,8 @@ typedef enum Direction {
    MOVING        = 20,
    DEBUGGER      = 21,
    PARALLEL      = 22,
-   PERPENDICULAR = 23
+   PERPENDICULAR = 23,
+   NEXT_LEVEL    = 24
   } Direction;
 
 typedef enum ExecutionTime {

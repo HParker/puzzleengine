@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
-#include<stdio.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <raylib.h>
 #include "puzzleData.h"
@@ -196,7 +197,7 @@ Color colorFromSprite(Runtime * rt, int objId, int tileIndex) {
 
 void initRenderer() {
   InitWindow(WINDOW_SIZE, WINDOW_SIZE, "My Puzzle");
-  SetTargetFPS(60);
+  SetTargetFPS(500);
 }
 
 void closeRenderer() {
@@ -477,12 +478,22 @@ void drawToMove(Runtime * rt) {
 
 
 
-void renderRule(Match * match) {
+void drawRule(Match * match) {
   Color transparentBlack = { 0, 0, 0, 140 };
   DrawRectangle(0, 0, WINDOW_SIZE, 50, transparentBlack);
   char * rstr = ruleString(match->ruleIndex);
   DrawText(rstr, 10, 10, 20, WHITE);
   free(rstr);
+}
+
+void drawDebugBar(Runtime * rt) {
+  Color transparentBlack = { 0, 0, 0, 190 };
+  DrawRectangle(0, WINDOW_SIZE-50, WINDOW_SIZE, 50, transparentBlack);
+
+  char debugLine[460];
+  sprintf(debugLine, "%d/%d ", rt->levelIndex, rt->pd->levelCount);
+  DrawFPS(10,WINDOW_SIZE-40);
+  DrawText(debugLine, 120, WINDOW_SIZE-40, 20, WHITE);
 }
 
 void debugRender(Runtime * rt, Match * match) {
@@ -501,12 +512,12 @@ void debugRender(Runtime * rt, Match * match) {
         }
 
         BeginDrawing();
-
         ClearBackground(bkColor());
         renderTiles(rt);
         drawMatch(rt, match);
         drawToMove(rt);
-        renderRule(match);
+        drawRule(match);
+        drawDebugBar(rt);
         EndDrawing();
       }
     }
@@ -517,7 +528,6 @@ void debugRender(Runtime * rt, Match * match) {
 void render(Runtime * rt) {
   BeginDrawing();
   ClearBackground(bkColor());
-  DrawFPS(0,0);
   switch (rt->levelType) {
   case SQUARES:
     renderTiles(rt);
@@ -526,6 +536,11 @@ void render(Runtime * rt) {
     renderMessage(rt);
     break;
   }
+
+  if (rt->pd->verboseLogging) {
+    drawDebugBar(rt);
+  }
+
   EndDrawing();
 }
 
@@ -558,5 +573,9 @@ Direction input() {
   if (IsKeyPressed(KEY_TAB)) {
     return DEBUGGER;
   }
+  if (IsKeyPressed(KEY_EQUAL)) {
+    return NEXT_LEVEL;
+  }
+
   return UNSPECIFIED;
 }

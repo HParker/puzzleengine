@@ -232,10 +232,10 @@ char * ruleString(int ruleId) {
           strcat(ruleStr, " ");
         }
         strcat(ruleStr, aliasLegendKey(legendId));
-
-        if (partId + 1 < pd.rules[ruleId].matchPaterns[stateId].partCount) {
-          strcat(ruleStr, " | ");
-        }
+        strcat(ruleStr, " ");
+      }
+      if (partId + 1 < pd.rules[ruleId].matchPaterns[stateId].partCount) {
+        strcat(ruleStr, " | ");
       }
     }
     strcat(ruleStr, " ]");
@@ -254,10 +254,10 @@ char * ruleString(int ruleId) {
           strcat(ruleStr, " ");
         }
         strcat(ruleStr, aliasLegendKey(legendId));
-
-        if (partId + 1 < pd.rules[ruleId].resultPaterns[stateId].partCount) {
-          strcat(ruleStr, " | ");
-        }
+          strcat(ruleStr, " ");
+      }
+      if (partId + 1 < pd.rules[ruleId].resultPaterns[stateId].partCount) {
+        strcat(ruleStr, " | ");
       }
     }
     strcat(ruleStr, " ]");
@@ -650,6 +650,21 @@ Direction realDirection(Direction applicationDirection, Direction ruleDir) {
   }
 }
 
+void copyPart(RulePart * sourcePart, RulePart * targetPart, Direction appDir, int rotate) {
+  for (int identId = 0; identId < sourcePart->identityCount; identId++) {
+    targetPart->identity[identId].legendId = sourcePart->identity[identId].legendId;
+
+
+    Direction ruleDir = sourcePart->identity[identId].direction;
+    if (rotate && ruleDir != UNSPECIFIED && ruleDir != COND_NO) {
+      targetPart->identity[identId].direction = ((realDirection(appDir, ruleDir) + 2) % 4);
+    } else {
+      targetPart->identity[identId].direction = realDirection(appDir, ruleDir);
+    }
+    incRuleIdent(targetPart);
+  }
+}
+
 int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule * sourceRule, int rotate) {
   int x = 0;
   if (sourceRule->directionConstraint == NONE ||
@@ -663,51 +678,37 @@ int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule *
       targetRule->directionConstraint = appDir;
     }
 
+    // COPY BASIC VALUES
     targetRule->executionTime = sourceRule->executionTime;
     targetRule->lineNo = sourceRule->lineNo;
     targetRule->hasSpread = sourceRule->hasSpread;
     targetRule->executionTime = sourceRule->executionTime;
 
+    // COPY COMMANDS
     targetRule->commandCount = sourceRule->commandCount;
     for (int commandId = 0; commandId < sourceRule->commandCount; commandId++) {
       targetRule->commands[commandId] = sourceRule->commands[commandId];
     }
 
+    // COPY MATCHES
     for (int stateId = 0; stateId < sourceRule->matchPaternCount; stateId++) {
       if ((appDir == UP || appDir == LEFT) && sourceRule->matchPaterns[stateId].partCount > 0) {
         x = 0;
         for (int partId = sourceRule->matchPaterns[stateId].partCount - 1; partId >= 0; partId--) {
           targetRule->matchPaterns[stateId].parts[x].isSpread = sourceRule->matchPaterns[stateId].parts[partId].isSpread;
-          for (int identId = 0; identId < sourceRule->matchPaterns[stateId].parts[partId].identityCount; identId++) {
-            Direction ruleDir = sourceRule->matchPaterns[stateId].parts[partId].identity[identId].direction;
-            int legendId = sourceRule->matchPaterns[stateId].parts[partId].identity[identId].legendId;
-            if (rotate && ruleDir != UNSPECIFIED) {
-              targetRule->matchPaterns[stateId].parts[x].identity[identId].direction = ((realDirection(appDir, ruleDir) + 2) % 4);
-            } else {
-              targetRule->matchPaterns[stateId].parts[x].identity[identId].direction = realDirection(appDir, ruleDir);
-            }
-            targetRule->matchPaterns[stateId].parts[x].identity[identId].legendId = legendId;
-            incRuleIdent(&targetRule->matchPaterns[stateId].parts[x]);
-          }
+          RulePart * sourcePart = &sourceRule->matchPaterns[stateId].parts[partId];
+          RulePart * targetPart = &targetRule->matchPaterns[stateId].parts[x];
+          copyPart(sourcePart, targetPart, appDir, rotate);
           incRulePart(&targetRule->matchPaterns[stateId]);
           x++;
         }
       } else {
         for (int partId = 0; partId < sourceRule->matchPaterns[stateId].partCount; partId++) {
           targetRule->matchPaterns[stateId].parts[partId].isSpread = sourceRule->matchPaterns[stateId].parts[partId].isSpread;
-          for (int identId = 0; identId < sourceRule->matchPaterns[stateId].parts[partId].identityCount; identId++) {
-            int legendId = sourceRule->matchPaterns[stateId].parts[partId].identity[identId].legendId;
-            Direction ruleDir = sourceRule->matchPaterns[stateId].parts[partId].identity[identId].direction;
-            if (rotate && ruleDir != UNSPECIFIED) {
-              targetRule->matchPaterns[stateId].parts[partId].identity[identId].direction = ((realDirection(appDir, ruleDir) + 2) % 4);
-            } else {
-              targetRule->matchPaterns[stateId].parts[partId].identity[identId].direction = realDirection(appDir, ruleDir);
-            }
-            targetRule->matchPaterns[stateId].parts[partId].identity[identId].legendId = legendId;
-            incRuleIdent(&targetRule->matchPaterns[stateId].parts[partId]);
-          }
+          RulePart * sourcePart = &sourceRule->matchPaterns[stateId].parts[partId];
+          RulePart * targetPart = &targetRule->matchPaterns[stateId].parts[partId];
+          copyPart(sourcePart, targetPart, appDir, rotate);
           incRulePart(&targetRule->matchPaterns[stateId]);
-          x++;
         }
       }
 
@@ -718,39 +719,24 @@ int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule *
       return 1;
     }
 
+    // COPY RESULTS
     for (int stateId = 0; stateId < sourceRule->resultPaternCount; stateId++) {
       if ((appDir == UP || appDir == LEFT) && sourceRule->resultPaterns[stateId].partCount > 0) {
         x = 0;
         for (int partId = sourceRule->resultPaterns[stateId].partCount - 1; partId >= 0; partId--) {
           targetRule->resultPaterns[stateId].parts[x].isSpread = sourceRule->resultPaterns[stateId].parts[partId].isSpread;
-          for (int identId = 0; identId < sourceRule->resultPaterns[stateId].parts[partId].identityCount; identId++) {
-            Direction ruleDir = sourceRule->resultPaterns[stateId].parts[partId].identity[identId].direction;
-            int legendId = sourceRule->resultPaterns[stateId].parts[partId].identity[identId].legendId;
-            if (rotate && ruleDir != UNSPECIFIED) {
-              targetRule->resultPaterns[stateId].parts[x].identity[identId].direction = ((realDirection(appDir, ruleDir) + 2) % 4);
-            } else {
-              targetRule->resultPaterns[stateId].parts[x].identity[identId].direction = realDirection(appDir, ruleDir);
-            }
-            targetRule->resultPaterns[stateId].parts[x].identity[identId].legendId = legendId;
-            incRuleIdent(&targetRule->resultPaterns[stateId].parts[x]);
-          }
+          RulePart * sourcePart = &sourceRule->resultPaterns[stateId].parts[partId];
+          RulePart * targetPart = &targetRule->resultPaterns[stateId].parts[x];
+          copyPart(sourcePart, targetPart, appDir, rotate);
           incRulePart(&targetRule->resultPaterns[stateId]);
           x++;
         }
       } else {
         for (int partId = 0; partId < sourceRule->resultPaterns[stateId].partCount; partId++) {
-          targetRule->resultPaterns[stateId].parts[partId].isSpread = sourceRule->resultPaterns[stateId].parts[partId].isSpread;
-          for (int identId = 0; identId < sourceRule->resultPaterns[stateId].parts[partId].identityCount; identId++) {
-            Direction ruleDir = sourceRule->resultPaterns[stateId].parts[partId].identity[identId].direction;
-            int legendId = sourceRule->resultPaterns[stateId].parts[partId].identity[identId].legendId;
-            if (rotate && ruleDir != UNSPECIFIED) {
-              targetRule->resultPaterns[stateId].parts[partId].identity[identId].direction = ((realDirection(appDir, ruleDir) + 2) % 4);
-            } else {
-              targetRule->resultPaterns[stateId].parts[partId].identity[identId].direction = realDirection(appDir, ruleDir);
-            }
-            targetRule->resultPaterns[stateId].parts[partId].identity[identId].legendId = legendId;
-            incRuleIdent(&targetRule->resultPaterns[stateId].parts[partId]);
-          }
+          targetRule->resultPaterns[stateId].parts[x].isSpread = sourceRule->resultPaterns[stateId].parts[partId].isSpread;
+          RulePart * sourcePart = &sourceRule->resultPaterns[stateId].parts[partId];
+          RulePart * targetPart = &targetRule->resultPaterns[stateId].parts[partId];
+          copyPart(sourcePart, targetPart, appDir, rotate);
           incRulePart(&targetRule->resultPaterns[stateId]);
         }
       }

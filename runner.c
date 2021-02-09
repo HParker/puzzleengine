@@ -422,6 +422,20 @@ int specificLegendId(Runtime * rt, int legendId, Match * match) {
 
 void debugRuleApplication(Runtime * rt, Match * match) {
   printf("Rule: %s\n", ruleString(match->ruleIndex));
+
+  /* for (int i = 0; i < match->partCount; i++) { */
+  /*   printf("MatchPart %i/%i\n  new: %i, objIndex: %i, goalId: %i (%s), dir: %i, id: (%i,%i)\n", */
+  /*          i, */
+  /*          match->partCount, */
+  /*          match->parts[i].newObject, */
+  /*          match->parts[i].objIndex, */
+  /*          match->parts[i].goalId, */
+  /*          objectName(match->parts[i].goalId), */
+  /*          match->parts[i].actualDirection, */
+  /*          match->parts[i].goalX, */
+  /*          match->parts[i].goalY */
+  /*          ); */
+  /* } */
 }
 
 void applyMatch(Runtime * rt, Match * match) {
@@ -437,22 +451,28 @@ void applyMatch(Runtime * rt, Match * match) {
 
   for (int i = 0; i < match->partCount; i++) {
     if (match->parts[i].newObject && match->parts[i].goalId != EMPTY_ID) {
+      /* printf("%i/%i - adding object %s (%i,%i)\n", i, match->partCount, objectName(specificLegendId(rt, match->parts[i].goalId, match)), match->parts[i].goalX, match->parts[i].goalY); */
+
       addObj(rt, specificLegendId(rt, match->parts[i].goalId, match), match->parts[i].goalX, match->parts[i].goalY);
 
       if (match->parts[i].goalDirection != -1 && (match->parts[i].goalDirection != UNSPECIFIED && match->parts[i].goalDirection != NONE)) {
+        /* printf("%i/%i - adding movement to new object above ^ \n", i, match->partCount); */
         addToMove(rt, rt->objectCount - 1,  match->parts[i].goalDirection);
       }
     } else {
       if (match->parts[i].goalId == EMPTY_ID) {
+        /* printf("%i/%i - deleting object %s (%i,%i)\n", i, match->partCount, objectName(rt->objects[match->parts[i].objIndex].objId), match->parts[i].goalX, match->parts[i].goalY); */
         removeObjFromMap(rt, match->parts[i].objIndex);
         rt->objects[match->parts[i].objIndex].deleted = 1;
         rt->deadCount++;
       } else if (match->parts[i].goalId == -1 && match->parts[i].goalDirection != UNSPECIFIED) {
+        /* printf("%i/%i - adding movement to existing object %s (%i,%i)\n", i, match->partCount, objectName(rt->objects[match->parts[i].objIndex].objId), match->parts[i].goalX, match->parts[i].goalY); */
         addToMove(rt, match->parts[i].objIndex,  match->parts[i].goalDirection);
       }
     }
   }
   if (ruleCommandContains(&rt->pd->rules[match->ruleIndex], AGAIN) && match->partCount > 0) {
+    /* printf("Marking again!\n"); */
     rt->doAgain = 1;
   }
   match->partCount = 0;
@@ -678,6 +698,8 @@ void replaceTile(Runtime * rt, Rule * rule, int stateId, int partId, Direction a
         if (objIndex == -1) {
           match->parts[match->partCount].newObject = 1;
           match->parts[match->partCount].goalId = legendId;
+          match->parts[match->partCount].objIndex = -1;
+          match->parts[match->partCount].objectId = -1;
           // TODO: we need to get this from the board
           /* match->parts[match->partCount].objectId = specificLegendId(rt, legendId, match); */
           match->parts[match->partCount].goalX = match->targetX;
@@ -806,21 +828,26 @@ int completeMatch(Runtime * rt, Rule * rule, int stateId, Direction appDir, Matc
       }
 
       if (success) {
+        int beforePartCount = match->partCount;
         replaceTile(rt, rule, stateId, partId, appDir, match);
+        int afterPartCount = match->partCount;
+
+        if (rule->matchPaterns[stateId].parts[partId].identityCount < rule->resultPaterns[stateId].parts[partId].identityCount &&
+            beforePartCount >= afterPartCount) {
+          success = 0;
+          match->partCount = prevPartCount;
+        }
       }
     }
 
     if (success != 1) {
       // failed to find an object that matches the next part, fail
+      /* printf("Failed to complete match setting %i to %i\n", match->partCount, prevPartCount); */
       match->partCount = prevPartCount;
       match->cancel = 0;
       return 0;
     }
     distance++;
-  }
-
-  if (rt->pd->verboseLogging) {
-    debugRender(rt, match);
   }
   return 1;
 }
@@ -845,7 +872,7 @@ int hasSpace(Runtime * rt, Rule * rule, Pattern * state, Match * match) {
 int applyState(Runtime * rt, Rule * rule, int stateId, Match * match) {
   int applied;
   int matched = 0;
-
+  int prevPartCount = match->partCount;
   for (int x = 0; x < rt->width; x++) {
     for (int y = 0; y < rt->height; y++) {
       match->targetX = match->cursorX = x;
@@ -854,8 +881,12 @@ int applyState(Runtime * rt, Rule * rule, int stateId, Match * match) {
         applied = completeMatch(rt, rule, stateId, rule->directionConstraint, match);
         if (applied) {
           matched = 1;
-          if (match->partCount > 0 || match->cancel) {
+          if (match->partCount > prevPartCount || match->cancel) {
+            prevPartCount = match->partCount;
             return 1;
+          } else {
+            match->partCount = 0;
+            match->cancel = 0;
           }
         }
       }
@@ -876,12 +907,15 @@ int applyRule(Runtime * rt, Rule * rule, Match * match) {
       return 0;
     }
   }
+  if (rt->pd->verboseLogging) {
+    debugRender(rt, match);
+  }
   return 1;
 }
 
 void applyRules(Runtime * rt, ExecutionTime execTime) {
   int applied = 1;
-  int maxAttempts = 10000;
+  int maxAttempts = 1000;
   int attempts = 0;
 
   Match match;
@@ -889,6 +923,10 @@ void applyRules(Runtime * rt, ExecutionTime execTime) {
   match.cancel = 0;
 
   for (int ruleIndex = 0; ruleIndex < rt->pd->ruleCount; ruleIndex++) {
+    if (rt->pd->rules[ruleIndex].executionTime != execTime) {
+      continue;
+    }
+
     match.ruleIndex = ruleIndex;
 
     applied = 1;
@@ -896,13 +934,15 @@ void applyRules(Runtime * rt, ExecutionTime execTime) {
     while (match.cancel == 0 && applied && attempts < maxAttempts) {
       applied = 0;
       match.partCount = 0;
-      if (rt->pd->rules[ruleIndex].executionTime == execTime) {
-        applied = applyRule(rt, &rt->pd->rules[ruleIndex], &match);
-        if (applied && (match.partCount > 0 || match.cancel)) {
-          applyMatch(rt, &match);
-        } else {
-          applied = 0;
-        }
+      match.cancel = 0;
+      match.ruleIndex = ruleIndex;
+
+      applied = applyRule(rt, &rt->pd->rules[ruleIndex], &match);
+
+      if (applied && (match.partCount > 0 || match.cancel)) {
+        applyMatch(rt, &match);
+      } else {
+        applied = 0;
       }
       attempts++;
     }
@@ -1120,7 +1160,7 @@ void startGame(Runtime * rt, FILE * file) {
 }
 
 void preUpdate(Runtime * rt) {
-  rt->doAgain = 0;
+  /* rt->doAgain = 0; */
   rt->didUndo = 0;
   rt->toMoveCount = 0;
   if (rt->deadCount > 300) {
@@ -1130,6 +1170,7 @@ void preUpdate(Runtime * rt) {
 }
 
 void tick(Runtime * rt) {
+  rt->doAgain = 0;
   preUpdate(rt);
   applyRules(rt, NORMAL);
   moveObjects(rt);
