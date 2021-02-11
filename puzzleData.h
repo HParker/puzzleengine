@@ -143,13 +143,13 @@ typedef struct Rule {
   Direction directionConstraint;
   ExecutionTime executionTime;
 
-  int matchPaternCount;
-  int matchPaternCapacity;
-  Pattern * matchPaterns;
+  int matchPatternCount;
+  int matchPatternCapacity;
+  Pattern * matchPatterns;
 
-  int resultPaternCount;
-  int resultPaternCapacity;
-  Pattern * resultPaterns;
+  int resultPatternCount;
+  int resultPatternCapacity;
+  Pattern * resultPatterns;
 } Rule;
 
 typedef struct MatchData {

@@ -421,7 +421,7 @@ match_state_internals: match_state_internals VERTICAL_PIPE match_state_part
 
 match_state_part: match_on_square {
   Rule * r = &pd.rules[pd.ruleCount];
-  Pattern * rs = &r->matchPaterns[r->matchPaternCount];
+  Pattern * rs = &r->matchPatterns[r->matchPatternCount];
   incRulePart(rs);
   if (rs->partCount > 1) {
       r->hasMultipleParts = 1;
@@ -430,7 +430,7 @@ match_state_part: match_on_square {
 }
                 | %empty {
   Rule * r = &pd.rules[pd.ruleCount];
-  Pattern * rs = &r->matchPaterns[r->matchPaternCount];
+  Pattern * rs = &r->matchPatterns[r->matchPatternCount];
   RulePart * rsp = &rs->parts[rs->partCount];
 
   rsp->identity[rsp->identityCount].direction = UNSPECIFIED;
@@ -445,7 +445,7 @@ match_on_square: match_on_square match_object_part | match_object_part;
 
 match_object_part: OBJID {
     Rule * r = &pd.rules[pd.ruleCount];
-    Pattern * rs = &r->matchPaterns[r->matchPaternCount];
+    Pattern * rs = &r->matchPatterns[r->matchPatternCount];
     RulePart * rsp = &rs->parts[rs->partCount];
     RuleIdentity * rid = &rsp->identity[rsp->identityCount];
 
@@ -463,7 +463,7 @@ match_object_part: OBJID {
 }
                  | DIRECTION OBJID {
     Rule * r = &pd.rules[pd.ruleCount];
-    Pattern * rs = &r->matchPaterns[r->matchPaternCount];
+    Pattern * rs = &r->matchPatterns[r->matchPatternCount];
     RulePart * rsp = &rs->parts[rs->partCount];
     RuleIdentity * rid = &rsp->identity[rsp->identityCount];
 
@@ -499,13 +499,13 @@ result_state_internals: result_state_internals VERTICAL_PIPE result_state_part
 
 result_state_part: result_on_square {
   Rule * r = &pd.rules[pd.ruleCount];
-  Pattern * rs = &r->resultPaterns[r->resultPaternCount];
+  Pattern * rs = &r->resultPatterns[r->resultPatternCount];
 
   incRulePart(rs);
 }
         |       %empty {
   Rule * r = &pd.rules[pd.ruleCount];
-  Pattern * rs = &r->resultPaterns[r->resultPaternCount];
+  Pattern * rs = &r->resultPatterns[r->resultPatternCount];
   RulePart * rsp = &rs->parts[rs->partCount];
 
   rsp->identity[rsp->identityCount].direction = UNSPECIFIED;
@@ -519,7 +519,7 @@ result_on_square: result_on_square result_object_part | result_object_part;
 
 result_object_part: OBJID {
     Rule * r = &pd.rules[pd.ruleCount];
-    Pattern * rs = &r->resultPaterns[r->resultPaternCount];
+    Pattern * rs = &r->resultPatterns[r->resultPatternCount];
     RulePart * rsp = &rs->parts[rs->partCount];
     RuleIdentity * rid = &rsp->identity[rsp->identityCount];
 
@@ -530,7 +530,7 @@ result_object_part: OBJID {
 }
                  | DIRECTION OBJID {
     Rule * r = &pd.rules[pd.ruleCount];
-    Pattern * rs = &r->resultPaterns[r->resultPaternCount];
+    Pattern * rs = &r->resultPatterns[r->resultPatternCount];
     RulePart * rsp = &rs->parts[rs->partCount];
     RuleIdentity * rid = &rsp->identity[rsp->identityCount];
 

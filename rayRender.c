@@ -197,7 +197,7 @@ Color colorFromSprite(Runtime * rt, int objId, int tileIndex) {
 
 void initRenderer() {
   InitWindow(WINDOW_SIZE, WINDOW_SIZE, "My Puzzle");
-  SetTargetFPS(500);
+  SetTargetFPS(60);
 }
 
 void closeRenderer() {
@@ -507,7 +507,7 @@ void debugRender(Runtime * rt, Match * match) {
   if (rt->levelType == SQUARES && rt->pd->verboseLogging) {
     if (awaitInput || 1) {
       while (pressed == 0) {
-        if (IsKeyPressed(KEY_PERIOD)) {
+        if (IsKeyDown(KEY_PERIOD)) {
           pressed = 1;
         }
 
@@ -536,7 +536,7 @@ void render(Runtime * rt) {
     renderMessage(rt);
     break;
   }
-
+  DrawFPS(10,10);
   if (rt->pd->verboseLogging) {
     drawDebugBar(rt);
   }
