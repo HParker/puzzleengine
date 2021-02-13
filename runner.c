@@ -882,6 +882,9 @@ int applyPattern(Runtime * rt, Rule * rule, int patternId, Match * match) {
           if (match->partCount > prevPartCount || match->cancel) {
             // under some conditions we should be able to NOT return here
             // if that is the case we can do all update in one walk of the board
+            /* if (rule->matchPatterns[patternId].parts[0].identityCount < rule->resultPatterns[patternId].parts[0].identityCount) { */
+            /*   return 1; */
+            /* } */
             return 1;
           } else {
             match->partCount = 0;
@@ -900,8 +903,6 @@ int applyPattern(Runtime * rt, Rule * rule, int patternId, Match * match) {
 }
 
 int applyRule(Runtime * rt, Rule * rule, Match * match) {
-
-
   match->appliedDirection = rule->directionConstraint;
   for (int i = 0; i < rule->matchPatternCount; i++) {
     if (applyPattern(rt, rule, i, match) == 0) {
