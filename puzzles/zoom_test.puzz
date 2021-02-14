@@ -2,7 +2,7 @@ title zoom test
 author Adam
 homepage www.puzzlescript.net
 
-zoomscreen 5x5
+flickscreen 5x5
 
 ========
 OBJECTS

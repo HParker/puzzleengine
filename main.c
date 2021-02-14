@@ -25,12 +25,13 @@ int main(int argc, char ** argv) {
 
   while (1) {
     // TODO: do a real again tick
-    if (rt.doAgain || (rt.pd->realTimeInterval > 0 && rt.pd->realTimeInterval*60.0f < frameCounter)) {
+
+    render(&rt);
+    frameCounter++;
+    if ((rt.doAgain && rt.pd->againInterval*60.0f < frameCounter) || (rt.pd->realTimeInterval > 0 && rt.pd->realTimeInterval*60.0f < frameCounter)) {
       tick(&rt);
       frameCounter = 0;
     }
-    render(&rt);
-    frameCounter++;
     if (rt.doAgain) {
       printf("Doing again\n");
       continue;
@@ -49,6 +50,9 @@ int main(int argc, char ** argv) {
         nextLevel(&rt);
       } else {
         update(&rt, inputDir);
+        if (rt.doAgain) {
+          frameCounter = 0;
+        }
       }
 
       if (rt.gameWon == 1) {

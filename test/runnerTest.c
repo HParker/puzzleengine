@@ -34,9 +34,10 @@ void test_solution_file(Runtime * rt, char * puzzleFileName, char * solutionFile
 
     update(rt, dir);
     render(rt);
+
     while (rt->doAgain) {
-      update(rt, dir);
       tick(rt);
+      render(rt);
     }
 
     if (rt->levelIndex > currentLevel) {
@@ -258,6 +259,15 @@ START_TEST (test_runs_sasquatch_sokoban)
 }
 END_TEST
 
+START_TEST (test_runs_wall_clip)
+{
+  Runtime rt;
+  test_solution_file(&rt, "./puzzles/wall_clip.puzz", "./solutions/wall_clip.solution");
+  ck_assert_int_eq(1, rt.gameWon);
+  endGame(&rt);
+}
+END_TEST
+
 Suite * puzzle_script_parser_suite(void)
 {
   Suite * s;
@@ -296,6 +306,7 @@ Suite * puzzle_script_parser_suite(void)
   tcase_add_test(test_Runner, test_runs_ooo);
   tcase_add_test(test_Runner, test_runs_pathlines);
   tcase_add_test(test_Runner, test_runs_zoom_test);
+  tcase_add_test(test_Runner, test_runs_wall_clip);
 
   // TODO: I believe realtime/ticks don't run the same in test
   //       this causes sasquatch to fail.

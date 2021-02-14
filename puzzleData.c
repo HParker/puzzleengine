@@ -527,6 +527,7 @@ void initPuzzleData() {
   pd.throttleMovement = 0;
   pd.runRulesOnLevelStart = 0;
   pd.realTimeInterval = 0;
+  pd.againInterval = 0.1f;
   pd.doesFlickScreen = 0;
   pd.doesZoomScreen = 0;
   pd.backgroundColor = "black";

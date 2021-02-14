@@ -87,8 +87,7 @@ Direction absoluteDirection(Direction applicationDirection, Direction ruleDir) {
 }
 
 int matchesDirection(Direction ruleDir, Direction applicationDir, Direction dir, int ignoreUnspec) {
-  // TODO: stationary is wrong here, it should be handled later to make sure it isn't moving
-  if (dir == COND_NO || dir == STATIONARY || (ignoreUnspec && ruleDir == UNSPECIFIED)) {
+  if (dir == COND_NO || (ignoreUnspec && ruleDir == UNSPECIFIED)) {
     return 1;
   }
   Direction absoluteDir = absoluteDirection(applicationDir, ruleDir);
@@ -243,11 +242,13 @@ void cleanup(Runtime * rt) {
 }
 
 void loadTile(Runtime * rt, char tile, int x, int y) {
+
   int id = legendIdForGlyph(tile);
 
   for (int i = 0; i < rt->pd->glyphLegend[id].objectCount; i++) {
     int objId = rt->pd->glyphLegend[id].objects[i];
     if (objId != -1) {
+      addObj(rt, rt->pd->aliasLegend[rt->backgroundId].objects[0], x, y);
       addObj(rt, objId, x, y);
     }
   }
@@ -462,8 +463,8 @@ void applyMatch(Runtime * rt, Match * match) {
     } else {
       if (match->parts[i].goalId == EMPTY_ID) {
         /* printf("%i/%i - deleting object %s (%i,%i)\n", i, match->partCount, objectName(rt->objects[match->parts[i].objIndex].objId), match->parts[i].goalX, match->parts[i].goalY); */
-        removeObjFromMap(rt, match->parts[i].objIndex);
         rt->objects[match->parts[i].objIndex].deleted = 1;
+        removeObjFromMap(rt, match->parts[i].objIndex);
         rt->deadCount++;
       } else if (match->parts[i].goalId == -1 && match->parts[i].goalDirection != UNSPECIFIED) {
         /* printf("%i/%i - adding movement to existing object %s (%i,%i)\n", i, match->partCount, objectName(rt->objects[match->parts[i].objIndex].objId), match->parts[i].goalX, match->parts[i].goalY); */
@@ -531,7 +532,7 @@ int resultDirectionMatches(Runtime * rt, Rule * rule, int patternId, int partId,
     Direction ruleDir = rule->resultPatterns[patternId].parts[partId].identity[identId].direction;
     int legendId = rule->resultPatterns[patternId].parts[partId].identity[identId].legendId;
 
-    if (legendId == EMPTY_ID || legendId == aliasLegendId("Background") || ruleDir == COND_NO) {
+    if (legendId == EMPTY_ID || ruleDir == COND_NO) {
       return 1;
     } else {
       for (int i = 0; i < rt->toMoveCount; i++) {
@@ -577,7 +578,7 @@ int alreadyResultIdentity(Runtime * rt, Rule * rule, int patternId, int partId, 
   }
 
   int matched = 0;
-  if (legendId == EMPTY_ID || legendId == rt->backgroundId) {
+  if (legendId == EMPTY_ID) {
     return 1;
   } else {
     // legend mask & tile
@@ -691,9 +692,9 @@ void replaceTile(Runtime * rt, Rule * rule, int patternId, int partId, Direction
     Direction ruleDir = rule->resultPatterns[patternId].parts[partId].identity[identId].direction;
     int legendId = rule->resultPatterns[patternId].parts[partId].identity[identId].legendId;
     Direction matchDir = matchLegendDirection(rule, patternId, partId, legendId);
+    int objIndex = legendObjId(rt, legendId, match->targetX, match->targetY);
     if (legendId != EMPTY_ID) {
       if (ruleDir != COND_NO) {
-        int objIndex = legendObjId(rt, legendId, match->targetX, match->targetY);
         if (objIndex == -1) {
           match->parts[match->partCount].newObject = 1;
           match->parts[match->partCount].goalId = legendId;
@@ -729,6 +730,16 @@ void replaceTile(Runtime * rt, Rule * rule, int patternId, int partId, Direction
             match->partCount++;
           }
         }
+      } else if (objIndex != -1) { // NOT EMPTY AND IS A COND_NO AND THE LEGEND_ID IS THERE
+        match->parts[match->partCount].newObject = 0;
+        match->parts[match->partCount].goalId = EMPTY_ID;
+        match->parts[match->partCount].goalX = match->targetX;
+        match->parts[match->partCount].goalY = match->targetY;
+
+        match->parts[match->partCount].objIndex = objIndex;
+        match->parts[match->partCount].objectId = rt->objects[objIndex].objId;
+        match->parts[match->partCount].goalDirection = absoluteDirection(appDir, ruleDir);
+        match->partCount++;
       }
     }
   }
@@ -742,7 +753,7 @@ int partIdentity(Runtime * rt, Rule * rule, int patternId, int partId, int ident
   Direction ruleDir = rule->matchPatterns[patternId].parts[partId].identity[identId].direction;
   int legendId = rule->matchPatterns[patternId].parts[partId].identity[identId].legendId;
   int matched = 0;
-  if (legendId == EMPTY_ID || legendId == rt->backgroundId) {
+  if (legendId == EMPTY_ID) {
     return 1;
   } else {
     if (ruleDir != COND_NO) {
@@ -769,13 +780,18 @@ int partIdentitys(Runtime * rt, Rule * rule, int patternId, int partId, Directio
   int bytePerRecord = rt->pd->objectCount/8+1;
   int x = match->targetX;
   int y = match->targetY;
-  int byteIndex = ((y * width * bytePerRecord * 8) + (x * bytePerRecord * 8))/8;
-  for (int i = 0; i < rule->matchPatterns[patternId].parts[partId].identityCount; i++) {
-    if  (partIdentity(rt, rule, patternId, partId, i, appDir, byteIndex, match) == 0) {
-      return 0;
+  // TODO: just double checking
+
+  if (onBoard(rt, x, y)) {
+    int byteIndex = ((y * width * bytePerRecord * 8) + (x * bytePerRecord * 8))/8;
+    for (int i = 0; i < rule->matchPatterns[patternId].parts[partId].identityCount; i++) {
+      if  (partIdentity(rt, rule, patternId, partId, i, appDir, byteIndex, match) == 0) {
+        return 0;
+      }
     }
+    return 1;
   }
-  return 1;
+  return 0;
 }
 
 int identitysAtDistance(Runtime * rt, Rule * rule, int patternId, int partId, Direction appDir, int distance, Match * match) {
@@ -830,7 +846,9 @@ int completeMatch(Runtime * rt, Rule * rule, int patternId, Direction appDir, Ma
         replaceTile(rt, rule, patternId, partId, appDir, match);
         int afterPartCount = match->partCount;
 
-        if (rule->matchPatterns[patternId].parts[partId].identityCount < rule->resultPatterns[patternId].parts[partId].identityCount &&
+        // TODO: this sucks
+        if (rule->matchPatterns[patternId].parts[partId].identityCount > 0 && rule->resultPatternCount > 0 && rule->resultPatterns[patternId].partCount > 0 && rule->resultPatterns[patternId].parts[partId].identityCount > 0 &&
+            rule->matchPatterns[patternId].parts[partId].identityCount < rule->resultPatterns[patternId].parts[partId].identityCount &&
             beforePartCount >= afterPartCount) {
           success = 0;
           match->partCount = prevPartCount;
@@ -850,10 +868,12 @@ int completeMatch(Runtime * rt, Rule * rule, int patternId, Direction appDir, Ma
   return 1;
 }
 
-int hasSpace(Runtime * rt, Rule * rule, Pattern * state, Match * match) {
-  int spaceRequired = state->partCount;
-  if (rule->hasSpread) {
-    spaceRequired--;
+int hasSpace(Runtime * rt, Rule * rule, Pattern * pattern, Match * match) {
+  int spaceRequired = 0;
+  for (int p = 0; p < pattern->partCount; p++) {
+    if (pattern->parts[p].isSpread == 0) {
+      spaceRequired++;
+    }
   }
 
   switch (rule->directionConstraint) {
@@ -909,9 +929,9 @@ int applyRule(Runtime * rt, Rule * rule, Match * match) {
       return 0;
     }
   }
-  if (rt->pd->verboseLogging) {
-    debugRender(rt, match);
-  }
+  /* if (rt->pd->verboseLogging) { */
+  /*   debugRender(rt, match); */
+  /* } */
   return 1;
 }
 
@@ -1162,7 +1182,7 @@ void startGame(Runtime * rt, FILE * file) {
 }
 
 void preUpdate(Runtime * rt) {
-  /* rt->doAgain = 0; */
+  rt->doAgain = 0;
   rt->didUndo = 0;
   rt->toMoveCount = 0;
   if (rt->deadCount > 300) {
@@ -1177,6 +1197,7 @@ void tick(Runtime * rt) {
   applyRules(rt, NORMAL);
   moveObjects(rt);
   applyRules(rt, LATE);
+  updateLevel(rt);
 }
 
 void update(Runtime * rt, Direction dir) {

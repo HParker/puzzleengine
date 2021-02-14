@@ -77,7 +77,7 @@ int rowWidth = 0;
 %token DEBUG VERBOSE_LOGGING RUN_RULES_ON_LEVEL_START
 %token END_OF_FILE 0 "end of file"
 %token MODE_HEADER EQUALS END_LAYER END_OF_RULE MESSAGE LEGEND_AND LEGEND_OR END_OF_OBJECT_LINE
-%token  <identifier> ID OBJID COLOR LEGEND_ID LEGEND_VALUE END_LEGEND_LINE LAYER_NAME RULE_POSTFIX
+%token <identifier> ID OBJID COLOR LEGEND_ID LEGEND_VALUE END_LEGEND_LINE LAYER_NAME RULE_POSTFIX
 %token  <decimal> DECIMAL
 
 %token  <number> DIGIT
@@ -132,7 +132,9 @@ preamble_option: title
                 ;
 
 title: TITLE ID { pd.title = $2; }
+
 author: AUTHOR ID { pd.author = $2; }
+
 homepage: HOMEPAGE ID { pd.homepage = $2; }
 
 require_player_movement: REQUIRE_PLAYER_MOVEMENT { pd.requirePlayerMovement = 1; }
@@ -145,9 +147,6 @@ again_interval: AGAIN_INTERVAL ID { pd.againInterval = 0.1f; }
         ;
 
 background_color: BACKGROUND_COLOR ID { pd.backgroundColor = $2; }
-        ;
-
-flickscreen: FLICKSCREEN ID { yyerror("FLICKSCREEN IS NOT YET SUPPORTED\n"); }
         ;
 
 key_repeat_interval: KEY_REPEAT_INTERVAL DECIMAL { pd.keyRepeatInterval = 0.1f; }
@@ -184,6 +183,13 @@ zoomscreen: ZOOMSCREEN DIGIT DIGIT {
 }
         ;
 
+flickscreen: FLICKSCREEN DIGIT DIGIT {
+    pd.doesFlickScreen = 1;
+    pd.flickScreenX = $2;
+    pd.flickScreenY = $2;
+ };
+
+
 debug: DEBUG { pd.debug = 1; }
         ;
 
@@ -204,7 +210,7 @@ object_definition: any_object_eol object_name some_object_eol colors some_object
 
     incObject();
 }
-                 | any_object_eol object_name some_object_eol colors some_object_eol {
+        |       any_object_eol object_name some_object_eol colors some_object_eol {
   for (int j = 0; j < 25; j++) {
     pd.objects[pd.objectCount].sprite[j] = '0';
   }

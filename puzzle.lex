@@ -41,7 +41,6 @@ color (color|colour)
 ^color_palette[ ]+ { BEGIN IDENTIFIER; return COLOR_PALETTE; }
 ^again_interval[ ]+ { BEGIN IDENTIFIER; return AGAIN_INTERVAL; }
 ^background_color[ ]+ { BEGIN IDENTIFIER; return BACKGROUND_COLOR; }
-^flickscreen[ ]+ { BEGIN IDENTIFIER; return FLICKSCREEN; }
 ^key_repeat_interval[ ]+ { BEGIN FLOAT; return KEY_REPEAT_INTERVAL; }
 ^realtime_interval[ ]+ { BEGIN FLOAT; return REALTIME_INTERVAL; }
 ^noaction { return NOACTION; }
@@ -53,6 +52,7 @@ color (color|colour)
 ^text_color[ ]+ { BEGIN IDENTIFIER; return TEXT_COLOR; }
 ^throttle_movement[ ]+ { BEGIN IDENTIFIER; return THROTTLE_MOVEMENT; }
 ^zoomscreen[ ]+ { BEGIN DIMENSIONS; return ZOOMSCREEN; }
+^flickscreen[ ]+ { BEGIN DIMENSIONS; return FLICKSCREEN; }
 ^enable_level_select {}
 
 ^debug { return DEBUG; }
@@ -150,14 +150,14 @@ color (color|colour)
   return OBJID;
 }
 
-<OBJECTS>{hexcode} {
-  yylval.identifier = strdup(yytext);
-  return OBJID;
-}
-
 <OBJECTS>{glyph} {
   yylval.tile = yytext[0];
   return GLYPH;
+}
+
+<OBJECTS>{hexcode} {
+  yylval.identifier = strdup(yytext);
+  return OBJID;
 }
 
 <LEGEND>^[a-zA-Z0-9_\.#\*@]{2,} {

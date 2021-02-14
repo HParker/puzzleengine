@@ -411,20 +411,10 @@ void drawObj(Runtime * rt, int objIndex) {
   drawObject(rt, rt->objects[objIndex].objId, rt->objects[objIndex].x, rt->objects[objIndex].y);
 }
 
-void renderBackground(Runtime * rt) {
-  int count = levelTileCount(rt->levelIndex);
-  for (int tile = 0; tile < count; tile++) {
-    int x = tile % rt->width;
-    int y = tile / rt->width;
-    drawObject(rt, rt->backgroundId, x, y);
-  }
-}
-
 void renderTiles(Runtime * rt) {
   int x, y, layer, tileIndex;
   for (y = startTileY(rt); y < endTileY(rt); y++) {
     for (x = startTileX(rt); x < endTileX(rt); x++) {
-      drawObject(rt, rt->pd->aliasLegend[rt->backgroundId].objects[0], x, y);
       for (layer = 0; layer < rt->pd->layerCount; layer++) {
         tileIndex = (layer * rt->width * rt->height) + (y * rt->width) + x;
         if (rt->map[tileIndex] != -1) {
