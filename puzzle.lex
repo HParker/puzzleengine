@@ -7,6 +7,10 @@ int modeToEnter = -1;
 int commentNestingLevel = 0;
 int inMode = 0;
 int dimensionCount = 0;
+int spriteLine = 0;
+int nameLine = 0;
+int colorLine = 0;
+ int keyFound = 0;
 %}
 
 %option noyywrap caseless yylineno
@@ -16,18 +20,24 @@ int dimensionCount = 0;
 %s FLOAT
 %s DIMENSIONS
 %s COMMENT
-%s OBJECTS
+
+%s OBJECT_NAME
+%s OBJECT_COLORS
+%s OBJECT_SPRITE
+
 %s LEGEND
+
 %s SOUNDS
 %s COLLISIONLAYERS
 %s RULES
 %s WINCONDITIONS
 %s LEVELS
 
-glyph [\+\-\!\?:\"\{\}\[\];\.0-9a-zA-Z\*#,@`\'~\%&\/\|_\>\$]
+glyph [^[:blank:]\(\n]
 hexcode #([a-fA-F0-9]{8}|[a-fA-F0-9]{6}|[a-fA-F0-9]{3})
 
 name ([a-zA-Z0-9_#]*[a-zA-Z][a-zA-Z0-9_]*){2,}
+word [^[:blank:]\(\n]+
 
 colors (black|white|lightgray|lightgrey|gray|grey|darkgray|darkgrey|red|darkred|lightred|brown|darkbrown|lightbrown|orange|yellow|green|darkgreen|lightgreen|blue|lightblue|darkblue|purple|pink|transparent)
 
@@ -107,7 +117,7 @@ color (color|colour)
 }
 
 <MODE>^OBJECTS {
-  modeToEnter = OBJECTS;
+  modeToEnter = OBJECT_NAME;
   return MODE_HEADER;
 }
 
@@ -141,23 +151,48 @@ color (color|colour)
   return MODE_HEADER;
 }
 
-<OBJECTS>\n {
+
+<OBJECT_NAME>{word} {
+  yylval.identifier = strdup(yytext);
+  nameLine = 1;
+  return OBJID;
+}
+
+<OBJECT_NAME>\n {
+  if (nameLine) {
+    modeToEnter = OBJECT_COLORS;
+    BEGIN OBJECT_COLORS;
+    nameLine = 0;
+  }
   return END_OF_OBJECT_LINE;
 }
 
-<OBJECTS>{name} {
+<OBJECT_COLORS>[^[:blank:]\(\n]+ {
   yylval.identifier = strdup(yytext);
   return OBJID;
 }
 
-<OBJECTS>{glyph} {
+<OBJECT_COLORS>\n {
+  modeToEnter = OBJECT_SPRITE;
+  BEGIN OBJECT_SPRITE;
+  return END_OF_OBJECT_LINE;
+}
+
+<OBJECT_SPRITE>[0-9\.] {
+  spriteLine = 1;
   yylval.tile = yytext[0];
   return GLYPH;
 }
 
-<OBJECTS>{hexcode} {
-  yylval.identifier = strdup(yytext);
-  return OBJID;
+<OBJECT_SPRITE>\n {
+                   if (spriteLine) {
+                     spriteLine = 0;
+                     return END_OF_OBJECT_LINE;
+                   } else {
+                     modeToEnter = OBJECT_NAME;
+                     BEGIN OBJECT_NAME;
+                     return END_OF_OBJECT_LINE;
+                   }
 }
 
 <LEGEND>^[a-zA-Z0-9_\.#\*@]{2,} {
@@ -372,7 +407,7 @@ message[ ]+ {
   BEGIN COMMENT;
 }
 
-<COMMENT>[^\)^\(]* {
+<COMMENT>[^\)\(]* {
 }
 <COMMENT>\) {
   commentNestingLevel--;

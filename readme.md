@@ -1,11 +1,13 @@
 # Disclaimer before you continue
 
-This is a Work in progress. the majority of example puzzles work (except rigid bodies, realtime games, sounds and some prelude fields)
+This is a Work in progress. the majority of example puzzles work (except rigid bodies, sounds)
 
 But if this project is interesting to you, consider contributing! Making a new implementation of PuzzleScript is a huge undertaking. I look forward to making puzzles with you.
 
 ## Puzzles known to work
 
+- Stumper test puzzle
+- Simple Block Pushing Game
 - EYE EYE EYE
 - Match 3 Block Push
 - Block Faker
@@ -26,6 +28,8 @@ But if this project is interesting to you, consider contributing! Making a new i
 - Enqueue
 - 🍡 -ooo- 🍡
 - Path lines
+- zoom test
+- Wall Clip
 
 ## Contributing puzzle tests
 

@@ -203,8 +203,7 @@ modechange: MODE_HEADER
 some_object_eol: some_object_eol END_OF_OBJECT_LINE | END_OF_OBJECT_LINE;
 any_object_eol: some_object_eol | %empty;
 
-object_definitions: object_definition object_definitions
-                  | object_definition
+object_definitions: object_definitions object_definition | object_definition;
 
 object_definition: any_object_eol object_name some_object_eol colors some_object_eol sprite some_object_eol {
 
@@ -217,7 +216,7 @@ object_definition: any_object_eol object_name some_object_eol colors some_object
   incObject();
 }
 
-object_name: OBJID GLYPH {
+object_name: OBJID OBJID {
     pd.objects[pd.objectCount].name = $1;
 
     pd.aliasLegend[pd.aliasLegendCount].key = strdup($1);
@@ -228,7 +227,7 @@ object_name: OBJID GLYPH {
 
     // single char key
     // They only reference AliasLegend names that have the actual object ID
-    pd.glyphLegend[pd.glyphLegendCount].key = $2;
+    pd.glyphLegend[pd.glyphLegendCount].key = $2[0];
     pd.glyphLegend[pd.glyphLegendCount].objects[0] = pd.objectCount;
 
     incGlyphLegendObject(pd.glyphLegendCount);
@@ -286,7 +285,7 @@ legend_glyph: LEGEND_GLYPH {
   pd.glyphLegend[pd.glyphLegendCount].key = $1;
 }
 
-end_legend_line: END_LEGEND_LINE end_legend_line | END_LEGEND_LINE
+end_legend_line: END_LEGEND_LINE end_legend_line | END_LEGEND_LINE;
 
 legend_values: legend_value legend_joiner legend_values
              | legend_value
