@@ -481,7 +481,7 @@ void drawDebugBar(Runtime * rt) {
   DrawRectangle(0, WINDOW_SIZE-50, WINDOW_SIZE, 50, transparentBlack);
 
   char debugLine[460];
-  sprintf(debugLine, "%d/%d ", rt->levelIndex, rt->pd->levelCount);
+  sprintf(debugLine, "%d/%d obj: %i", rt->levelIndex, rt->pd->levelCount, rt->objectCount);
   DrawFPS(10,WINDOW_SIZE-40);
   DrawText(debugLine, 120, WINDOW_SIZE-40, 20, WHITE);
 }

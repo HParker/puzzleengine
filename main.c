@@ -43,8 +43,10 @@ int main(int argc, char ** argv) {
       if (inputDir == QUIT) {
         break;
       }
-      if (inputDir == UNDO && rt.statesCount > 0) {
-        undo(&rt);
+      if (inputDir == UNDO) {
+        if (rt.statesCount > 0) {
+          undo(&rt);
+        }
         rt.didUndo = 0;
       } else if (inputDir == NEXT_LEVEL) {
         nextLevel(&rt);

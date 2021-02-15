@@ -8,10 +8,7 @@
 #define EMPTY_ID 1
 
 int onBoard(Runtime * rt, int x, int y) {
-  if (x < 0 || x >= rt->width) {
-    return 0;
-  }
-  if (y < 0 || y >= rt->height) {
+  if (x < 0 || x >= rt->width || y < 0 || y >= rt->height) {
     return 0;
   }
   return 1;
@@ -19,9 +16,9 @@ int onBoard(Runtime * rt, int x, int y) {
 
 int legendObjId(Runtime * rt, int legendId, int x, int y) {
   int tileIndex;
+
   for (int i = 0; i < rt->pd->layerCount; i++) {
     tileIndex = (i * rt->width * rt->height) + (y * rt->width) + x;
-
     if (rt->map[tileIndex] != -1 &&
         aliasLegendContains(legendId, rt->objects[rt->map[tileIndex]].objId)) {
       return rt->map[tileIndex];
@@ -242,13 +239,11 @@ void cleanup(Runtime * rt) {
 }
 
 void loadTile(Runtime * rt, char tile, int x, int y) {
-
   int id = legendIdForGlyph(tile);
-
+  addObj(rt, rt->pd->aliasLegend[rt->backgroundId].objects[0], x, y);
   for (int i = 0; i < rt->pd->glyphLegend[id].objectCount; i++) {
     int objId = rt->pd->glyphLegend[id].objects[i];
     if (objId != -1) {
-      addObj(rt, rt->pd->aliasLegend[rt->backgroundId].objects[0], x, y);
       addObj(rt, objId, x, y);
     }
   }
@@ -287,7 +282,6 @@ void initGame(Runtime * rt) {
     rt->states[i].objectCount = 0;
   }
 
-  rt->removedId = -1;
   rt->hasMap = 0;
   rt->hasOMap = 0;
 }
@@ -326,6 +320,9 @@ void undo(Runtime * rt) {
 
   if (rt->states[rt->statesCount].objectCount > 0) {
     free(rt->states[rt->statesCount].objects);
+    /* free(rt->states[rt->statesCount].map); */
+    /* free(rt->states[rt->statesCount].oMap); */
+
     rt->states[rt->statesCount].objectCount = 0;
     rt->states[rt->statesCount].objectCapacity = 0;
   }
@@ -1090,6 +1087,9 @@ void addState(Runtime * rt) {
   if (rt->states[rt->statesCount].objectCount > 0) {
     // TODO: I feel like this shouldn't happen
     free(rt->states[rt->statesCount].objects);
+    /* free(rt->states[rt->statesCount].map); */
+    /* free(rt->states[rt->statesCount].oMap); */
+
     rt->states[rt->statesCount].objectCount = 0;
     rt->states[rt->statesCount].objectCapacity = 0;
   }
@@ -1117,7 +1117,6 @@ void addState(Runtime * rt) {
 void loadLevel(Runtime * rt) {
   rt->levelType = levelType(rt->levelIndex);
   if (rt->levelType == SQUARES) {
-
     rt->height = rt->pd->levels[rt->levelIndex].height;
     rt->width = rt->pd->levels[rt->levelIndex].width;
     rt->toMoveCount = 0;
@@ -1131,8 +1130,6 @@ void loadLevel(Runtime * rt) {
     }
     rt->hasOMap = 1;
     rt->oMap = rt->oMap = calloc(rt->height * rt->width * bytePerRecord, 1);
-
-
 
     int count = levelTileCount(rt->levelIndex);
     for (int i = 0; i < count; i++) {
@@ -1151,6 +1148,12 @@ void loadLevel(Runtime * rt) {
       }
     }
   }
+  for (int i = 0; i < rt->statesCount; i++) {
+    free(rt->states[i].objects);
+    rt->states[i].objectCount = 0;
+    rt->states[i].objectCapacity = 0;
+  }
+  rt->statesCount = 0;
 }
 
 void nextLevel(Runtime * rt) {
@@ -1192,7 +1195,6 @@ void preUpdate(Runtime * rt) {
 }
 
 void tick(Runtime * rt) {
-  rt->doAgain = 0;
   preUpdate(rt);
   applyRules(rt, NORMAL);
   moveObjects(rt);

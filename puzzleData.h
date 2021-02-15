@@ -306,10 +306,9 @@ typedef struct Runtime {
   int width;
 
   LevelType levelType;
+
   int objectCount;
   int objectCapacity;
-
-  int removedId;
   Obj * objects;
 
   int toMoveCount;
