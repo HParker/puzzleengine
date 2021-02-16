@@ -3,6 +3,8 @@ author Stefan Peeters
 
 realtime_interval .1
 
+debug
+
 zoomscreen 11x9
 
 (verbose_logging)

@@ -27,25 +27,6 @@ int legendObjId(Runtime * rt, int legendId, int x, int y) {
   return -1;
 }
 
-int playerLocation(Runtime * rt) {
-  int x, y, byteIndex, byteOffset;
-  int width = rt->width;
-  int bytePerRecord = rt->pd->objectCount/8+1;
-  int legendId = rt->playerId;
-
-  for (x = 0; x < rt->width; x++) {
-    for (y = 0; y < rt->height; y++) {
-      byteIndex = ((y * width * bytePerRecord * 8) + (x * bytePerRecord * 8))/8;
-      for (byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
-        if ((rt->pd->aliasLegend[legendId].mask[byteOffset] & rt->oMap[byteIndex + byteOffset]) != 0) {
-          return (y * width + x);
-        }
-      }
-    }
-  }
-  return -1;
-}
-
 Direction absoluteDirection(Direction applicationDirection, Direction ruleDir) {
   switch (ruleDir) {
   case UP:
@@ -121,6 +102,19 @@ void addToMove(Runtime * rt, int objIndex, Direction direction) {
 }
 
 // MAPS
+int legendAt(Runtime * rt, int legendId, int x, int y) {
+  int width = rt->width;
+  int bytePerRecord = rt->pd->objectCount/8+1;
+  int byteIndex = ((y * width * bytePerRecord * 8) + (x * bytePerRecord * 8))/8;
+
+  for (int byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
+    if ((rt->pd->aliasLegend[legendId].mask[byteOffset] & rt->oMap[byteIndex + byteOffset]) != 0) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
 void buildOMap(Runtime * rt) {
   int width = rt->width;
   int bytePerRecord = rt->pd->objectCount/8+1;
@@ -449,6 +443,10 @@ void applyMatch(Runtime * rt, Match * match) {
     return;
   }
 
+  if (ruleCommandContains(&rt->pd->rules[match->ruleIndex], AGAIN) && match->partCount > 0) {
+    rt->doAgain = 1;
+  }
+
   for (int i = 0; i < match->partCount; i++) {
     if (match->parts[i].newObject && match->parts[i].goalId != EMPTY_ID) {
       /* printf("%i/%i - adding object %s (%i,%i)\n", i, match->partCount, objectName(specificLegendId(rt, match->parts[i].goalId, match)), match->parts[i].goalX, match->parts[i].goalY); */
@@ -470,10 +468,6 @@ void applyMatch(Runtime * rt, Match * match) {
         addToMove(rt, match->parts[i].objIndex,  match->parts[i].goalDirection);
       }
     }
-  }
-  if (ruleCommandContains(&rt->pd->rules[match->ruleIndex], AGAIN) && match->partCount > 0) {
-    /* printf("Marking again!\n"); */
-    rt->doAgain = 1;
   }
   match->partCount = 0;
 }
@@ -557,10 +551,6 @@ int resultDirectionMatches(Runtime * rt, Rule * rule, int patternId, int partId,
 }
 
 int alreadyResultIdentity(Runtime * rt, Rule * rule, int patternId, int partId, int identId, Direction appDir, int x, int y) {
-    // bit/byte math
-  int width = rt->width;
-  int bytePerRecord = rt->pd->objectCount/8+1;
-
   Direction ruleDir = rule->resultPatterns[patternId].parts[partId].identity[identId].direction;
   int legendId = rule->resultPatterns[patternId].parts[partId].identity[identId].legendId;
 
@@ -580,21 +570,14 @@ int alreadyResultIdentity(Runtime * rt, Rule * rule, int patternId, int partId, 
   if (legendId == EMPTY_ID) {
     return 1;
   } else {
-    // legend mask & tile
-    int byte_index = ((y * width * bytePerRecord * 8) + (x * bytePerRecord * 8))/8;
-
-    if (ruleDir != COND_NO) {
-      for (int byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
-        if ((rt->pd->aliasLegend[legendId].mask[byteOffset] & rt->oMap[byte_index + byteOffset]) != 0 &&
-            (rule->executionTime == LATE || resultDirectionMatches(rt, rule, patternId, partId, appDir, x, y, ignoreUnspecified))) {
-          matched = 1;
-        }
+    if (ruleDir == COND_NO) {
+      if (legendAt(rt, legendId, x, y) == 0) {
+        matched = 1;
       }
     } else {
-      matched = 1;
-      for (int byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
-        if ((rt->pd->aliasLegend[legendId].mask[byteOffset] & rt->oMap[byte_index + byteOffset]) != 0) {
-          matched = 0;
+      if (legendAt(rt, legendId, x, y)) {
+        if (rule->executionTime == LATE || resultDirectionMatches(rt, rule, patternId, partId, appDir, x, y, ignoreUnspecified)) {
+          matched = 1;
         }
       }
     }
@@ -744,47 +727,39 @@ void replaceTile(Runtime * rt, Rule * rule, int patternId, int partId, Direction
   }
 }
 
-int partIdentity(Runtime * rt, Rule * rule, int patternId, int partId, int identId, Direction appDir, int byteIndex, Match * match) {
+int partIdentity(Runtime * rt, Rule * rule, int patternId, int partId, int identId, Direction appDir, Match * match) {
   // bit/byte math
   int x = match->targetX;
   int y = match->targetY;
-  int bytePerRecord = rt->pd->objectCount/8+1;
   Direction ruleDir = rule->matchPatterns[patternId].parts[partId].identity[identId].direction;
   int legendId = rule->matchPatterns[patternId].parts[partId].identity[identId].legendId;
-  int matched = 0;
   if (legendId == EMPTY_ID) {
     return 1;
   } else {
-    if (ruleDir != COND_NO) {
-      for (int byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
-        if ((rt->pd->aliasLegend[legendId].mask[byteOffset] & rt->oMap[byteIndex + byteOffset]) != 0 &&
-            (rule->executionTime == LATE || directionMatches(rt, rule, patternId, partId, identId, appDir, x, y))) {
-          return 1;
-        }
+    if (ruleDir == COND_NO) {
+      if (legendAt(rt, legendId, x, y) == 0) {
+        return 1;
       }
     } else {
-      matched = 1;
-      for (int byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
-        if ((rt->pd->aliasLegend[legendId].mask[byteOffset] & rt->oMap[byteIndex + byteOffset]) != 0) {
-          return 0;
+      if (legendAt(rt, legendId, x, y)) {
+        if (rule->executionTime == LATE || directionMatches(rt, rule, patternId, partId, identId, appDir, x, y)) {
+          return 1;
         }
+
       }
     }
-    return matched;
+    return 0;
   }
 }
 
 int partIdentitys(Runtime * rt, Rule * rule, int patternId, int partId, Direction appDir, Match * match) {
-  int width = rt->width;
-  int bytePerRecord = rt->pd->objectCount/8+1;
   int x = match->targetX;
   int y = match->targetY;
   // TODO: just double checking
 
   if (onBoard(rt, x, y)) {
-    int byteIndex = ((y * width * bytePerRecord * 8) + (x * bytePerRecord * 8))/8;
     for (int i = 0; i < rule->matchPatterns[patternId].parts[partId].identityCount; i++) {
-      if  (partIdentity(rt, rule, patternId, partId, i, appDir, byteIndex, match) == 0) {
+      if  (partIdentity(rt, rule, patternId, partId, i, appDir, match) == 0) {
         return 0;
       }
     }
@@ -1047,18 +1022,13 @@ Direction handleInput(Runtime * rt, Direction input) {
 }
 
 void markPlayerAsMoving(Runtime * rt, Direction dir) {
-  int x, y, byteIndex, byteOffset;
-  int width = rt->width;
-  int bytePerRecord = rt->pd->objectCount/8+1;
+  int x, y;
   int legendId = rt->playerId;
 
   for (x = 0; x < rt->width; x++) {
     for (y = 0; y < rt->height; y++) {
-      byteIndex = ((y * width * bytePerRecord * 8) + (x * bytePerRecord * 8))/8;
-      for (byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
-        if ((rt->pd->aliasLegend[legendId].mask[byteOffset] & rt->oMap[byteIndex + byteOffset]) != 0) {
-          addToMove(rt, legendObjId(rt, legendId, x, y), dir);
-        }
+      if (legendAt(rt, legendId, x, y)) {
+        addToMove(rt, legendObjId(rt, legendId, x, y), dir);
       }
     }
   }
@@ -1178,6 +1148,21 @@ void startGame(Runtime * rt, FILE * file) {
   }
 }
 
+int playerLocation(Runtime * rt) {
+  int x, y;
+  int width = rt->width;
+  int legendId = rt->playerId;
+
+  for (x = 0; x < rt->width; x++) {
+    for (y = 0; y < rt->height; y++) {
+      if (legendAt(rt, legendId, x, y)) {
+        return (y * width + x);
+      }
+    }
+  }
+  return -1;
+}
+
 void preUpdate(Runtime * rt) {
   rt->doAgain = 0;
   rt->didUndo = 0;
@@ -1233,31 +1218,19 @@ void update(Runtime * rt, Direction dir) {
 }
 
 int verifyOne(Runtime * rt, int legendId, int containerId, int hasOnQualifier) {
-  int x, y, byteIndex, byteOffset, matched;
-  int width = rt->width;
-  int bytePerRecord = rt->pd->objectCount/8+1;
-
+  int x, y, matched;
   for (x = 0; x < rt->width; x++) {
     for (y = 0; y < rt->height; y++) {
-      matched = 0;
-      byteIndex = ((y * width * bytePerRecord * 8) + (x * bytePerRecord * 8))/8;
-      for (byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
-        if ((rt->pd->aliasLegend[legendId].mask[byteOffset] & rt->oMap[byteIndex + byteOffset]) != 0) {
-          matched = 1;
-          if (hasOnQualifier == 0) {
-            return 1;
-          }
-
-        }
-      }
+      matched = legendAt(rt, legendId, x, y);
       if (matched) {
-        for (byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
-          if ((rt->pd->aliasLegend[containerId].mask[byteOffset] & rt->oMap[byteIndex + byteOffset]) != 0) {
+        if (hasOnQualifier == 0) {
+          return 1;
+        } else {
+          if (legendAt(rt, containerId, x, y)) {
             return 1;
           }
         }
       }
-
     }
   }
   return 0;
@@ -1268,27 +1241,17 @@ int verifyNone(Runtime * rt, int thingId, int containerId, int hasOnQualifier) {
 }
 
 int verifyAll(Runtime * rt, int legendId, int containerId, int hasOnQualifier) {
-  int x, y, byteIndex, byteOffset, thingMatched, containerMatched;
-  int width = rt->width;
-  int bytePerRecord = rt->pd->objectCount/8+1;
+  int x, y, thingMatched, containerMatched;
 
   for (x = 0; x < rt->width; x++) {
     for (y = 0; y < rt->height; y++) {
       thingMatched = 0;
       containerMatched = 0;
-      byteIndex = ((y * width * bytePerRecord * 8) + (x * bytePerRecord * 8))/8;
-      for (byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
-        if ((rt->pd->aliasLegend[legendId].mask[byteOffset] & rt->oMap[byteIndex + byteOffset]) != 0) {
-          thingMatched = 1;
-        }
-      }
+      thingMatched = legendAt(rt, legendId, x, y);
       if (thingMatched) {
-        for (byteOffset = 0; byteOffset < bytePerRecord; byteOffset++) {
-          if ((rt->pd->aliasLegend[containerId].mask[byteOffset] & rt->oMap[byteIndex + byteOffset]) != 0) {
-            containerMatched = 1;
-          }
-        }
+        containerMatched = legendAt(rt, containerId, x, y);
       }
+
       if (thingMatched ^ containerMatched) {
         return 0;
       }

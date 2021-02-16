@@ -226,6 +226,8 @@ typedef struct PuzzleData {
 
   // interval
   float keyRepeatInterval;
+  // TODO: these set flags don't do what we want... again always triggers regardless of if it is set
+  //       realtime interval does need this flag though.
   int setAgainInterval;
   float againInterval;
   int setRealtimeInterval;

@@ -31,7 +31,7 @@ nc: parser
 	${CC} -o ./bin/ncpuzzlescript puzzle.tab.c ncRender.c runner.c puzzleData.c main.c `pkg-config --cflags --libs ncurses`
 
 ray: parser
-	${CC} -o ./bin/raypuzzlescript puzzle.tab.c rayRender.c runner.c puzzleData.c main.c `pkg-config --cflags --libs raylib`
+	${CC} -O3 -o ./bin/raypuzzlescript puzzle.tab.c rayRender.c runner.c puzzleData.c main.c `pkg-config --cflags --libs raylib`
 
 3dray: parser
 	${CC} -o ./bin/3draypuzzlescript puzzle.tab.c 3drayRender.c runner.c puzzleData.c main.c `pkg-config --cflags --libs raylib`
@@ -39,5 +39,5 @@ ray: parser
 all: default sdl debug nc ray 3dray graphics_tests
 
 clean:
-	rm puzzle.tab.h puzzle.tab.c
-	rm bin/*
+	rm -p puzzle.tab.h puzzle.tab.c
+	rm -rf bin/*

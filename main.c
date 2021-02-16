@@ -27,45 +27,38 @@ int main(int argc, char ** argv) {
     render(&rt);
     frameCounter++;
 
-    if ((rt.doAgain && rt.pd->againInterval*60.0f < frameCounter)) {
-      tick(&rt);
-      frameCounter = 0;
-    }
     if (rt.doAgain) {
-      printf("Doing again\n");
-      continue;
-    }
-
-    if (rt.pd->setRealtimeInterval) {
-      if (rt.pd->realTimeInterval > 0 && rt.pd->realTimeInterval*60.0f < frameCounter) {
+      if (rt.pd->againInterval*60.0f < frameCounter) {
         tick(&rt);
         frameCounter = 0;
       }
-    }
-
-
-
-    inputDir = handleInput(&rt, input());
-    if (inputDir != UNSPECIFIED) {
-      if (inputDir == QUIT) {
-        break;
-      }
-      if (inputDir == UNDO) {
-        if (rt.statesCount > 0) {
-          undo(&rt);
+      continue;
+    } else if (rt.pd->setRealtimeInterval && rt.pd->realTimeInterval > 0 && rt.pd->realTimeInterval*60.0f < frameCounter) {
+      tick(&rt);
+      frameCounter = 0;
+    } else {
+      inputDir = handleInput(&rt, input());
+      if (inputDir != UNSPECIFIED) {
+        if (inputDir == QUIT) {
+          break;
         }
-        rt.didUndo = 0;
-      } else if (inputDir == NEXT_LEVEL) {
-        nextLevel(&rt);
-      } else {
-        update(&rt, inputDir);
-        if (rt.doAgain) {
-          frameCounter = 0;
+        if (inputDir == UNDO) {
+          if (rt.statesCount > 0) {
+            undo(&rt);
+          }
+          rt.didUndo = 0;
+        } else if (inputDir == NEXT_LEVEL) {
+          nextLevel(&rt);
+        } else {
+          update(&rt, inputDir);
+          if (rt.doAgain) {
+            frameCounter = 0;
+          }
         }
-      }
 
-      if (rt.gameWon == 1) {
-        break;
+        if (rt.gameWon == 1) {
+          break;
+        }
       }
     }
   }
