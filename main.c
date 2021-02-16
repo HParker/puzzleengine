@@ -20,15 +20,14 @@ int main(int argc, char ** argv) {
   }
   Runtime rt;
   startGame(&rt, file);
-  rt.toMoveCount = 0;
+
   initRenderer();
 
   while (1) {
-    // TODO: do a real again tick
-
     render(&rt);
     frameCounter++;
-    if ((rt.doAgain && rt.pd->againInterval*60.0f < frameCounter) || (rt.pd->realTimeInterval > 0 && rt.pd->realTimeInterval*60.0f < frameCounter)) {
+
+    if ((rt.doAgain && rt.pd->againInterval*60.0f < frameCounter)) {
       tick(&rt);
       frameCounter = 0;
     }
@@ -36,6 +35,14 @@ int main(int argc, char ** argv) {
       printf("Doing again\n");
       continue;
     }
+
+    if (rt.pd->setRealtimeInterval) {
+      if (rt.pd->realTimeInterval > 0 && rt.pd->realTimeInterval*60.0f < frameCounter) {
+        tick(&rt);
+        frameCounter = 0;
+      }
+    }
+
 
 
     inputDir = handleInput(&rt, input());

@@ -293,6 +293,8 @@ void endGame(Runtime * rt) {
 
   for (int i = 0; i < rt->statesCount; i++) {
     free(rt->states[i].objects);
+    free(rt->states[i].map);
+    free(rt->states[i].oMap);
     rt->states[i].objectCount = 0;
     rt->states[i].objectCapacity = 0;
   }
@@ -318,30 +320,30 @@ void undo(Runtime * rt) {
     return;
   }
 
-  if (rt->states[rt->statesCount].objectCount > 0) {
-    free(rt->states[rt->statesCount].objects);
-    /* free(rt->states[rt->statesCount].map); */
-    /* free(rt->states[rt->statesCount].oMap); */
-
-    rt->states[rt->statesCount].objectCount = 0;
-    rt->states[rt->statesCount].objectCapacity = 0;
-  }
-
-  rt->objectCount = rt->states[rt->statesCount - 1].objectCount;
-  rt->objectCapacity = rt->states[rt->statesCount - 1].objectCapacity;
-  rt->objects = realloc(rt->objects, sizeof(Obj) * rt->states[rt->statesCount - 1].objectCapacity);
-
   rt->levelIndex = rt->states[rt->statesCount - 1].levelIndex;
   rt->levelType = levelType(rt->levelIndex);
   rt->height = rt->pd->levels[rt->levelIndex].height;
   rt->width = rt->pd->levels[rt->levelIndex].width;
 
+  rt->objectCount = rt->states[rt->statesCount - 1].objectCount;
+  rt->objectCapacity = rt->states[rt->statesCount - 1].objectCapacity;
+
+  rt->objects = realloc(rt->objects, sizeof(Obj) * rt->states[rt->statesCount - 1].objectCapacity);
   memcpy(rt->objects, rt->states[rt->statesCount - 1].objects, sizeof(Obj) * rt->objectCapacity);
 
-  if (rt->levelType == SQUARES) {
-    rt->map = rt->states[rt->statesCount - 1].map;
-    rt->oMap = rt->states[rt->statesCount - 1].oMap;
-  }
+  rt->map = realloc(rt->map, (sizeof(int) * rt->height * rt->width * rt->pd->layerCount));
+  memcpy(rt->map, rt->states[rt->statesCount - 1].map, (sizeof(int) * rt->height * rt->width * rt->pd->layerCount));
+
+  int bytePerRecord = rt->pd->objectCount/8+1;
+
+  /* rt->oMap = realloc(rt->oMap, (rt->height * rt->width * bytePerRecord)); */
+  memcpy(rt->oMap, rt->states[rt->statesCount - 1].oMap, (rt->height * rt->width * bytePerRecord));
+
+  free(rt->states[rt->statesCount - 1].map);
+  free(rt->states[rt->statesCount - 1].oMap);
+  free(rt->states[rt->statesCount - 1].objects);
+  rt->states[rt->statesCount - 1].objectCount = 0;
+  rt->states[rt->statesCount - 1].objectCapacity = 0;
 
   rt->statesCount--;
   rt->historyCount--;
@@ -1084,16 +1086,6 @@ void addState(Runtime * rt) {
     }
   }
 
-  if (rt->states[rt->statesCount].objectCount > 0) {
-    // TODO: I feel like this shouldn't happen
-    free(rt->states[rt->statesCount].objects);
-    /* free(rt->states[rt->statesCount].map); */
-    /* free(rt->states[rt->statesCount].oMap); */
-
-    rt->states[rt->statesCount].objectCount = 0;
-    rt->states[rt->statesCount].objectCapacity = 0;
-  }
-
   rt->states[rt->statesCount].levelIndex = rt->levelIndex;
   rt->states[rt->statesCount].objectCount = rt->objectCount;
   rt->states[rt->statesCount].objectCapacity = rt->objectCapacity;
@@ -1101,16 +1093,12 @@ void addState(Runtime * rt) {
   rt->states[rt->statesCount].objects = malloc(sizeof(Obj) * rt->objectCapacity);
   memcpy(rt->states[rt->statesCount].objects, rt->objects, sizeof(Obj) * rt->objectCapacity);
 
-  if (rt->levelType == SQUARES) {
-    rt->states[rt->statesCount].map = malloc((sizeof(int) * rt->height * rt->width * rt->pd->layerCount));
-    memcpy(rt->states[rt->statesCount].map, rt->map, (sizeof(int) * rt->height * rt->width * rt->pd->layerCount));
+  rt->states[rt->statesCount].map = malloc((sizeof(int) * rt->height * rt->width * rt->pd->layerCount));
+  memcpy(rt->states[rt->statesCount].map, rt->map, (sizeof(int) * rt->height * rt->width * rt->pd->layerCount));
 
-    int bytePerRecord = rt->pd->objectCount/8+1;
-    rt->states[rt->statesCount].oMap = malloc((rt->height * rt->width * bytePerRecord));
-    memcpy(rt->states[rt->statesCount].oMap, rt->oMap, (rt->height * rt->width * bytePerRecord));
-  }
-
-
+  int bytePerRecord = rt->pd->objectCount/8+1;
+  rt->states[rt->statesCount].oMap = malloc((rt->height * rt->width * bytePerRecord));
+  memcpy(rt->states[rt->statesCount].oMap, rt->oMap, (rt->height * rt->width * bytePerRecord));
   rt->statesCount++;
 }
 
@@ -1147,9 +1135,14 @@ void loadLevel(Runtime * rt) {
         applyRules(rt, LATE);
       }
     }
+  } else {
+    rt->height = 0;
+    rt->width = 0;
   }
   for (int i = 0; i < rt->statesCount; i++) {
     free(rt->states[i].objects);
+    free(rt->states[i].map);
+    free(rt->states[i].oMap);
     rt->states[i].objectCount = 0;
     rt->states[i].objectCapacity = 0;
   }
@@ -1178,6 +1171,7 @@ void startGame(Runtime * rt, FILE * file) {
   loadLevel(rt);
 
   rt->doAgain = 0;
+  rt->toMoveCount = 0;
 
   if (rt->pd->verboseLogging) {
     printRules();
@@ -1211,11 +1205,9 @@ void update(Runtime * rt, Direction dir) {
     return;
   }
 
-  preUpdate(rt);
-  addHistory(rt, dir);
-  addState(rt);
-
   if (rt->levelType == SQUARES) {
+    preUpdate(rt);
+
     int startingPlayerLocation = playerLocation(rt);
     markPlayerAsMoving(rt, dir);
 
@@ -1228,13 +1220,16 @@ void update(Runtime * rt, Direction dir) {
       undo(rt);
       return;
     }
-
     updateLevel(rt);
+
+    addState(rt);
+
   } else {
     if (dir == USE) {
       nextLevel(rt);
     }
   }
+  addHistory(rt, dir);
 }
 
 int verifyOne(Runtime * rt, int legendId, int containerId, int hasOnQualifier) {

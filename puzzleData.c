@@ -485,8 +485,7 @@ void incLevel() {
     pd.levels = realloc(pd.levels, sizeof(Level) * pd.levelCapacity);
     for (int i = pd.levelCount + 1; i < pd.levelCapacity; i++) {
       pd.levels[i].tileIndex = 0;
-      pd.levels[i].tileCapacity = 100;
-      pd.levels[i].tiles = malloc(sizeof(char) * pd.levels[i].tileCapacity);
+      pd.levels[i].tileCapacity = 0;
       pd.levels[i].height = 0;
       pd.levels[i].width = 0;
     }
@@ -494,12 +493,17 @@ void incLevel() {
   pd.levelCount++;
 }
 
-void incTileIndex(int levelId) {
-  if (pd.levels[levelId].tileIndex + 1 >= pd.levels[levelId].tileCapacity) {
+void addTile(int levelId, char tileValue) {
+  if (pd.levels[levelId].tileCapacity == 0) {
+    pd.levels[levelId].tileCapacity += PUZZLE_MALLOC_INC;
+    pd.levels[levelId].tiles = malloc(sizeof(char) * pd.levels[levelId].tileCapacity);
+  } else if (pd.levels[levelId].tileIndex + 1 >= pd.levels[levelId].tileCapacity) {
     pd.levels[levelId].tileCapacity += PUZZLE_MALLOC_INC;
     pd.levels[levelId].tiles = realloc(pd.levels[levelId].tiles, sizeof(char) * pd.levels[levelId].tileCapacity);
   }
-  pd.levels[levelId].tileIndex++;
+
+  pd.levels[pd.levelCount].tiles[pd.levels[pd.levelCount].tileIndex] = tileValue;
+  pd.levels[pd.levelCount].tileIndex++;
 }
 
 void initStarterObjects() {
@@ -526,12 +530,22 @@ void initPuzzleData() {
   pd.requirePlayerMovement = 0;
   pd.throttleMovement = 0;
   pd.runRulesOnLevelStart = 0;
+  pd.setRealtimeInterval = 0;
   pd.realTimeInterval = 0;
+  pd.setAgainInterval = 0;
   pd.againInterval = 0.1f;
   pd.doesFlickScreen = 0;
   pd.doesZoomScreen = 0;
-  pd.backgroundColor = "black";
-  pd.textColor = "white";
+  pd.title = (char *) malloc(10);
+  strcpy(pd.title, "black");
+  pd.author = (char *) malloc(10);
+  strcpy(pd.author, "black");
+  pd.homepage = (char *) malloc(10);
+  strcpy(pd.homepage, "black");
+  pd.backgroundColor = (char *) malloc(10);
+  strcpy(pd.backgroundColor, "black");
+  pd.textColor = (char *) malloc(10);
+  strcpy(pd.textColor, "white");
 
   pd.objectCount = 0;
   pd.objectCapacity = 100;
@@ -593,8 +607,7 @@ void initPuzzleData() {
   pd.levels = malloc(sizeof(Level) * pd.levelCapacity);
   for (int i = 0; i < pd.levelCapacity; i++) {
     pd.levels[i].tileIndex = 0;
-    pd.levels[i].tileCapacity = 1;
-    pd.levels[i].tiles = malloc(sizeof(char) * pd.levels[i].tileCapacity);
+    pd.levels[i].tileCapacity = 0;
     pd.levels[i].height = 0;
     pd.levels[i].width = 0;
   }
@@ -789,8 +802,6 @@ void expandRules() {
       }
       rules[ruleCount].id = ruleCount;
       ruleCount++;
-    } else {
-      resetRule(&rules[ruleCount]);
     }
 
     if (pd.rules[ruleId].hasMultipleParts || pd.rules[ruleId].hasRelativeDirection || pd.rules[ruleId].directionConstraint != NONE) {
@@ -801,8 +812,6 @@ void expandRules() {
         }
         rules[ruleCount].id = ruleCount;
         ruleCount++;
-      } else {
-        resetRule(&rules[ruleCount]);
       }
 
       if (buildRule(LEFT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId], 0)) {
@@ -812,8 +821,6 @@ void expandRules() {
         }
         rules[ruleCount].id = ruleCount;
         ruleCount++;
-      } else {
-        resetRule(&rules[ruleCount]);
       }
       if (buildRule(RIGHT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId], 0)) {
         if (ruleCount + 1 >= ruleCapacity) {
@@ -822,8 +829,6 @@ void expandRules() {
         }
         rules[ruleCount].id = ruleCount;
         ruleCount++;
-      } else {
-        resetRule(&rules[ruleCount]);
       }
 
       // Reverse rules for
@@ -835,8 +840,6 @@ void expandRules() {
           }
           rules[ruleCount].id = ruleCount;
           ruleCount++;
-        } else {
-          resetRule(&rules[ruleCount]);
         }
 
         if (buildRule(DOWN, VERTICAL, &rules[ruleCount], &pd.rules[ruleId], 1)) {
@@ -846,8 +849,6 @@ void expandRules() {
           }
           rules[ruleCount].id = ruleCount;
           ruleCount++;
-        } else {
-          resetRule(&rules[ruleCount]);
         }
 
         if (buildRule(LEFT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId], 1)) {
@@ -857,8 +858,6 @@ void expandRules() {
           }
           rules[ruleCount].id = ruleCount;
           ruleCount++;
-        } else {
-          resetRule(&rules[ruleCount]);
         }
 
         if (buildRule(RIGHT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId], 1)) {
@@ -868,8 +867,6 @@ void expandRules() {
           }
           rules[ruleCount].id = ruleCount;
           ruleCount++;
-        } else {
-          resetRule(&rules[ruleCount]);
         }
       }
     }
@@ -915,20 +912,32 @@ PuzzleData * parsePuzzle(FILE * file) {
 void freePuzzle() {
   // TODO: we start at 2 because the first two objects are "static" basic objects.
   // We can make that explicit
+  free(pd.title);
+  free(pd.author);
+  free(pd.homepage);
+  free(pd.textColor);
+  free(pd.backgroundColor);
+
+  /* for (int i = 2; i < pd.objectCount; i++) { */
+  /*   free(pd.objects[i].name); */
+  /* } */
+
   for (int i = 2; i < pd.objectCount; i++) {
     free(pd.objects[i].name);
+    if (pd.objects[i].colorCount > 0) {
+      for (int c = 0; c < pd.objects[i].colorCount; c++) {
+        free(pd.objects[i].colors[c]);
+      }
+    }
   }
   free(pd.objects);
-
-  /* for (int i = 0; i < pd.aliasLegendCount; i++) { */
-  /*   free(pd.aliasLegend[i].key); */
-  /* } */
 
   for (int i = 0; i < pd.aliasLegendCapacity; i++) {
     free(pd.aliasLegend[i].objects);
   }
 
-  for (int i = 0; i < pd.aliasLegendCount; i++) {
+  for (int i = 2; i < pd.aliasLegendCount; i++) {
+    free(pd.aliasLegend[i].key);
     free(pd.aliasLegend[i].mask);
   }
   free(pd.aliasLegend);
@@ -945,8 +954,18 @@ void freePuzzle() {
 
   freeRules();
 
-  for (int i = 0; i < pd.levelCapacity; i++) {
-    free(pd.levels[i].tiles);
+  /* for (int i = 0; i < pd.levelCapacity; i++) { */
+  /*     free(pd.levels[i].tiles); */
+  /* } */
+
+  for (int i = 0; i < pd.levelCount; i++) {
+    if (pd.levels[i].levelType == SQUARES) {
+      if (pd.levels[i].tileCapacity > 0) {
+        free(pd.levels[i].tiles);
+      }
+    } else {
+      free(pd.levels[i].message);
+    }
   }
   free(pd.levels);
 

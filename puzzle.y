@@ -131,28 +131,28 @@ preamble_option: title
                | require_player_movement
                 ;
 
-title: TITLE ID { pd.title = $2; }
+title: TITLE ID { free(pd.title); pd.title = $2; }
 
-author: AUTHOR ID { pd.author = $2; }
+author: AUTHOR ID { free(pd.author); pd.author = $2; }
 
-homepage: HOMEPAGE ID { pd.homepage = $2; }
+homepage: HOMEPAGE ID { free(pd.homepage); pd.homepage = $2; }
 
 require_player_movement: REQUIRE_PLAYER_MOVEMENT { pd.requirePlayerMovement = 1; }
         ;
 
-color_palette: COLOR_PALETTE ID { pd.colorPalette = colorPaletteId($2); }
+color_palette: COLOR_PALETTE ID { pd.colorPalette = colorPaletteId($2); free($2); }
         ;
 
-again_interval: AGAIN_INTERVAL ID { pd.againInterval = 0.1f; }
+again_interval: AGAIN_INTERVAL DECIMAL { printf("set again\n"); pd.setAgainInterval = 1; pd.againInterval = 0.1f; }
         ;
 
-background_color: BACKGROUND_COLOR ID { pd.backgroundColor = $2; }
+background_color: BACKGROUND_COLOR ID { free(pd.backgroundColor); pd.backgroundColor = $2; }
         ;
 
 key_repeat_interval: KEY_REPEAT_INTERVAL DECIMAL { pd.keyRepeatInterval = 0.1f; }
         ;
 
-realtime_interval: REALTIME_INTERVAL DECIMAL { pd.realTimeInterval = $2; }
+realtime_interval: REALTIME_INTERVAL DECIMAL { pd.setRealtimeInterval = 1; pd.realTimeInterval = $2; }
         ;
 
 noaction: NOACTION { pd.noAction = 1; }
@@ -170,10 +170,10 @@ norestart: NORESTART { pd.noRestart = 1; }
 scanline: SCANLINE { pd.scanLine = 1; }
         ;
 
-text_color: TEXT_COLOR ID { pd.textColor = $2; }
+text_color: TEXT_COLOR ID { free(pd.textColor); pd.textColor = $2; }
         ;
 
-throttle_movement: THROTTLE_MOVEMENT ID { pd.throttleMovement = 1; }
+throttle_movement: THROTTLE_MOVEMENT ID { free($2); pd.throttleMovement = 1; }
         ;
 
 zoomscreen: ZOOMSCREEN DIGIT DIGIT {
@@ -217,9 +217,9 @@ object_definition: any_object_eol object_name some_object_eol colors some_object
 }
 
 object_name: OBJID OBJID {
-    pd.objects[pd.objectCount].name = $1;
+    pd.objects[pd.objectCount].name = strdup($1);
 
-    pd.aliasLegend[pd.aliasLegendCount].key = strdup($1);
+    pd.aliasLegend[pd.aliasLegendCount].key = $1;
     pd.aliasLegend[pd.aliasLegendCount].objects[0] = pd.objectCount;
 
     incAliasLegendObject(pd.aliasLegendCount);
@@ -228,15 +228,16 @@ object_name: OBJID OBJID {
     // single char key
     // They only reference AliasLegend names that have the actual object ID
     pd.glyphLegend[pd.glyphLegendCount].key = $2[0];
+    free($2);
     pd.glyphLegend[pd.glyphLegendCount].objects[0] = pd.objectCount;
 
     incGlyphLegendObject(pd.glyphLegendCount);
     incGlyphLegend();
 }
            | OBJID {
-    pd.objects[pd.objectCount].name = $1;
+    pd.objects[pd.objectCount].name = strdup($1);
 
-    pd.aliasLegend[pd.aliasLegendCount].key = strdup($1);
+    pd.aliasLegend[pd.aliasLegendCount].key = $1;
     pd.aliasLegend[pd.aliasLegendCount].objects[0] = pd.objectCount;
     incAliasLegendObject(pd.aliasLegendCount);
     incAliasLegend();
@@ -412,6 +413,7 @@ rule_postfix: OBJID {
 }
             | MESSAGE ID {
   fprintf(stderr, "this should show a message '%s'\n", $2);
+  free($2);
 }
 
 match_states:   match_states match_state | match_state;
@@ -604,7 +606,6 @@ tiles: tile tiles | tile
 
 tile: GLYPH {
   rowWidth++;
-  pd.levels[pd.levelCount].tiles[pd.levels[pd.levelCount].tileIndex] = $1;
-  incTileIndex(pd.levelCount);
+  addTile(pd.levelCount, $1);
 }
 %%

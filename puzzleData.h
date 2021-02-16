@@ -226,7 +226,9 @@ typedef struct PuzzleData {
 
   // interval
   float keyRepeatInterval;
+  int setAgainInterval;
   float againInterval;
+  int setRealtimeInterval;
   float realTimeInterval;
 
   // debug
@@ -426,7 +428,7 @@ extern int ruleCommandContains(Rule * rule, Command cmd);
 
 extern void incWinCondition();
 extern void incLevel();
-extern void incTileIndex(int levelId);
+extern void addTile(int levelId, char tileValue);
 extern FILE * yyin;
 extern int yyparse();
 
