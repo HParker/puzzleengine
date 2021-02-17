@@ -537,11 +537,11 @@ void initPuzzleData() {
   pd.doesFlickScreen = 0;
   pd.doesZoomScreen = 0;
   pd.title = (char *) malloc(10);
-  strcpy(pd.title, "black");
+  strcpy(pd.title, "Puzzle");
   pd.author = (char *) malloc(10);
-  strcpy(pd.author, "black");
-  pd.homepage = (char *) malloc(10);
-  strcpy(pd.homepage, "black");
+  strcpy(pd.author, "Me");
+  pd.homepage = (char *) malloc(20);
+  strcpy(pd.homepage, "example.com");
   pd.backgroundColor = (char *) malloc(10);
   strcpy(pd.backgroundColor, "black");
   pd.textColor = (char *) malloc(10);
@@ -1016,10 +1016,11 @@ char objectGlyph(int objId) {
 
 int legendIdForGlyph(char glyph) {
   for (int i = 0; i < pd.glyphLegendCount; i++) {
-    if (toupper(pd.glyphLegend[i].key) == toupper(glyph)) {
+    if (tolower(pd.glyphLegend[i].key) == tolower(glyph)) {
       return i;
     }
   }
+
   fprintf(stderr, "err: no id found '%c'\n", glyph);
   return -1;
 }
@@ -1029,20 +1030,6 @@ int aliasLegendContains(int legendId, int objId) {
   int bit_index = objId % 8;
   int bit_mask = (1 << bit_index);
   return ((pd.aliasLegend[legendId].mask[byte_index] & bit_mask) != 0);
-}
-
-int idForGlyph(char glyph) {
-  for (int i = 0; i < pd.glyphLegendCount; i++) {
-    if (toupper(pd.glyphLegend[i].key) == toupper(glyph)) {
-      if (pd.glyphLegend[i].objectCount > 1) {
-        fprintf(stderr, "err: multi object key '%c'\n", glyph);
-      } else {
-        return pd.glyphLegend[i].objects[0];
-      }
-    }
-  }
-  fprintf(stderr, "err: no id found '%c'\n", glyph);
-  return -1;
 }
 
 int objectLayer(int objId) {

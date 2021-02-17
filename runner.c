@@ -417,19 +417,19 @@ int specificLegendId(Runtime * rt, int legendId, Match * match) {
 void debugRuleApplication(Runtime * rt, Match * match) {
   printf("Rule: %s\n", ruleString(match->ruleIndex));
 
-  /* for (int i = 0; i < match->partCount; i++) { */
-  /*   printf("MatchPart %i/%i\n  new: %i, objIndex: %i, goalId: %i (%s), dir: %i, id: (%i,%i)\n", */
-  /*          i, */
-  /*          match->partCount, */
-  /*          match->parts[i].newObject, */
-  /*          match->parts[i].objIndex, */
-  /*          match->parts[i].goalId, */
-  /*          objectName(match->parts[i].goalId), */
-  /*          match->parts[i].actualDirection, */
-  /*          match->parts[i].goalX, */
-  /*          match->parts[i].goalY */
-  /*          ); */
-  /* } */
+  for (int i = 0; i < match->partCount; i++) {
+    printf("MatchPart %i/%i\n  new: %i, objIndex: %i, goalId: %i (%s), dir: %i, id: (%i,%i)\n",
+           i,
+           match->partCount,
+           match->parts[i].newObject,
+           match->parts[i].objIndex,
+           match->parts[i].goalId,
+           objectName(match->parts[i].goalId),
+           match->parts[i].actualDirection,
+           match->parts[i].goalX,
+           match->parts[i].goalY
+           );
+  }
 }
 
 void applyMatch(Runtime * rt, Match * match) {
@@ -568,7 +568,7 @@ int alreadyResultIdentity(Runtime * rt, Rule * rule, int patternId, int partId, 
 
   int matched = 0;
   if (legendId == EMPTY_ID) {
-    return 1;
+    return 0;
   } else {
     if (ruleDir == COND_NO) {
       if (legendAt(rt, legendId, x, y) == 0) {
@@ -699,8 +699,8 @@ void replaceTile(Runtime * rt, Rule * rule, int patternId, int partId, Direction
                ruleDir == DOWN ||
                ruleDir == LEFT ||
                ruleDir == RIGHT)) &&
-              ruleDir != matchDir
-              ) {
+              ruleDir != matchDir) {
+
             match->parts[match->partCount].newObject = 0;
             match->parts[match->partCount].goalId = -1; //aliasLegendObjectId(legendId, 0);
             match->parts[match->partCount].goalX = match->targetX;
@@ -728,7 +728,6 @@ void replaceTile(Runtime * rt, Rule * rule, int patternId, int partId, Direction
 }
 
 int partIdentity(Runtime * rt, Rule * rule, int patternId, int partId, int identId, Direction appDir, Match * match) {
-  // bit/byte math
   int x = match->targetX;
   int y = match->targetY;
   Direction ruleDir = rule->matchPatterns[patternId].parts[partId].identity[identId].direction;
@@ -745,7 +744,6 @@ int partIdentity(Runtime * rt, Rule * rule, int patternId, int partId, int ident
         if (rule->executionTime == LATE || directionMatches(rt, rule, patternId, partId, identId, appDir, x, y)) {
           return 1;
         }
-
       }
     }
     return 0;
@@ -824,6 +822,7 @@ int completeMatch(Runtime * rt, Rule * rule, int patternId, Direction appDir, Ma
         if (rule->matchPatterns[patternId].parts[partId].identityCount > 0 && rule->resultPatternCount > 0 && rule->resultPatterns[patternId].partCount > 0 && rule->resultPatterns[patternId].parts[partId].identityCount > 0 &&
             rule->matchPatterns[patternId].parts[partId].identityCount < rule->resultPatterns[patternId].parts[partId].identityCount &&
             beforePartCount >= afterPartCount) {
+          /* printf("FAILING DUE TO LACK OF CHANFGES\n"); */
           success = 0;
           match->partCount = prevPartCount;
         }
@@ -881,7 +880,7 @@ int applyPattern(Runtime * rt, Rule * rule, int patternId, Match * match) {
             /* } */
             return 1;
           } else {
-            match->partCount = 0;
+            match->partCount = prevPartCount;
             match->cancel = 0;
           }
         }
@@ -903,9 +902,9 @@ int applyRule(Runtime * rt, Rule * rule, Match * match) {
       return 0;
     }
   }
-  /* if (rt->pd->verboseLogging) { */
-  /*   debugRender(rt, match); */
-  /* } */
+  if (rt->pd->verboseLogging) {
+    debugRender(rt, match);
+  }
   return 1;
 }
 

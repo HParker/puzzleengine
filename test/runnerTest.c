@@ -268,6 +268,15 @@ START_TEST (test_runs_wall_clip)
 }
 END_TEST
 
+START_TEST (test_runs_samson_goes_to_the_barber)
+{
+  Runtime rt;
+  test_solution_file(&rt, "./puzzles/samson_goes_to_the_barber.puzz", "./solutions/samson_goes_to_the_barber.solution");
+  ck_assert_int_eq(1, rt.gameWon);
+  endGame(&rt);
+}
+END_TEST
+
 Suite * puzzle_script_parser_suite(void)
 {
   Suite * s;
@@ -307,6 +316,7 @@ Suite * puzzle_script_parser_suite(void)
   tcase_add_test(test_Runner, test_runs_pathlines);
   tcase_add_test(test_Runner, test_runs_zoom_test);
   tcase_add_test(test_Runner, test_runs_wall_clip);
+  tcase_add_test(test_Runner, test_runs_samson_goes_to_the_barber);
 
   // TODO: I believe realtime/ticks don't run the same in test
   //       this causes sasquatch to fail.

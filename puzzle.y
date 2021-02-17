@@ -143,7 +143,7 @@ require_player_movement: REQUIRE_PLAYER_MOVEMENT { pd.requirePlayerMovement = 1;
 color_palette: COLOR_PALETTE ID { pd.colorPalette = colorPaletteId($2); free($2); }
         ;
 
-again_interval: AGAIN_INTERVAL DECIMAL { printf("set again\n"); pd.setAgainInterval = 1; pd.againInterval = 0.1f; }
+again_interval: AGAIN_INTERVAL DECIMAL { pd.setAgainInterval = 1; pd.againInterval = 0.1f; }
         ;
 
 background_color: BACKGROUND_COLOR ID { free(pd.backgroundColor); pd.backgroundColor = $2; }
@@ -233,6 +233,15 @@ object_name: OBJID OBJID {
 
     incGlyphLegendObject(pd.glyphLegendCount);
     incGlyphLegend();
+
+    if (strlen($1) == 1) {
+      pd.glyphLegend[pd.glyphLegendCount].key = tolower($1[0]);
+      pd.glyphLegend[pd.glyphLegendCount].objects[0] = pd.objectCount;
+
+      incGlyphLegendObject(pd.glyphLegendCount);
+      incGlyphLegend();
+    }
+
 }
            | OBJID {
     pd.objects[pd.objectCount].name = strdup($1);
@@ -241,6 +250,14 @@ object_name: OBJID OBJID {
     pd.aliasLegend[pd.aliasLegendCount].objects[0] = pd.objectCount;
     incAliasLegendObject(pd.aliasLegendCount);
     incAliasLegend();
+
+    if (strlen($1) == 1) {
+      pd.glyphLegend[pd.glyphLegendCount].key = tolower($1[0]);
+      pd.glyphLegend[pd.glyphLegendCount].objects[0] = pd.objectCount;
+
+      incGlyphLegendObject(pd.glyphLegendCount);
+      incGlyphLegend();
+    }
 }
 
 colors: colors color | color;

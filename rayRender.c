@@ -197,7 +197,7 @@ Color colorFromSprite(Runtime * rt, int objId, int tileIndex) {
 
 void initRenderer() {
   InitWindow(WINDOW_SIZE, WINDOW_SIZE, "My Puzzle");
-  SetTargetFPS(30);
+  SetTargetFPS(120);
 }
 
 void closeRenderer() {
@@ -526,7 +526,7 @@ void render(Runtime * rt) {
     renderMessage(rt);
     break;
   }
-  DrawFPS(10,10);
+  /* DrawFPS(10,10); */
   if (rt->pd->verboseLogging) {
     drawDebugBar(rt);
   }

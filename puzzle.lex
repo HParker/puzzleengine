@@ -201,7 +201,7 @@ color (color|colour)
 }
 
 <LEGEND>^{glyph} {
-  yylval.tile = yytext[0];
+  yylval.tile = tolower(yytext[0]);
   return LEGEND_GLYPH;
 }
 
@@ -230,6 +230,9 @@ color (color|colour)
 }
 
 <COLLISIONLAYERS>[, ]+
+
+<RULES>startloop
+<RULES>endloop
 
 <RULES>\[ {
   return OPEN_SQUARE;
@@ -394,7 +397,7 @@ message[ ]+ {
 }
 
 <LEVELS>{glyph} {
-  yylval.tile = yytext[0];
+  yylval.tile = tolower(yytext[0]);
   return GLYPH;
 }
 

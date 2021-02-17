@@ -14,7 +14,7 @@ graphics_tests: parser
 	${CC} -g -o ./bin/sdlRunnerTest puzzle.tab.c sdlRender.c puzzleData.c runner.c test/runnerTest.c `pkg-config --cflags --libs check sdl2`
 
 check_graphics: graphics_tests
-	CK_FORK=no ./bin/rayRunnerTest && CK_FORK=no ./bin/3drayRunnerTest && CK_FORK=no ./bin/sdlRunnerTest
+	CK_FORK=no ./bin/rayRunnerTest # && CK_FORK=no ./bin/3drayRunnerTest && CK_FORK=no ./bin/sdlRunnerTest
 
 parser:
 	${BISON} -d puzzle.y
