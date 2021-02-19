@@ -195,8 +195,8 @@ Color colorFromSprite(Runtime * rt, int objId, int tileIndex) {
 #define WINDOW_SIZE 940
 #define SPRITE_WIDTH 5
 
-void initRenderer() {
-  InitWindow(WINDOW_SIZE, WINDOW_SIZE, "My Puzzle");
+void initRenderer(char * name) {
+  InitWindow(WINDOW_SIZE, WINDOW_SIZE, name);
   SetTargetFPS(120);
 }
 

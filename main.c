@@ -21,7 +21,7 @@ int main(int argc, char ** argv) {
   Runtime rt;
   startGame(&rt, file);
 
-  initRenderer();
+  initRenderer(rt.pd->title);
 
   while (1) {
     render(&rt);

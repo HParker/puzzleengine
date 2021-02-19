@@ -64,12 +64,12 @@ void drawObj(Runtime * rt, int objIndex) {
   }
 }
 
-void initRenderer() {
+void initRenderer(char * name) {
   if (SDL_Init(SDL_INIT_VIDEO) != 0){
     fprintf(stderr, "ERROR Initializing SDL2\n");
   }
 
-  window = SDL_CreateWindow("Game", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_SIZE, WINDOW_SIZE, SDL_WINDOW_SHOWN);
+  window = SDL_CreateWindow(name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_SIZE, WINDOW_SIZE, SDL_WINDOW_SHOWN);
   if (window == NULL) {
     fprintf(stderr, "ERROR making window\n");
   }

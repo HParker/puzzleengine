@@ -334,7 +334,7 @@ int main(void)
   Suite *s;
   SRunner *sr;
 
-  initRenderer();
+  initRenderer("TEST");
 
   s = puzzle_script_parser_suite();
   sr = srunner_create(s);
