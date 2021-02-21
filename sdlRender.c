@@ -155,7 +155,7 @@ Direction input() {
   // block on input for now. I don't think we have to do this forever.
   if (SDL_PollEvent(&e)) {
     if (e.type == SDL_QUIT) {
-      return 'q';
+      return QUIT;
     } else if (e.type == SDL_KEYDOWN) {
       switch (e.key.keysym.sym) {
       case SDLK_q:
