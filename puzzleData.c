@@ -1,9 +1,9 @@
 // Interface to puzzle data extracted from the puzzlescript file
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
 #include "puzzleData.h"
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 extern PuzzleData pd;
 
@@ -18,69 +18,30 @@ void verboseLoggingOn() {
   }
 }
 
-
 // TODO: util this
-char * dirName(Direction dir) {
-  char * directionNames[] = {
-                             "RIGHT",
-                             "UP",
-                             "LEFT",
-                             "DOWN",
-                             "HORIZONTAL",
-                             "VERTICAL",
-                             "STATIONARY",
-                             "RANDOMDIR",
-                             "RANDOM",
-                             "^",
-                             "v",
-                             "<",
-                             ">",
-                             "USE",
-                             "NONE",
-                             "NO",
-                             "QUIT",
-                             "RESTART",
-                             "UNDO",
-                             "UNSPECIFIED",
-                             "MOVING",
-                             "DEBUGGER",
-                             "PARALLEL",
-                             "PERPENDICULAR"
-  };
+char *dirName(Direction dir) {
+  char *directionNames[] = {
+      "RIGHT",    "UP",         "LEFT",      "DOWN",         "HORIZONTAL",
+      "VERTICAL", "STATIONARY", "RANDOMDIR", "RANDOM",       "^",
+      "v",        "<",          ">",         "USE",          "NONE",
+      "NO",       "QUIT",       "RESTART",   "UNDO",         "UNSPECIFIED",
+      "MOVING",   "DEBUGGER",   "PARALLEL",  "PERPENDICULAR"};
   return directionNames[dir];
 }
 
-char * commandName(Command cmd) {
-  char * commandNames[] = {
-                           "SFX0",
-                           "SFX1",
-                           "SFX2",
-                           "SFX3",
-                           "SFX4",
-                           "SFX5",
-                           "SFX6",
-                           "SFX7",
-                           "SFX8",
-                           "SFX9",
-                           "AGAIN",
-                           "CANCEL",
-                           "CHECKPOINT",
-                           "CMD_RESTART",
-                           "WIN"
-  };
+char *commandName(Command cmd) {
+  char *commandNames[] = {"SFX0",       "SFX1",        "SFX2",  "SFX3",
+                          "SFX4",       "SFX5",        "SFX6",  "SFX7",
+                          "SFX8",       "SFX9",        "AGAIN", "CANCEL",
+                          "CHECKPOINT", "CMD_RESTART", "WIN"};
   return commandNames[cmd];
 }
 
-char * backgroundColor() {
-  return pd.backgroundColor;
-}
+char *backgroundColor() { return pd.backgroundColor; }
 
-char * textColor() {
-  return pd.textColor;
-}
+char *textColor() { return pd.textColor; }
 
-
-int colorPaletteId(char * name) {
+int colorPaletteId(char *name) {
   if (strcasecmp(name, "mastersystem") == 0) {
     return 1;
   } else if (strcasecmp(name, "gameboycolour") == 0) {
@@ -133,11 +94,13 @@ void incAliasLegend() {
   if (pd.aliasLegendCount + 1 >= pd.aliasLegendCapacity) {
     fprintf(stderr, "aliasLegend REALLOC\n");
     pd.aliasLegendCapacity += PUZZLE_MALLOC_INC;
-    pd.aliasLegend = realloc(pd.aliasLegend, sizeof(AliasLegend) * pd.aliasLegendCapacity);
+    pd.aliasLegend =
+        realloc(pd.aliasLegend, sizeof(AliasLegend) * pd.aliasLegendCapacity);
     for (int i = pd.aliasLegendCount + 1; i < pd.aliasLegendCapacity; i++) {
       pd.aliasLegend[i].objectCount = 0;
       pd.aliasLegend[i].objectCapacity = 10;
-      pd.aliasLegend[i].objects = malloc(sizeof(int) * pd.aliasLegend[i].objectCapacity);
+      pd.aliasLegend[i].objects =
+          malloc(sizeof(int) * pd.aliasLegend[i].objectCapacity);
     }
   }
   pd.aliasLegendCount++;
@@ -147,43 +110,52 @@ void incGlyphLegend() {
   if (pd.glyphLegendCount + 1 >= pd.glyphLegendCapacity) {
     fprintf(stderr, "glyphLegend REALLOC\n");
     pd.glyphLegendCapacity += PUZZLE_MALLOC_INC;
-    pd.glyphLegend = realloc(pd.glyphLegend, sizeof(GlyphLegend) * pd.glyphLegendCapacity);
+    pd.glyphLegend =
+        realloc(pd.glyphLegend, sizeof(GlyphLegend) * pd.glyphLegendCapacity);
     for (int i = pd.glyphLegendCount + 1; i < pd.glyphLegendCapacity; i++) {
       pd.glyphLegend[i].objectCount = 0;
       pd.glyphLegend[i].objectCapacity = 10;
-      pd.glyphLegend[i].objects = malloc(sizeof(int) * pd.glyphLegend[i].objectCapacity);
+      pd.glyphLegend[i].objects =
+          malloc(sizeof(int) * pd.glyphLegend[i].objectCapacity);
     }
   }
   pd.glyphLegendCount++;
 }
 
 void incAliasLegendObject(int legendId) {
-  if (pd.aliasLegend[legendId].objectCount + 1 >= pd.aliasLegend[legendId].objectCapacity) {
+  if (pd.aliasLegend[legendId].objectCount + 1 >=
+      pd.aliasLegend[legendId].objectCapacity) {
     pd.aliasLegend[legendId].objectCapacity += PUZZLE_MALLOC_INC;
-    pd.aliasLegend[legendId].objects = realloc(pd.aliasLegend[legendId].objects, sizeof(int) * pd.aliasLegend[legendId].objectCapacity);
+    pd.aliasLegend[legendId].objects =
+        realloc(pd.aliasLegend[legendId].objects,
+                sizeof(int) * pd.aliasLegend[legendId].objectCapacity);
   }
 
   pd.aliasLegend[legendId].objectCount++;
 }
 
-void addObjectsToAliasLegend(char * name) {
+void addObjectsToAliasLegend(char *name) {
   int legId = aliasLegendId(name);
 
   for (int i = 0; i < pd.aliasLegend[legId].objectCount; i++) {
-    pd.aliasLegend[pd.aliasLegendCount].objects[pd.aliasLegend[pd.aliasLegendCount].objectCount] = pd.aliasLegend[legId].objects[i];
+    pd.aliasLegend[pd.aliasLegendCount]
+        .objects[pd.aliasLegend[pd.aliasLegendCount].objectCount] =
+        pd.aliasLegend[legId].objects[i];
     incAliasLegendObject(pd.aliasLegendCount);
   }
 }
 
 void incGlyphLegendObject(int legendId) {
-  if (pd.glyphLegend[legendId].objectCount + 1 >= pd.glyphLegend[legendId].objectCapacity) {
+  if (pd.glyphLegend[legendId].objectCount + 1 >=
+      pd.glyphLegend[legendId].objectCapacity) {
     pd.glyphLegend[legendId].objectCapacity += PUZZLE_MALLOC_INC;
-    pd.glyphLegend[legendId].objects = realloc(pd.glyphLegend[legendId].objects, sizeof(int) * pd.glyphLegend[legendId].objectCapacity);
+    pd.glyphLegend[legendId].objects =
+        realloc(pd.glyphLegend[legendId].objects,
+                sizeof(int) * pd.glyphLegend[legendId].objectCapacity);
   }
 
   pd.glyphLegend[legendId].objectCount++;
 }
-
 
 void incLayer() {
   if (pd.layerCount + 1 >= pd.layerCapacity) {
@@ -193,27 +165,33 @@ void incLayer() {
     for (int i = pd.layerCount + 1; i < pd.layerCapacity; i++) {
       pd.layers[i].count = 0;
       pd.layers[i].objectCapacity = 100;
-      pd.layers[i].objectIds = malloc(sizeof(int) * pd.layers[i].objectCapacity);
+      pd.layers[i].objectIds =
+          malloc(sizeof(int) * pd.layers[i].objectCapacity);
     }
   }
   pd.layerCount++;
 }
 
-void addObjectsToLayer(char * name) {
+void addObjectsToLayer(char *name) {
   int legId = aliasLegendId(name);
-  if (pd.layers[pd.layerCount].count + pd.aliasLegend[legId].objectCount + 1 >= pd.layers[pd.layerCount].objectCapacity) {
-    pd.layers[pd.layerCount].objectCapacity += pd.aliasLegend[legId].objectCount + PUZZLE_MALLOC_INC;
-    pd.layers[pd.layerCount].objectIds = realloc(pd.layers[pd.layerCount].objectIds, sizeof(int) * pd.layers[pd.layerCount].objectCapacity);
+  if (pd.layers[pd.layerCount].count + pd.aliasLegend[legId].objectCount + 1 >=
+      pd.layers[pd.layerCount].objectCapacity) {
+    pd.layers[pd.layerCount].objectCapacity +=
+        pd.aliasLegend[legId].objectCount + PUZZLE_MALLOC_INC;
+    pd.layers[pd.layerCount].objectIds =
+        realloc(pd.layers[pd.layerCount].objectIds,
+                sizeof(int) * pd.layers[pd.layerCount].objectCapacity);
   }
 
   for (int i = 0; i < pd.aliasLegend[legId].objectCount; i++) {
-    pd.layers[pd.layerCount].objectIds[pd.layers[pd.layerCount].count] = pd.aliasLegend[legId].objects[i];
+    pd.layers[pd.layerCount].objectIds[pd.layers[pd.layerCount].count] =
+        pd.aliasLegend[legId].objects[i];
     pd.layers[pd.layerCount].count++;
   }
 }
 
-char * ruleString(int ruleId) {
-  char * ruleStr = malloc(sizeof(char) * 4096);
+char *ruleString(int ruleId) {
+  char *ruleStr = malloc(sizeof(char) * 4096);
 
   char lineNumber[80];
   sprintf(lineNumber, "%d. ", pd.rules[ruleId].lineNo);
@@ -221,12 +199,27 @@ char * ruleString(int ruleId) {
 
   strcat(ruleStr, dirName(pd.rules[ruleId].directionConstraint));
   strcat(ruleStr, " ");
-  for (int patternId = 0; patternId < pd.rules[ruleId].matchPatternCount; patternId++) {
+  for (int patternId = 0; patternId < pd.rules[ruleId].matchPatternCount;
+       patternId++) {
     strcat(ruleStr, "[ ");
-    for (int partId = 0; partId < pd.rules[ruleId].matchPatterns[patternId].partCount; partId++) {
-      for (int identId = 0; identId < pd.rules[ruleId].matchPatterns[patternId].parts[partId].identityCount; identId++) {
-        Direction ruleDir = pd.rules[ruleId].matchPatterns[patternId].parts[partId].identity[identId].direction;
-        int legendId = pd.rules[ruleId].matchPatterns[patternId].parts[partId].identity[identId].legendId;
+    for (int partId = 0;
+         partId < pd.rules[ruleId].matchPatterns[patternId].partCount;
+         partId++) {
+      for (int identId = 0; identId < pd.rules[ruleId]
+                                          .matchPatterns[patternId]
+                                          .parts[partId]
+                                          .identityCount;
+           identId++) {
+        Direction ruleDir = pd.rules[ruleId]
+                                .matchPatterns[patternId]
+                                .parts[partId]
+                                .identity[identId]
+                                .direction;
+        int legendId = pd.rules[ruleId]
+                           .matchPatterns[patternId]
+                           .parts[partId]
+                           .identity[identId]
+                           .legendId;
         if (ruleDir != UNSPECIFIED) {
           strcat(ruleStr, dirName(ruleDir));
           strcat(ruleStr, " ");
@@ -243,18 +236,33 @@ char * ruleString(int ruleId) {
 
   strcat(ruleStr, " -> ");
 
-  for (int patternId = 0; patternId < pd.rules[ruleId].resultPatternCount; patternId++) {
+  for (int patternId = 0; patternId < pd.rules[ruleId].resultPatternCount;
+       patternId++) {
     strcat(ruleStr, "[ ");
-    for (int partId = 0; partId < pd.rules[ruleId].resultPatterns[patternId].partCount; partId++) {
-      for (int identId = 0; identId < pd.rules[ruleId].resultPatterns[patternId].parts[partId].identityCount; identId++) {
-        Direction ruleDir = pd.rules[ruleId].resultPatterns[patternId].parts[partId].identity[identId].direction;
-        int legendId = pd.rules[ruleId].resultPatterns[patternId].parts[partId].identity[identId].legendId;
+    for (int partId = 0;
+         partId < pd.rules[ruleId].resultPatterns[patternId].partCount;
+         partId++) {
+      for (int identId = 0; identId < pd.rules[ruleId]
+                                          .resultPatterns[patternId]
+                                          .parts[partId]
+                                          .identityCount;
+           identId++) {
+        Direction ruleDir = pd.rules[ruleId]
+                                .resultPatterns[patternId]
+                                .parts[partId]
+                                .identity[identId]
+                                .direction;
+        int legendId = pd.rules[ruleId]
+                           .resultPatterns[patternId]
+                           .parts[partId]
+                           .identity[identId]
+                           .legendId;
         if (ruleDir != UNSPECIFIED) {
           strcat(ruleStr, dirName(ruleDir));
           strcat(ruleStr, " ");
         }
         strcat(ruleStr, aliasLegendKey(legendId));
-          strcat(ruleStr, " ");
+        strcat(ruleStr, " ");
       }
       if (partId + 1 < pd.rules[ruleId].resultPatterns[patternId].partCount) {
         strcat(ruleStr, " | ");
@@ -279,15 +287,17 @@ void printLegends() {
   for (int legendId = 0; legendId < pd.aliasLegendCount; legendId++) {
     printf("%s (%i): ", pd.aliasLegend[legendId].key, legendId);
     // TODO: we can print the relation here: `and/or`
-    for (int objectId = 0; objectId < pd.aliasLegend[legendId].objectCount; objectId++) {
-      printf("%s (%i) ", objectName(pd.aliasLegend[legendId].objects[objectId]), pd.aliasLegend[legendId].objects[objectId]);
+    for (int objectId = 0; objectId < pd.aliasLegend[legendId].objectCount;
+         objectId++) {
+      printf("%s (%i) ", objectName(pd.aliasLegend[legendId].objects[objectId]),
+             pd.aliasLegend[legendId].objects[objectId]);
     }
     printf("\n");
   }
 }
 
 void printRules() {
-  char * rstr;
+  char *rstr;
   for (int ruleId = 0; ruleId < pd.ruleCount; ruleId++) {
     rstr = ruleString(ruleId);
     printf("%i: %s\n", ruleId, rstr);
@@ -298,8 +308,11 @@ void printRules() {
 void printLayers() {
   for (int layerId = 0; layerId < pd.layerCount; layerId++) {
     printf("%i: ", layerId);
-    for (int layerObjectId = 0; layerObjectId < pd.layers[layerId].count; layerObjectId++) {
-      printf("%s (%i) ", objectName(pd.layers[layerId].objectIds[layerObjectId]), pd.layers[layerId].objectIds[layerObjectId]);
+    for (int layerObjectId = 0; layerObjectId < pd.layers[layerId].count;
+         layerObjectId++) {
+      printf("%s (%i) ",
+             objectName(pd.layers[layerId].objectIds[layerObjectId]),
+             pd.layers[layerId].objectIds[layerObjectId]);
     }
     printf("\n");
   }
@@ -318,13 +331,12 @@ void printDebug() {
   // printLevels();
 }
 
-
-void initRuleIdentity(RuleIdentity * ruleIdent) {
+void initRuleIdentity(RuleIdentity *ruleIdent) {
   ruleIdent->direction = UNSPECIFIED;
   ruleIdent->legendId = 1; // TODO: this is empty, but that isn't clear
 }
 
-void initPart(RulePart * part) {
+void initPart(RulePart *part) {
   part->identityCount = 0;
   part->identityCapacity = 1;
   part->isSpread = 0;
@@ -334,7 +346,7 @@ void initPart(RulePart * part) {
   }
 }
 
-void initPattern(Pattern * ruleState) {
+void initPattern(Pattern *ruleState) {
   ruleState->partCount = 0;
   ruleState->partCapacity = 1;
   ruleState->parts = malloc(sizeof(RulePart) * ruleState->partCapacity);
@@ -343,7 +355,7 @@ void initPattern(Pattern * ruleState) {
   }
 }
 
-void initRule(Rule * rule) {
+void initRule(Rule *rule) {
   rule->lineNo = 0;
   rule->hasSpread = 0;
   rule->hasRelativeDirection = 0;
@@ -363,12 +375,13 @@ void initRule(Rule * rule) {
   rule->resultPatternCount = 0;
   rule->resultPatternCapacity = 1;
   rule->resultPatterns = malloc(sizeof(Pattern) * rule->resultPatternCapacity);
-  for (int patternId = 0; patternId < rule->resultPatternCapacity; patternId++) {
+  for (int patternId = 0; patternId < rule->resultPatternCapacity;
+       patternId++) {
     initPattern(&rule->resultPatterns[patternId]);
   }
 }
 
-void resetRule(Rule * rule) {
+void resetRule(Rule *rule) {
   rule->lineNo = 0;
   rule->hasSpread = 0;
 
@@ -387,13 +400,13 @@ void resetRule(Rule * rule) {
   rule->resultPatternCapacity = 1;
   free(rule->resultPatterns);
   rule->resultPatterns = malloc(sizeof(Pattern) * rule->resultPatternCapacity);
-  for (int patternId = 0; patternId < rule->resultPatternCapacity; patternId++) {
+  for (int patternId = 0; patternId < rule->resultPatternCapacity;
+       patternId++) {
     initPattern(&rule->resultPatterns[patternId]);
   }
 }
 
-
-Rule * reallocRule(Rule * rules, int newSize) {
+Rule *reallocRule(Rule *rules, int newSize) {
   return realloc(rules, sizeof(Rule) * newSize);
 }
 
@@ -410,56 +423,62 @@ void incRule() {
   pd.ruleCount++;
 }
 
-void incRuleMatchState(Rule * rule) {
+void incRuleMatchState(Rule *rule) {
   if (rule->matchPatternCount + 1 >= rule->matchPatternCapacity) {
     rule->matchPatternCapacity += PUZZLE_MALLOC_INC;
-    rule->matchPatterns = realloc(rule->matchPatterns, sizeof(Pattern) * rule->matchPatternCapacity);
-    for (int patternId = rule->matchPatternCount + 1; patternId < rule->matchPatternCapacity; patternId++) {
+    rule->matchPatterns = realloc(rule->matchPatterns,
+                                  sizeof(Pattern) * rule->matchPatternCapacity);
+    for (int patternId = rule->matchPatternCount + 1;
+         patternId < rule->matchPatternCapacity; patternId++) {
       initPattern(&rule->matchPatterns[patternId]);
     }
   }
   rule->matchPatternCount++;
 }
 
-void incRuleResultState(Rule * rule) {
+void incRuleResultState(Rule *rule) {
   if (rule->resultPatternCount + 1 >= rule->resultPatternCapacity) {
     rule->resultPatternCapacity += PUZZLE_MALLOC_INC;
-    rule->resultPatterns = realloc(rule->resultPatterns, sizeof(Pattern) * rule->resultPatternCapacity);
+    rule->resultPatterns = realloc(
+        rule->resultPatterns, sizeof(Pattern) * rule->resultPatternCapacity);
 
-    for (int patternId = rule->resultPatternCount + 1; patternId < rule->resultPatternCapacity; patternId++) {
+    for (int patternId = rule->resultPatternCount + 1;
+         patternId < rule->resultPatternCapacity; patternId++) {
       initPattern(&rule->resultPatterns[patternId]);
     }
   }
   rule->resultPatternCount++;
 }
 
-void incRulePart(Pattern * ruleState) {
+void incRulePart(Pattern *ruleState) {
   if (ruleState->partCount + 1 >= ruleState->partCapacity) {
     ruleState->partCapacity += PUZZLE_MALLOC_INC;
-    ruleState->parts = realloc(ruleState->parts, sizeof(RulePart) * ruleState->partCapacity);
-    for (int partId = ruleState->partCount + 1; partId < ruleState->partCapacity; partId++) {
+    ruleState->parts =
+        realloc(ruleState->parts, sizeof(RulePart) * ruleState->partCapacity);
+    for (int partId = ruleState->partCount + 1;
+         partId < ruleState->partCapacity; partId++) {
       initPart(&ruleState->parts[partId]);
     }
   }
   ruleState->partCount++;
 }
 
-void incRuleIdent(RulePart * part) {
+void incRuleIdent(RulePart *part) {
   if (part->identityCount + 1 >= part->identityCapacity) {
     part->identityCapacity += PUZZLE_MALLOC_INC;
-    part->identity = realloc(part->identity, sizeof(RuleIdentity) * part->identityCapacity);
-    for (int ident = part->identityCount + 1; ident < part->identityCapacity; ident++) {
+    part->identity =
+        realloc(part->identity, sizeof(RuleIdentity) * part->identityCapacity);
+    for (int ident = part->identityCount + 1; ident < part->identityCapacity;
+         ident++) {
       initRuleIdentity(&part->identity[ident]);
     }
   }
   part->identityCount++;
 }
 
-int ruleCommandCount(int ruleId) {
-  return pd.rules[ruleId].commandCount;
-}
+int ruleCommandCount(int ruleId) { return pd.rules[ruleId].commandCount; }
 
-int ruleCommandContains(Rule * rule, Command cmd) {
+int ruleCommandContains(Rule *rule, Command cmd) {
   for (int i = 0; i < rule->commandCount; i++) {
     if (rule->commands[i] == cmd) {
       return 1;
@@ -468,12 +487,12 @@ int ruleCommandContains(Rule * rule, Command cmd) {
   return 0;
 }
 
-
 void incWinCondition() {
   if (pd.winConditionCount + 1 >= pd.winConditionCapacity) {
     fprintf(stderr, "winCondition REALLOC\n");
     pd.winConditionCapacity += PUZZLE_MALLOC_INC;
-    pd.winConditions = realloc(pd.winConditions, sizeof(WinCondition) * pd.winConditionCapacity);
+    pd.winConditions = realloc(pd.winConditions,
+                               sizeof(WinCondition) * pd.winConditionCapacity);
   }
   pd.winConditionCount++;
 }
@@ -496,13 +515,18 @@ void incLevel() {
 void addTile(int levelId, char tileValue) {
   if (pd.levels[levelId].tileCapacity == 0) {
     pd.levels[levelId].tileCapacity += PUZZLE_MALLOC_INC;
-    pd.levels[levelId].tiles = malloc(sizeof(char) * pd.levels[levelId].tileCapacity);
-  } else if (pd.levels[levelId].tileIndex + 1 >= pd.levels[levelId].tileCapacity) {
+    pd.levels[levelId].tiles =
+        malloc(sizeof(char) * pd.levels[levelId].tileCapacity);
+  } else if (pd.levels[levelId].tileIndex + 1 >=
+             pd.levels[levelId].tileCapacity) {
     pd.levels[levelId].tileCapacity += PUZZLE_MALLOC_INC;
-    pd.levels[levelId].tiles = realloc(pd.levels[levelId].tiles, sizeof(char) * pd.levels[levelId].tileCapacity);
+    pd.levels[levelId].tiles =
+        realloc(pd.levels[levelId].tiles,
+                sizeof(char) * pd.levels[levelId].tileCapacity);
   }
 
-  pd.levels[pd.levelCount].tiles[pd.levels[pd.levelCount].tileIndex] = tileValue;
+  pd.levels[pd.levelCount].tiles[pd.levels[pd.levelCount].tileIndex] =
+      tileValue;
   pd.levels[pd.levelCount].tileIndex++;
 }
 
@@ -536,15 +560,15 @@ void initPuzzleData() {
   pd.againInterval = 0.1f;
   pd.doesFlickScreen = 0;
   pd.doesZoomScreen = 0;
-  pd.title = (char *) malloc(10);
+  pd.title = (char *)malloc(10);
   strcpy(pd.title, "Puzzle");
-  pd.author = (char *) malloc(10);
+  pd.author = (char *)malloc(10);
   strcpy(pd.author, "Me");
-  pd.homepage = (char *) malloc(20);
+  pd.homepage = (char *)malloc(20);
   strcpy(pd.homepage, "example.com");
-  pd.backgroundColor = (char *) malloc(10);
+  pd.backgroundColor = (char *)malloc(10);
   strcpy(pd.backgroundColor, "black");
-  pd.textColor = (char *) malloc(10);
+  pd.textColor = (char *)malloc(10);
   strcpy(pd.textColor, "white");
 
   pd.objectCount = 0;
@@ -568,7 +592,8 @@ void initPuzzleData() {
     pd.aliasLegend[i].objectRelation = LEGEND_RELATION_UNKNOWN;
     pd.aliasLegend[i].objectCount = 0;
     pd.aliasLegend[i].objectCapacity = 10;
-    pd.aliasLegend[i].objects = malloc(sizeof(int) * pd.aliasLegend[i].objectCapacity);
+    pd.aliasLegend[i].objects =
+        malloc(sizeof(int) * pd.aliasLegend[i].objectCapacity);
   }
 
   pd.glyphLegendCount = 0;
@@ -578,9 +603,9 @@ void initPuzzleData() {
     pd.glyphLegend[i].objectRelation = LEGEND_RELATION_UNKNOWN;
     pd.glyphLegend[i].objectCount = 0;
     pd.glyphLegend[i].objectCapacity = 10;
-    pd.glyphLegend[i].objects = malloc(sizeof(int) * pd.glyphLegend[i].objectCapacity);
+    pd.glyphLegend[i].objects =
+        malloc(sizeof(int) * pd.glyphLegend[i].objectCapacity);
   }
-
 
   pd.layerCount = 0;
   pd.layerCapacity = 400;
@@ -659,19 +684,23 @@ Direction realDirection(Direction applicationDirection, Direction ruleDir) {
   case PERPENDICULAR:
     return (Direction)((applicationDirection + 1) % 4);
   default:
-    fprintf(stderr, "err: (realDirection) unsupported direction (ad: %i rd: %i)\n", applicationDirection, ruleDir);
+    fprintf(stderr,
+            "err: (realDirection) unsupported direction (ad: %i rd: %i)\n",
+            applicationDirection, ruleDir);
     return NONE;
   }
 }
 
-void copyPart(RulePart * sourcePart, RulePart * targetPart, Direction appDir, int rotate) {
+void copyPart(RulePart *sourcePart, RulePart *targetPart, Direction appDir,
+              int rotate) {
   for (int identId = 0; identId < sourcePart->identityCount; identId++) {
-    targetPart->identity[identId].legendId = sourcePart->identity[identId].legendId;
-
+    targetPart->identity[identId].legendId =
+        sourcePart->identity[identId].legendId;
 
     Direction ruleDir = sourcePart->identity[identId].direction;
     if (rotate && ruleDir != UNSPECIFIED && ruleDir != COND_NO) {
-      targetPart->identity[identId].direction = ((realDirection(appDir, ruleDir) + 2) % 4);
+      targetPart->identity[identId].direction =
+          ((realDirection(appDir, ruleDir) + 2) % 4);
     } else {
       targetPart->identity[identId].direction = realDirection(appDir, ruleDir);
     }
@@ -679,7 +708,8 @@ void copyPart(RulePart * sourcePart, RulePart * targetPart, Direction appDir, in
   }
 }
 
-int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule * sourceRule, int rotate) {
+int buildRule(Direction appDir, Direction dirCategory, Rule *targetRule,
+              Rule *sourceRule, int rotate) {
   int x = 0;
   if (sourceRule->directionConstraint == NONE ||
       sourceRule->directionConstraint == appDir ||
@@ -705,22 +735,32 @@ int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule *
     }
 
     // COPY MATCHES
-    for (int patternId = 0; patternId < sourceRule->matchPatternCount; patternId++) {
-      if ((appDir == UP || appDir == LEFT) && sourceRule->matchPatterns[patternId].partCount > 0) {
+    for (int patternId = 0; patternId < sourceRule->matchPatternCount;
+         patternId++) {
+      if ((appDir == UP || appDir == LEFT) &&
+          sourceRule->matchPatterns[patternId].partCount > 0) {
         x = 0;
-        for (int partId = sourceRule->matchPatterns[patternId].partCount - 1; partId >= 0; partId--) {
-          targetRule->matchPatterns[patternId].parts[x].isSpread = sourceRule->matchPatterns[patternId].parts[partId].isSpread;
-          RulePart * sourcePart = &sourceRule->matchPatterns[patternId].parts[partId];
-          RulePart * targetPart = &targetRule->matchPatterns[patternId].parts[x];
+        for (int partId = sourceRule->matchPatterns[patternId].partCount - 1;
+             partId >= 0; partId--) {
+          targetRule->matchPatterns[patternId].parts[x].isSpread =
+              sourceRule->matchPatterns[patternId].parts[partId].isSpread;
+          RulePart *sourcePart =
+              &sourceRule->matchPatterns[patternId].parts[partId];
+          RulePart *targetPart = &targetRule->matchPatterns[patternId].parts[x];
           copyPart(sourcePart, targetPart, appDir, rotate);
           incRulePart(&targetRule->matchPatterns[patternId]);
           x++;
         }
       } else {
-        for (int partId = 0; partId < sourceRule->matchPatterns[patternId].partCount; partId++) {
-          targetRule->matchPatterns[patternId].parts[partId].isSpread = sourceRule->matchPatterns[patternId].parts[partId].isSpread;
-          RulePart * sourcePart = &sourceRule->matchPatterns[patternId].parts[partId];
-          RulePart * targetPart = &targetRule->matchPatterns[patternId].parts[partId];
+        for (int partId = 0;
+             partId < sourceRule->matchPatterns[patternId].partCount;
+             partId++) {
+          targetRule->matchPatterns[patternId].parts[partId].isSpread =
+              sourceRule->matchPatterns[patternId].parts[partId].isSpread;
+          RulePart *sourcePart =
+              &sourceRule->matchPatterns[patternId].parts[partId];
+          RulePart *targetPart =
+              &targetRule->matchPatterns[patternId].parts[partId];
           copyPart(sourcePart, targetPart, appDir, rotate);
           incRulePart(&targetRule->matchPatterns[patternId]);
         }
@@ -734,22 +774,33 @@ int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule *
     }
 
     // COPY RESULTS
-    for (int patternId = 0; patternId < sourceRule->resultPatternCount; patternId++) {
-      if ((appDir == UP || appDir == LEFT) && sourceRule->resultPatterns[patternId].partCount > 0) {
+    for (int patternId = 0; patternId < sourceRule->resultPatternCount;
+         patternId++) {
+      if ((appDir == UP || appDir == LEFT) &&
+          sourceRule->resultPatterns[patternId].partCount > 0) {
         x = 0;
-        for (int partId = sourceRule->resultPatterns[patternId].partCount - 1; partId >= 0; partId--) {
-          targetRule->resultPatterns[patternId].parts[x].isSpread = sourceRule->resultPatterns[patternId].parts[partId].isSpread;
-          RulePart * sourcePart = &sourceRule->resultPatterns[patternId].parts[partId];
-          RulePart * targetPart = &targetRule->resultPatterns[patternId].parts[x];
+        for (int partId = sourceRule->resultPatterns[patternId].partCount - 1;
+             partId >= 0; partId--) {
+          targetRule->resultPatterns[patternId].parts[x].isSpread =
+              sourceRule->resultPatterns[patternId].parts[partId].isSpread;
+          RulePart *sourcePart =
+              &sourceRule->resultPatterns[patternId].parts[partId];
+          RulePart *targetPart =
+              &targetRule->resultPatterns[patternId].parts[x];
           copyPart(sourcePart, targetPart, appDir, rotate);
           incRulePart(&targetRule->resultPatterns[patternId]);
           x++;
         }
       } else {
-        for (int partId = 0; partId < sourceRule->resultPatterns[patternId].partCount; partId++) {
-          targetRule->resultPatterns[patternId].parts[x].isSpread = sourceRule->resultPatterns[patternId].parts[partId].isSpread;
-          RulePart * sourcePart = &sourceRule->resultPatterns[patternId].parts[partId];
-          RulePart * targetPart = &targetRule->resultPatterns[patternId].parts[partId];
+        for (int partId = 0;
+             partId < sourceRule->resultPatterns[patternId].partCount;
+             partId++) {
+          targetRule->resultPatterns[patternId].parts[x].isSpread =
+              sourceRule->resultPatterns[patternId].parts[partId].isSpread;
+          RulePart *sourcePart =
+              &sourceRule->resultPatterns[patternId].parts[partId];
+          RulePart *targetPart =
+              &targetRule->resultPatterns[patternId].parts[partId];
           copyPart(sourcePart, targetPart, appDir, rotate);
           incRulePart(&targetRule->resultPatterns[patternId]);
         }
@@ -764,19 +815,25 @@ int buildRule(Direction appDir, Direction dirCategory, Rule * targetRule, Rule *
 
 void freeRules() {
   for (int ruleId = 0; ruleId < pd.ruleCapacity; ruleId++) {
-    for (int patternId = 0; patternId < pd.rules[ruleId].matchPatternCapacity; patternId++) {
-      for (int partId = 0; partId < pd.rules[ruleId].matchPatterns[patternId].partCapacity; partId++) {
+    for (int patternId = 0; patternId < pd.rules[ruleId].matchPatternCapacity;
+         patternId++) {
+      for (int partId = 0;
+           partId < pd.rules[ruleId].matchPatterns[patternId].partCapacity;
+           partId++) {
         free(pd.rules[ruleId].matchPatterns[patternId].parts[partId].identity);
       }
       free(pd.rules[ruleId].matchPatterns[patternId].parts);
     }
     free(pd.rules[ruleId].matchPatterns);
 
-    for (int patternId = 0; patternId < pd.rules[ruleId].resultPatternCapacity; patternId++) {
-      for (int partId = 0; partId < pd.rules[ruleId].resultPatterns[patternId].partCapacity; partId++) {
+    for (int patternId = 0; patternId < pd.rules[ruleId].resultPatternCapacity;
+         patternId++) {
+      for (int partId = 0;
+           partId < pd.rules[ruleId].resultPatterns[patternId].partCapacity;
+           partId++) {
         free(pd.rules[ruleId].resultPatterns[patternId].parts[partId].identity);
       }
-        free(pd.rules[ruleId].resultPatterns[patternId].parts);
+      free(pd.rules[ruleId].resultPatterns[patternId].parts);
     }
     free(pd.rules[ruleId].resultPatterns);
   }
@@ -789,7 +846,7 @@ void expandRules() {
   int ruleCount = 0;
   int ruleCapacity = 800;
 
-  Rule * rules = malloc(sizeof(Rule) * ruleCapacity);
+  Rule *rules = malloc(sizeof(Rule) * ruleCapacity);
   for (int ruleId = 0; ruleId < ruleCapacity; ruleId++) {
     initRule(&rules[ruleId]);
   }
@@ -804,7 +861,9 @@ void expandRules() {
       ruleCount++;
     }
 
-    if (pd.rules[ruleId].hasMultipleParts || pd.rules[ruleId].hasRelativeDirection || pd.rules[ruleId].directionConstraint != NONE) {
+    if (pd.rules[ruleId].hasMultipleParts ||
+        pd.rules[ruleId].hasRelativeDirection ||
+        pd.rules[ruleId].directionConstraint != NONE) {
       if (buildRule(UP, VERTICAL, &rules[ruleCount], &pd.rules[ruleId], 0)) {
         if (ruleCount + 1 >= ruleCapacity) {
           ruleCapacity += PUZZLE_MALLOC_INC;
@@ -814,7 +873,8 @@ void expandRules() {
         ruleCount++;
       }
 
-      if (buildRule(LEFT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId], 0)) {
+      if (buildRule(LEFT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId],
+                    0)) {
         if (ruleCount + 1 >= ruleCapacity) {
           ruleCapacity += PUZZLE_MALLOC_INC;
           rules = reallocRule(rules, ruleCapacity);
@@ -822,7 +882,8 @@ void expandRules() {
         rules[ruleCount].id = ruleCount;
         ruleCount++;
       }
-      if (buildRule(RIGHT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId], 0)) {
+      if (buildRule(RIGHT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId],
+                    0)) {
         if (ruleCount + 1 >= ruleCapacity) {
           ruleCapacity += PUZZLE_MALLOC_INC;
           rules = reallocRule(rules, ruleCapacity);
@@ -842,7 +903,8 @@ void expandRules() {
           ruleCount++;
         }
 
-        if (buildRule(DOWN, VERTICAL, &rules[ruleCount], &pd.rules[ruleId], 1)) {
+        if (buildRule(DOWN, VERTICAL, &rules[ruleCount], &pd.rules[ruleId],
+                      1)) {
           if (ruleCount + 1 >= ruleCapacity) {
             ruleCapacity += PUZZLE_MALLOC_INC;
             rules = reallocRule(rules, ruleCapacity);
@@ -851,7 +913,8 @@ void expandRules() {
           ruleCount++;
         }
 
-        if (buildRule(LEFT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId], 1)) {
+        if (buildRule(LEFT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId],
+                      1)) {
           if (ruleCount + 1 >= ruleCapacity) {
             ruleCapacity += PUZZLE_MALLOC_INC;
             rules = reallocRule(rules, ruleCapacity);
@@ -860,7 +923,8 @@ void expandRules() {
           ruleCount++;
         }
 
-        if (buildRule(RIGHT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId], 1)) {
+        if (buildRule(RIGHT, HORIZONTAL, &rules[ruleCount], &pd.rules[ruleId],
+                      1)) {
           if (ruleCount + 1 >= ruleCapacity) {
             ruleCapacity += PUZZLE_MALLOC_INC;
             rules = reallocRule(rules, ruleCapacity);
@@ -880,10 +944,11 @@ void expandRules() {
 
 void makeLegendMasks() {
   for (int legendId = 0; legendId < pd.aliasLegendCount; legendId++) {
-    pd.aliasLegend[legendId].mask = calloc(pd.objectCount/8+1, 1);
-    for (int objectId = 0; objectId < pd.aliasLegend[legendId].objectCount; objectId++) {
+    pd.aliasLegend[legendId].mask = calloc(pd.objectCount / 8 + 1, 1);
+    for (int objectId = 0; objectId < pd.aliasLegend[legendId].objectCount;
+         objectId++) {
       unsigned int element = pd.aliasLegend[legendId].objects[objectId];
-      unsigned int byte_index = element/8;
+      unsigned int byte_index = element / 8;
       unsigned int bit_index = element % 8;
       unsigned int bit_mask = (1 << bit_index);
 
@@ -894,7 +959,7 @@ void makeLegendMasks() {
   }
 }
 
-PuzzleData * parsePuzzle(FILE * file) {
+PuzzleData *parsePuzzle(FILE *file) {
   initPuzzleData();
   yyin = file;
   yyparse();
@@ -910,8 +975,8 @@ PuzzleData * parsePuzzle(FILE * file) {
 }
 
 void freePuzzle() {
-  // TODO: we start at 2 because the first two objects are "static" basic objects.
-  // We can make that explicit
+  // TODO: we start at 2 because the first two objects are "static" basic
+  // objects. We can make that explicit
   free(pd.title);
   free(pd.author);
   free(pd.homepage);
@@ -972,27 +1037,19 @@ void freePuzzle() {
   free(pd.winConditions);
 }
 
+Object *object(int id) { return &pd.objects[id]; }
 
-Object * object(int id) {
-  return &pd.objects[id];
-}
+char *objectName(int id) { return pd.objects[id].name; }
 
-char * objectName(int id) {
-  return pd.objects[id].name;
-}
+int objectSpriteTile(int id, int i) { return pd.objects[id].sprite[i]; }
 
-int objectSpriteTile(int id, int i) {
-  return pd.objects[id].sprite[i];
-}
-
-char * objectColor(int id, int index) {
+char *objectColor(int id, int index) {
   if (index < pd.objects[id].colorCount) {
     return pd.objects[id].colors[index];
   } else {
     fprintf(stderr, "Color out of bounds\n");
     return "!";
   }
-
 }
 
 int glyphLegendContains(int legendId, int objId) {
@@ -1006,7 +1063,8 @@ int glyphLegendContains(int legendId, int objId) {
 
 char objectGlyph(int objId) {
   for (int i = 0; i < pd.glyphLegendCount; i++) {
-    if (pd.glyphLegend[i].objectCount == 1 && glyphLegendContains(i, objId) == 1) {
+    if (pd.glyphLegend[i].objectCount == 1 &&
+        glyphLegendContains(i, objId) == 1) {
       return pd.glyphLegend[i].key;
     }
   }
@@ -1026,7 +1084,7 @@ int legendIdForGlyph(char glyph) {
 }
 
 int aliasLegendContains(int legendId, int objId) {
-  int byte_index = objId/8;
+  int byte_index = objId / 8;
   int bit_index = objId % 8;
   int bit_mask = (1 << bit_index);
   return ((pd.aliasLegend[legendId].mask[byte_index] & bit_mask) != 0);
@@ -1045,25 +1103,20 @@ int objectLayer(int objId) {
       }
     }
   }
-  fprintf(stderr, "err: layer not found for objid: '%s' (%i) \n", objectName(objId), objId);
+  fprintf(stderr, "err: layer not found for objid: '%s' (%i) \n",
+          objectName(objId), objId);
   return -1;
 }
 
-int levelTileCount(int levelIndex) {
-  return pd.levels[levelIndex].tileIndex;
-}
+int levelTileCount(int levelIndex) { return pd.levels[levelIndex].tileIndex; }
 
 int levelTile(int levelIndex, int tileIndex) {
   return pd.levels[levelIndex].tiles[tileIndex];
 }
 
-LevelType levelType(int levelIndex) {
-  return pd.levels[levelIndex].levelType;
-}
+LevelType levelType(int levelIndex) { return pd.levels[levelIndex].levelType; }
 
-char * levelMessage(int levelIndex) {
-  return pd.levels[levelIndex].message;
-}
+char *levelMessage(int levelIndex) { return pd.levels[levelIndex].message; }
 
 int layerIncludes(int layerId, int objId) {
   for (int i = 0; i < pd.layers[layerId].count; i++) {
@@ -1074,9 +1127,7 @@ int layerIncludes(int layerId, int objId) {
   return 0;
 }
 
-int objectCount() {
-  return pd.objectCount;
-}
+int objectCount() { return pd.objectCount; }
 
 /* int aliasLegendCount() { */
 /*   return pd.aliasLegendCount; */
@@ -1086,21 +1137,17 @@ int objectCount() {
 /*   return pd.glyphLegendCount; */
 /* } */
 
-char * aliasLegendKey(int id) {
+char *aliasLegendKey(int id) {
   if (id == 1) {
     return "";
   }
   return pd.aliasLegend[id].key;
 }
 
-char glyphLegendKey(int id) {
-  return pd.glyphLegend[id].key;
-}
+char glyphLegendKey(int id) { return pd.glyphLegend[id].key; }
 
-int winConditionCount() {
-  return pd.winConditionCount;
-}
+int winConditionCount() { return pd.winConditionCount; }
 
-WinCondition * winCondition(int winConditionIndex) {
-   return &pd.winConditions[winConditionIndex];
+WinCondition *winCondition(int winConditionIndex) {
+  return &pd.winConditions[winConditionIndex];
 }

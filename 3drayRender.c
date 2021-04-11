@@ -1,76 +1,32 @@
+#include "alphabet.c"
+#include "puzzleData.h"
+#include <raylib.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include<stdio.h>
 #include <unistd.h>
-#include <raylib.h>
-#include "puzzleData.h"
-#include "alphabet.c"
 
-#define TRANSPARENT CLITERAL(Color){ 0, 0, 0, 0 }           // Blank (Transparent)
+#define TRANSPARENT                                                            \
+  CLITERAL(Color) { 0, 0, 0, 0 } // Blank (Transparent)
 
-const char * colorNames[] =
-  {
-   "black",
-   "white",
-   "lightgray",
-   "lightgrey",
-   "gray",
-   "grey",
-   "darkgray",
-   "darkgrey",
-   "red",
-   "darkred",
-   "lightred",
-   "brown",
-   "darkbrown",
-   "lightbrown",
-   "orange",
-   "yellow",
-   "green",
-   "darkgreen",
-   "lightgreen",
-   "blue",
-   "lightblue",
-   "darkblue",
-   "purple",
-   "pink",
-   "transparent"
-  };
+const char *colorNames[] = {
+    "black",     "white",    "lightgray", "lightgrey",  "gray",
+    "grey",      "darkgray", "darkgrey",  "red",        "darkred",
+    "lightred",  "brown",    "darkbrown", "lightbrown", "orange",
+    "yellow",    "green",    "darkgreen", "lightgreen", "blue",
+    "lightblue", "darkblue", "purple",    "pink",       "transparent"};
 
-const Color colors[] =
-  {
-   BLACK,
-   WHITE,
-   LIGHTGRAY,
-   LIGHTGRAY,
-   GRAY,
-   GRAY,
-   DARKGRAY,
-   DARKGRAY,
-   RED,
-   MAROON,
-   PINK,
-   BROWN,
-   DARKBROWN,
-   YELLOW,
-   ORANGE,
-   YELLOW,
-   GREEN,
-   DARKGREEN,
-   LIME,
-   BLUE,
-   SKYBLUE,
-   DARKBLUE,
-   PURPLE,
-   PINK,
-   TRANSPARENT
-  };
+const Color colors[] = {BLACK,   WHITE,    LIGHTGRAY, LIGHTGRAY, GRAY,
+                        GRAY,    DARKGRAY, DARKGRAY,  RED,       MAROON,
+                        PINK,    BROWN,    DARKBROWN, YELLOW,    ORANGE,
+                        YELLOW,  GREEN,    DARKGREEN, LIME,      BLUE,
+                        SKYBLUE, DARKBLUE, PURPLE,    PINK,      TRANSPARENT};
 
 const int colorCount = 25;
 
-Vector3 cubePosition = { 0.0f, 0.0f, 0.0f };
+Vector3 cubePosition = {0.0f, 0.0f, 0.0f};
 
-Color colorFromName(char * name) {
+Color colorFromName(char *name) {
   if (name[0] == '#') {
     char *str = name;
     str++;
@@ -93,7 +49,7 @@ Color colorFromName(char * name) {
   return PINK;
 }
 
-Color colorFromSprite(Runtime * rt, int objId, int tileIndex) {
+Color colorFromSprite(Runtime *rt, int objId, int tileIndex) {
   int tile = objectSpriteTile(objId, tileIndex);
   switch (tile) {
   case '0':
@@ -129,7 +85,6 @@ Color colorFromSprite(Runtime * rt, int objId, int tileIndex) {
 
   case '.':
     return TRANSPARENT;
-
   }
   fprintf(stderr, "FAILED TO MATCH A COLOR CODE id %i (%c)\n", objId, tile);
   for (int i = 0; i < 25; i++) {
@@ -142,7 +97,7 @@ Color colorFromSprite(Runtime * rt, int objId, int tileIndex) {
 #define WINDOW_SIZE 840
 
 // Define the camera to look into our 3d world
-Camera3D camera = { 0 };
+Camera3D camera = {0};
 
 int offsetX = 0;
 int offsetY = 0;
@@ -151,18 +106,17 @@ int offsetZ = 0;
 void initRenderer() {
   InitWindow(WINDOW_SIZE, WINDOW_SIZE, "My Puzzle Game");
   SetTargetFPS(60);
-  camera.position = (Vector3){ 0.0f, 0.0f, 40.0f };  // Camera position
-  camera.target = (Vector3){ 0.0f, 0.0f, 0.0f };      // Camera looking at point
-  camera.up = (Vector3){ 0.0f, -1.0f, 0.0f };          // Camera up vector (rotation towards target)
-  camera.fovy = 50.0f;                                // Camera field-of-view Y
-  camera.type = CAMERA_PERSPECTIVE;                   // Camera mode type
+  camera.position = (Vector3){0.0f, 0.0f, 40.0f}; // Camera position
+  camera.target = (Vector3){0.0f, 0.0f, 0.0f};    // Camera looking at point
+  camera.up = (Vector3){0.0f, -1.0f,
+                        0.0f}; // Camera up vector (rotation towards target)
+  camera.fovy = 50.0f;         // Camera field-of-view Y
+  camera.type = CAMERA_PERSPECTIVE; // Camera mode type
 }
 
-void closeRenderer() {
-  CloseWindow();
-}
+void closeRenderer() { CloseWindow(); }
 
-void renderBackground(Runtime * rt) {
+void renderBackground(Runtime *rt) {
   int pixelSize = 1;
   /* if (rt->width > rt->height) { */
   /*   pixelSize = WINDOW_SIZE / (rt->width * 5); */
@@ -180,8 +134,10 @@ void renderBackground(Runtime * rt) {
 
       if (tileColor.a != 0) {
         Vector3 cubePosition;
-        cubePosition.x = -(tile % rt->width * pixelSize * width) + ((i % 5) * pixelSize);
-        cubePosition.y = (tile / rt->width * pixelSize * height) + ((i / 5) * pixelSize);
+        cubePosition.x =
+            -(tile % rt->width * pixelSize * width) + ((i % 5) * pixelSize);
+        cubePosition.y =
+            (tile / rt->width * pixelSize * height) + ((i / 5) * pixelSize);
         cubePosition.z = 0.0f;
 
         int w = pixelSize;
@@ -194,7 +150,7 @@ void renderBackground(Runtime * rt) {
   }
 }
 
-void drawObj(Runtime * rt, int objIndex) {
+void drawObj(Runtime *rt, int objIndex) {
   if (rt->objects[objIndex].deleted == 1) {
     return;
   }
@@ -216,8 +172,10 @@ void drawObj(Runtime * rt, int objIndex) {
     Color tileColor = colorFromSprite(rt, objectId, i);
     if (tileColor.a != 0) {
       Vector3 cubePosition;
-      cubePosition.x = -(rt->objects[objIndex].x * pixelSize * width) + ((i % 5) * pixelSize);
-      cubePosition.y = (rt->objects[objIndex].y * pixelSize * height) + ((i / 5) * pixelSize);
+      cubePosition.x = -(rt->objects[objIndex].x * pixelSize * width) +
+                       ((i % 5) * pixelSize);
+      cubePosition.y = (rt->objects[objIndex].y * pixelSize * height) +
+                       ((i / 5) * pixelSize);
       cubePosition.z = objectLayer(objectId) * 2.5f;
       int w = pixelSize;
       int h = pixelSize;
@@ -228,7 +186,7 @@ void drawObj(Runtime * rt, int objIndex) {
   }
 }
 
-void renderLevel(Runtime * rt) {
+void renderLevel(Runtime *rt) {
   int objLayer;
   renderBackground(rt);
   int count = rt->pd->layerCount;
@@ -242,14 +200,15 @@ void renderLevel(Runtime * rt) {
   }
 }
 
-void renderMessage(Runtime * rt) {
-  char * message = levelMessage(rt->levelIndex);
+void renderMessage(Runtime *rt) {
+  char *message = levelMessage(rt->levelIndex);
   int textLength = MeasureText(message, 20);
 
-  DrawText(message, WINDOW_SIZE / 2 - textLength / 2, WINDOW_SIZE / 2, 20, BLACK);
+  DrawText(message, WINDOW_SIZE / 2 - textLength / 2, WINDOW_SIZE / 2, 20,
+           BLACK);
 }
 
-void render(Runtime * rt) {
+void render(Runtime *rt) {
   BeginDrawing();
   ClearBackground(BLACK);
 
@@ -258,7 +217,6 @@ void render(Runtime * rt) {
 
   camera.position.x = -(((rt->width * 5) / 2) - 5);
   camera.position.y = ((rt->height * 5) / 2) + 55;
-
 
   switch (rt->levelType) {
   case SQUARES:
@@ -273,8 +231,7 @@ void render(Runtime * rt) {
   EndDrawing();
 }
 
-void debugRender(Runtime * rt) {
-  /* render(rt); */
+void debugRender(Runtime *rt) { /* render(rt); */
 }
 
 char input() {

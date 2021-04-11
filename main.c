@@ -1,10 +1,10 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include "puzzleData.h"
 #include "render.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-int main(int argc, char ** argv) {
+int main(int argc, char **argv) {
   Direction inputDir;
   int frameCounter = 0;
   FILE *file;
@@ -28,12 +28,13 @@ int main(int argc, char ** argv) {
     frameCounter++;
 
     if (rt.doAgain) {
-      if (rt.pd->againInterval*60.0f < frameCounter) {
+      if (rt.pd->againInterval * 60.0f < frameCounter) {
         tick(&rt);
         frameCounter = 0;
       }
       continue;
-    } else if (rt.pd->setRealtimeInterval && rt.pd->realTimeInterval > 0 && rt.pd->realTimeInterval*60.0f < frameCounter) {
+    } else if (rt.pd->setRealtimeInterval && rt.pd->realTimeInterval > 0 &&
+               rt.pd->realTimeInterval * 60.0f < frameCounter) {
       tick(&rt);
       frameCounter = 0;
     } else {

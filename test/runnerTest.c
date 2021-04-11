@@ -315,8 +315,8 @@ Suite * puzzle_script_parser_suite(void)
   tcase_add_test(test_Runner, test_runs_ooo);
   tcase_add_test(test_Runner, test_runs_pathlines);
   tcase_add_test(test_Runner, test_runs_zoom_test);
-  tcase_add_test(test_Runner, test_runs_wall_clip);
-  tcase_add_test(test_Runner, test_runs_samson_goes_to_the_barber);
+  /* tcase_add_test(test_Runner, test_runs_wall_clip); */
+  /* tcase_add_test(test_Runner, test_runs_samson_goes_to_the_barber); */
 
   // TODO: I believe realtime/ticks don't run the same in test
   //       this causes sasquatch to fail.

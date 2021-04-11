@@ -1,22 +1,23 @@
 #ifndef PUZZLE_DATA
 #define PUZZLE_DATA
 
+#include <stdio.h>
 #include <time.h>
 
 // Object
 typedef struct Object {
-  char * name;
+  char *name;
   int height;
   int width;
   char sprite[25];
   int colorCount;
-  char * colors[10];
+  char *colors[10];
 } Object;
 
 typedef enum LegendRelation {
-   LEGEND_RELATION_UNKNOWN = 0,
-   LEGEND_RELATION_AND = 1,
-   LEGEND_RELATION_OR = 2
+  LEGEND_RELATION_UNKNOWN = 0,
+  LEGEND_RELATION_AND = 1,
+  LEGEND_RELATION_OR = 2
 } LegendRelation;
 
 typedef struct GlyphLegend {
@@ -24,32 +25,30 @@ typedef struct GlyphLegend {
   LegendRelation objectRelation;
   int objectCount;
   int objectCapacity;
-  int * objects;
+  int *objects;
 } GlyphLegend;
 
 typedef struct AliasLegend {
-  char * key;
+  char *key;
   LegendRelation objectRelation;
   int objectCount;
   int objectCapacity;
-  int * objects;
-  char * mask;
+  int *objects;
+  char *mask;
 } AliasLegend;
 
 typedef struct Layer {
   int count;
   int objectCapacity;
-  int * objectIds;
+  int *objectIds;
 } Layer;
 
 typedef enum WinQualifier // TODO: rename to logic words?
-  {
-   ALL  = 0,
-   ANY  = 1,
-   NO   = 2,
-   SOME = 3,
-   ON   = 4
-  } WinQualifier;
+{ ALL = 0,
+  ANY = 1,
+  NO = 2,
+  SOME = 3,
+  ON = 4 } WinQualifier;
 
 typedef struct WinCondition {
   WinQualifier winQualifier;
@@ -58,57 +57,53 @@ typedef struct WinCondition {
   int onIndentifier;
 } WinCondition;
 
-typedef enum Command
-  {
-   SFX0 = 0,
-   SFX1 = 1,
-   SFX2 = 2,
-   SFX3 = 3,
-   SFX4 = 4,
-   SFX5 = 5,
-   SFX6 = 6,
-   SFX7 = 7,
-   SFX8 = 8,
-   SFX9 = 9,
-   AGAIN = 10,
-   CANCEL = 11,
-   CHECKPOINT = 12,
-   CMD_RESTART = 13,
-   WIN = 14,
-  } Command;
+typedef enum Command {
+  SFX0 = 0,
+  SFX1 = 1,
+  SFX2 = 2,
+  SFX3 = 3,
+  SFX4 = 4,
+  SFX5 = 5,
+  SFX6 = 6,
+  SFX7 = 7,
+  SFX8 = 8,
+  SFX9 = 9,
+  AGAIN = 10,
+  CANCEL = 11,
+  CHECKPOINT = 12,
+  CMD_RESTART = 13,
+  WIN = 14,
+} Command;
 
 typedef enum Direction {
-   RIGHT         = 0,
-   UP            = 1,
-   LEFT          = 2,
-   DOWN          = 3,
-   HORIZONTAL    = 4,
-   VERTICAL      = 5,
-   STATIONARY    = 6,
-   RANDOMDIR     = 7,
-   RANDOM        = 8,
-   REL_UP        = 9,
-   REL_DOWN      = 10,
-   REL_LEFT      = 11,
-   REL_RIGHT     = 12,
-   USE           = 13,
-   NONE          = 14,
-   COND_NO       = 15,
-   QUIT          = 16,
-   RESTART       = 17,
-   UNDO          = 18,
-   UNSPECIFIED   = 19,
-   MOVING        = 20,
-   DEBUGGER      = 21,
-   PARALLEL      = 22,
-   PERPENDICULAR = 23,
-   NEXT_LEVEL    = 24
-  } Direction;
+  RIGHT = 0,
+  UP = 1,
+  LEFT = 2,
+  DOWN = 3,
+  HORIZONTAL = 4,
+  VERTICAL = 5,
+  STATIONARY = 6,
+  RANDOMDIR = 7,
+  RANDOM = 8,
+  REL_UP = 9,
+  REL_DOWN = 10,
+  REL_LEFT = 11,
+  REL_RIGHT = 12,
+  USE = 13,
+  NONE = 14,
+  COND_NO = 15,
+  QUIT = 16,
+  RESTART = 17,
+  UNDO = 18,
+  UNSPECIFIED = 19,
+  MOVING = 20,
+  DEBUGGER = 21,
+  PARALLEL = 22,
+  PERPENDICULAR = 23,
+  NEXT_LEVEL = 24
+} Direction;
 
-typedef enum ExecutionTime {
-  NORMAL = 0,
-  LATE = 1
-} ExecutionTime;
+typedef enum ExecutionTime { NORMAL = 0, LATE = 1 } ExecutionTime;
 
 typedef struct RuleIdentity {
   Direction direction;
@@ -120,13 +115,13 @@ typedef struct RulePart {
   int identityCount;
   int identityCapacity;
   int isSpread;
-  RuleIdentity * identity;
+  RuleIdentity *identity;
 } RulePart;
 
 typedef struct Pattern {
   int partCount;
   int partCapacity;
-  RulePart * parts;
+  RulePart *parts;
 } Pattern;
 
 typedef struct Rule {
@@ -145,18 +140,19 @@ typedef struct Rule {
 
   int matchPatternCount;
   int matchPatternCapacity;
-  Pattern * matchPatterns;
+  Pattern *matchPatterns;
 
   int resultPatternCount;
   int resultPatternCapacity;
-  Pattern * resultPatterns;
+  Pattern *resultPatterns;
 } Rule;
 
 typedef struct MatchData {
   int newObject;
   int objIndex;
   // legend id in rules could be things like `movable = Block or Player`
-  // which isn't the legend id of the thing to actually place when applying the result state
+  // which isn't the legend id of the thing to actually place when applying the
+  // result state
   int ruleLegendId;
   int actualDirection;
   // goal
@@ -180,11 +176,7 @@ typedef struct Match {
   MatchData parts[1000];
 } Match;
 
-typedef enum LevelType
-  {
-   SQUARES = 0,
-   MESSAGE_TEXT = 1
-  } LevelType;
+typedef enum LevelType { SQUARES = 0, MESSAGE_TEXT = 1 } LevelType;
 
 typedef struct Level {
   LevelType levelType;
@@ -192,15 +184,15 @@ typedef struct Level {
   int width;
   int tileIndex;
   int tileCapacity;
-  char * tiles;
-  char * message;
+  char *tiles;
+  char *message;
 } Level;
 
 typedef struct PuzzleData {
   // basics
-  char * title;
-  char * author;
-  char * homepage;
+  char *title;
+  char *author;
+  char *homepage;
   // disable flags
   int noAction;
   int noRepeatAction;
@@ -214,8 +206,8 @@ typedef struct PuzzleData {
 
   // global styling
   int colorPalette;
-  char * backgroundColor;
-  char * textColor;
+  char *backgroundColor;
+  char *textColor;
   int doesFlickScreen;
   int flickScreenX;
   int flickScreenY;
@@ -226,7 +218,8 @@ typedef struct PuzzleData {
 
   // interval
   float keyRepeatInterval;
-  // TODO: these set flags don't do what we want... again always triggers regardless of if it is set
+  // TODO: these set flags don't do what we want... again always triggers
+  // regardless of if it is set
   //       realtime interval does need this flag though.
   int setAgainInterval;
   float againInterval;
@@ -237,42 +230,40 @@ typedef struct PuzzleData {
   int verboseLogging;
   int debug;
 
-
   int objectCount;
   int objectCapacity;
-  Object * objects;
+  Object *objects;
 
   // sounds
   // blah. I don't wanna do it...
 
   int aliasLegendCount;
   int aliasLegendCapacity;
-  AliasLegend * aliasLegend;
+  AliasLegend *aliasLegend;
 
   int glyphLegendCount;
   int glyphLegendCapacity;
-  GlyphLegend * glyphLegend;
-
+  GlyphLegend *glyphLegend;
 
   // collision layers
   int layerCount;
   int layerCapacity;
-  Layer * layers;
+  Layer *layers;
 
   // rules
   int ruleCount;
   int ruleCapacity;
-  Rule * rules;
+  Rule *rules;
 
   // win conditions
   int winConditionCount;
   int winConditionCapacity;
-  WinCondition * winConditions;
+  WinCondition *winConditions;
 
   // levels
   int levelCount;
   int levelCapacity;
-  Level * levels;
+  Level *levels;
 } PuzzleData;
 
 typedef struct ToMove {
@@ -291,13 +282,13 @@ typedef struct State {
   int levelIndex;
   int objectCount;
   int objectCapacity;
-  Obj * objects;
-  int * map;
-  char * oMap;
+  Obj *objects;
+  int *map;
+  char *oMap;
 } State;
 
 typedef struct Runtime {
-  PuzzleData * pd;
+  PuzzleData *pd;
   time_t randomSeed;
   int gameWon;
   int doAgain;
@@ -313,36 +304,36 @@ typedef struct Runtime {
 
   int objectCount;
   int objectCapacity;
-  Obj * objects;
+  Obj *objects;
 
   int toMoveCount;
   int toMoveCapacity;
-  ToMove * toMove;
+  ToMove *toMove;
 
   int historyCount;
   int historyCapacity;
-  Direction * history;
+  Direction *history;
 
   int hasMap;
-  int * map;
+  int *map;
 
   int hasOMap;
-  char * oMap;
+  char *oMap;
 
   int statesCount;
   int statesCapacity;
-  State * states;
+  State *states;
   int prevHistoryCount;
 } Runtime;
 
 // PuzzleData
-extern PuzzleData * parsePuzzle(FILE * file);
+extern PuzzleData *parsePuzzle(FILE *file);
 extern void freePuzzle();
 extern char objectGlyph(int objId);
-extern Object * object(int id);
-extern char * objectName(int id);
+extern Object *object(int id);
+extern char *objectName(int id);
 extern int objectSpriteTile(int id, int index);
-extern char * objectColor(int id, int colorIndex);
+extern char *objectColor(int id, int colorIndex);
 
 // legend
 extern int legendIdForGlyph(char glyph);
@@ -358,9 +349,9 @@ extern int glyphLegendObjectIsLegend(int legendId, int objectIndex);
 extern int legendContains(int legendId, int objId);
 extern int glyphLegendContains(int legendId, int objId);
 extern int aliasLegendContains(int legendId, int objId);
-extern int aliasLegendId(char * name);
+extern int aliasLegendId(char *name);
 
-extern char * aliasLegendKey(int id);
+extern char *aliasLegendKey(int id);
 extern char glyphLegendKey(int id);
 
 // layers
@@ -372,66 +363,66 @@ extern int layerObjectId(int layerId, int objectIndex);
 extern int levelTileCount(int levelIndex);
 extern int levelTile(int levelIndex, int tileIndex);
 extern LevelType levelType(int levelIndex);
-extern char * levelMessage(int levelIndex);
+extern char *levelMessage(int levelIndex);
 
 // layers
 int layerIncludes(int layerId, int objId);
-int objectId(char * name);
+int objectId(char *name);
 
 // runner
 // Levels
-extern void startGame(Runtime * rt, FILE * file);
-extern void endGame(Runtime * rt);
-extern void nextLevel(Runtime * rt);
-extern void undo(Runtime * rt);
+extern void startGame(Runtime *rt, FILE *file);
+extern void endGame(Runtime *rt);
+extern void nextLevel(Runtime *rt);
+extern void undo(Runtime *rt);
 
 // Winning
-extern int checkWinCondition(Runtime * rt, int winConditionIndex);
-extern int checkWinConditions(Runtime * rt);
+extern int checkWinCondition(Runtime *rt, int winConditionIndex);
+extern int checkWinConditions(Runtime *rt);
 
 // Update
-extern Direction handleInput(Runtime * rt, Direction input);
-extern void update(Runtime * rt, Direction dir);
-extern void tick(Runtime * rt);
+extern Direction handleInput(Runtime *rt, Direction input);
+extern void update(Runtime *rt, Direction dir);
+extern void tick(Runtime *rt);
 
 // Debug
-extern void printHistory(Runtime * rt);
+extern void printHistory(Runtime *rt);
 extern void printRules();
-extern char * ruleString(int ruleId);
-extern char * dirName(Direction dir);
+extern char *ruleString(int ruleId);
+extern char *dirName(Direction dir);
 
 // Win Condition
 extern int winConditionCount();
-extern WinCondition * winCondition(int winConditionIndex);
+extern WinCondition *winCondition(int winConditionIndex);
 
 // Parser methods
 extern void verboseLoggingOn();
-extern int colorPaletteId(char * name);
-extern char * backgroundColor();
-extern char * textColor();
-extern int legendId(char * name);
+extern int colorPaletteId(char *name);
+extern char *backgroundColor();
+extern char *textColor();
+extern int legendId(char *name);
 extern void incObject();
 extern void incAliasLegend();
 extern void incGlyphLegend();
 extern void incAliasLegendObject(int legendId);
-extern void addObjectsToAliasLegend(char * name);
+extern void addObjectsToAliasLegend(char *name);
 extern void incGlyphLegendObject(int legendId);
 extern void incLayer();
-extern void addObjectsToLayer(char * name);
+extern void addObjectsToLayer(char *name);
 
 extern void incRule();
-extern void incRuleMatchState(Rule * rule);
-extern void incRuleResultState(Rule * rule);
-extern void incRulePart(Pattern * ruleState);
-extern void incRuleIdent(RulePart * part);
+extern void incRuleMatchState(Rule *rule);
+extern void incRuleResultState(Rule *rule);
+extern void incRulePart(Pattern *ruleState);
+extern void incRuleIdent(RulePart *part);
 
 extern int ruleCommandCount(int ruleId);
-extern int ruleCommandContains(Rule * rule, Command cmd);
+extern int ruleCommandContains(Rule *rule, Command cmd);
 
 extern void incWinCondition();
 extern void incLevel();
 extern void addTile(int levelId, char tileValue);
-extern FILE * yyin;
+extern FILE *yyin;
 extern int yyparse();
 
 #endif

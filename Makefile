@@ -41,3 +41,15 @@ all: default sdl debug nc ray 3dray graphics_tests
 clean:
 	rm -p puzzle.tab.h puzzle.tab.c
 	rm -rf bin/*
+format:
+	clang-format -i 3drayRender.c
+	clang-format -i colors.c
+	clang-format -i license.txt
+	clang-format -i main.c
+	clang-format -i ncRender.c
+	clang-format -i nullRender.c
+	clang-format -i puzzleData.c
+	clang-format -i runner.c
+	clang-format -i sdlRender.c
+	clang-format -i puzzleData.h
+	clang-format -i render.h

@@ -1,20 +1,19 @@
-#include <stdlib.h>
-#include<stdio.h>
-#include <unistd.h>
-#include <SDL.h>
-#include "puzzleData.h"
 #include "alphabet.c"
 #include "colors.c"
+#include "puzzleData.h"
+#include <SDL.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #define WINDOW_SIZE 840
 
 int delta = 0;
-SDL_Window * window;
-SDL_Renderer * renderer;
+SDL_Window *window;
+SDL_Renderer *renderer;
 SDL_Event e;
 
-
-void drawChar(int x, int y, int pixelSize, char * sprite) {
+void drawChar(int x, int y, int pixelSize, char *sprite) {
   int width = 5;
   int height = 5;
   SDL_Rect sdlRect;
@@ -26,13 +25,14 @@ void drawChar(int x, int y, int pixelSize, char * sprite) {
       sdlRect.y = (y * pixelSize * height) + ((i / 5) * pixelSize);
       sdlRect.w = pixelSize;
       sdlRect.h = pixelSize;
-      SDL_SetRenderDrawColor(renderer, textColor.r, textColor.g, textColor.b, textColor.a);
+      SDL_SetRenderDrawColor(renderer, textColor.r, textColor.g, textColor.b,
+                             textColor.a);
       SDL_RenderFillRect(renderer, &sdlRect);
     }
   }
 }
 
-void drawObj(Runtime * rt, int objIndex) {
+void drawObj(Runtime *rt, int objIndex) {
   if (rt->objects[objIndex].deleted == 1) {
     return;
   }
@@ -53,33 +53,39 @@ void drawObj(Runtime * rt, int objIndex) {
   for (int i = 0; i < 25; i++) {
     Color tileColor = colorFromSprite(rt, objectId, i);
     if (tileColor.a != 0) {
-      sdlRect.x = (rt->objects[objIndex].x * pixelSize * width) + ((i % 5) * pixelSize);
-      sdlRect.y = (rt->objects[objIndex].y * pixelSize * height) + ((i / 5) * pixelSize);
+      sdlRect.x =
+          (rt->objects[objIndex].x * pixelSize * width) + ((i % 5) * pixelSize);
+      sdlRect.y = (rt->objects[objIndex].y * pixelSize * height) +
+                  ((i / 5) * pixelSize);
       sdlRect.w = pixelSize;
       sdlRect.h = pixelSize;
 
-      SDL_SetRenderDrawColor(renderer, tileColor.r, tileColor.g, tileColor.b, tileColor.a);
+      SDL_SetRenderDrawColor(renderer, tileColor.r, tileColor.g, tileColor.b,
+                             tileColor.a);
       SDL_RenderFillRect(renderer, &sdlRect);
     }
   }
 }
 
-void initRenderer(char * name) {
-  if (SDL_Init(SDL_INIT_VIDEO) != 0){
+void initRenderer(char *name) {
+  if (SDL_Init(SDL_INIT_VIDEO) != 0) {
     fprintf(stderr, "ERROR Initializing SDL2\n");
   }
 
-  window = SDL_CreateWindow(name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_SIZE, WINDOW_SIZE, SDL_WINDOW_SHOWN);
+  window =
+      SDL_CreateWindow(name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                       WINDOW_SIZE, WINDOW_SIZE, SDL_WINDOW_SHOWN);
   if (window == NULL) {
     fprintf(stderr, "ERROR making window\n");
   }
 
-  renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+  renderer = SDL_CreateRenderer(
+      window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
   if (renderer == NULL) {
     fprintf(stderr, "ERROR making renderer\n");
   }
 }
-void renderBackground(Runtime * rt) {
+void renderBackground(Runtime *rt) {
   int pixelSize;
   if (rt->width > rt->height) {
     pixelSize = WINDOW_SIZE / (rt->width * 5);
@@ -96,19 +102,22 @@ void renderBackground(Runtime * rt) {
     for (int i = 0; i < 25; i++) {
       Color tileColor = colorFromSprite(rt, rt->backgroundId, i);
       if (tileColor.a != 0) {
-        sdlRect.x = (tile % rt->width * pixelSize * width) + ((i % 5) * pixelSize);
-        sdlRect.y = (tile / rt->width * pixelSize * height) + ((i / 5) * pixelSize);
+        sdlRect.x =
+            (tile % rt->width * pixelSize * width) + ((i % 5) * pixelSize);
+        sdlRect.y =
+            (tile / rt->width * pixelSize * height) + ((i / 5) * pixelSize);
         sdlRect.w = pixelSize;
         sdlRect.h = pixelSize;
 
-        SDL_SetRenderDrawColor(renderer, tileColor.r, tileColor.g, tileColor.b, tileColor.a);
+        SDL_SetRenderDrawColor(renderer, tileColor.r, tileColor.g, tileColor.b,
+                               tileColor.a);
         SDL_RenderFillRect(renderer, &sdlRect);
       }
     }
   }
 }
 
-void renderLevel(Runtime * rt) {
+void renderLevel(Runtime *rt) {
   int objLayer;
 
   renderBackground(rt);
@@ -123,15 +132,15 @@ void renderLevel(Runtime * rt) {
   }
 }
 
-void renderMessage(Runtime * rt) {
-  char * message = levelMessage(rt->levelIndex);
+void renderMessage(Runtime *rt) {
+  char *message = levelMessage(rt->levelIndex);
   int messageLength = strlen(message);
   for (int i = 0; i < messageLength; i++) {
     drawChar((i % 25) + 1, ((i / 25) * 2) + 5, 5, charSprite(message[i]));
   }
 }
 
-void render(Runtime * rt) {
+void render(Runtime *rt) {
   SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF);
   SDL_RenderClear(renderer);
 
@@ -147,8 +156,7 @@ void render(Runtime * rt) {
   SDL_RenderPresent(renderer);
 }
 
-void debugRender(Runtime * rt) {
-  /* render(rt); */
+void debugRender(Runtime *rt) { /* render(rt); */
 }
 
 Direction input() {
@@ -188,8 +196,6 @@ Direction input() {
   }
   return UNSPECIFIED;
 }
-
-
 
 // Blocking
 char blockInput() {

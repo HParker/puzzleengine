@@ -1,110 +1,92 @@
 #ifndef COLORS
 #define COLORS
 
+#include <string.h>
+
 typedef struct Color {
-  Uint8 r;
-  Uint8 g;
-  Uint8 b;
-  Uint8 a;
+  int r;
+  int g;
+  int b;
+  int a;
 } Color;
 
 #define CLITERAL(type) (type)
-#define BLACK       CLITERAL(Color){ 0x00, 0x00, 0x00, 0xFF }
-#define WHITE       CLITERAL(Color){ 255, 255, 255, 255 }   // White
+#define BLACK                                                                  \
+  CLITERAL(Color) { 0x00, 0x00, 0x00, 0xFF }
+#define WHITE                                                                  \
+  CLITERAL(Color) { 255, 255, 255, 255 } // White
 
-#define LIGHTGRAY   CLITERAL(Color){ 200, 200, 200, 255 }   // Light Gray
-#define GRAY        CLITERAL(Color){ 130, 130, 130, 255 }   // Gray
-#define DARKGRAY    CLITERAL(Color){ 80, 80, 80, 255 }      // Dark Gray
+#define LIGHTGRAY                                                              \
+  CLITERAL(Color) { 200, 200, 200, 255 } // Light Gray
+#define GRAY                                                                   \
+  CLITERAL(Color) { 130, 130, 130, 255 } // Gray
+#define DARKGRAY                                                               \
+  CLITERAL(Color) { 80, 80, 80, 255 } // Dark Gray
 
-#define RED         CLITERAL(Color){ 230, 41, 55, 255 }     // Red
-#define DARKRED     CLITERAL(Color){ 190, 33, 55, 255 }     // Dark Red
-#define LIGHTRED    CLITERAL(Color){ 240, 44, 55, 255 }     // Light Red
+#define RED                                                                    \
+  CLITERAL(Color) { 230, 41, 55, 255 } // Red
+#define DARKRED                                                                \
+  CLITERAL(Color) { 190, 33, 55, 255 } // Dark Red
+#define LIGHTRED                                                               \
+  CLITERAL(Color) { 240, 44, 55, 255 } // Light Red
 
-#define BROWN       CLITERAL(Color){ 127, 106, 79, 255 }    // Brown
-#define LIGHTBROWN  CLITERAL(Color){ 211, 176, 131, 255 }   // Beige
-#define DARKBROWN   CLITERAL(Color){ 76, 63, 47, 255 }      // Dark Brown
+#define BROWN                                                                  \
+  CLITERAL(Color) { 127, 106, 79, 255 } // Brown
+#define LIGHTBROWN                                                             \
+  CLITERAL(Color) { 211, 176, 131, 255 } // Beige
+#define DARKBROWN                                                              \
+  CLITERAL(Color) { 76, 63, 47, 255 } // Dark Brown
 
-#define ORANGE      CLITERAL(Color){ 255, 161, 0, 255 }     // Orange
-#define YELLOW      CLITERAL(Color){ 253, 249, 0, 255 }     // Yellow
+#define ORANGE                                                                 \
+  CLITERAL(Color) { 255, 161, 0, 255 } // Orange
+#define YELLOW                                                                 \
+  CLITERAL(Color) { 253, 249, 0, 255 } // Yellow
 
-#define GOLD        CLITERAL(Color){ 255, 203, 0, 255 }     // Gold
+#define GOLD                                                                   \
+  CLITERAL(Color) { 255, 203, 0, 255 } // Gold
 
-#define GREEN       CLITERAL(Color){ 0, 228, 48, 255 }      // Green
-#define LIGHTGREEN  CLITERAL(Color){ 0, 158, 47, 255 }      // Lime
-#define DARKGREEN   CLITERAL(Color){ 0, 117, 44, 255 }      // Dark Green
+#define GREEN                                                                  \
+  CLITERAL(Color) { 0, 228, 48, 255 } // Green
+#define LIGHTGREEN                                                             \
+  CLITERAL(Color) { 0, 158, 47, 255 } // Lime
+#define DARKGREEN                                                              \
+  CLITERAL(Color) { 0, 117, 44, 255 } // Dark Green
 
-#define BLUE        CLITERAL(Color){ 0, 121, 241, 255 }     // Blue
-#define LIGHTBLUE   CLITERAL(Color){ 102, 191, 255, 255 }   // Sky Blue
-#define DARKBLUE    CLITERAL(Color){ 0, 82, 172, 255 }      // Dark Blue
+#define BLUE                                                                   \
+  CLITERAL(Color) { 0, 121, 241, 255 } // Blue
+#define LIGHTBLUE                                                              \
+  CLITERAL(Color) { 102, 191, 255, 255 } // Sky Blue
+#define DARKBLUE                                                               \
+  CLITERAL(Color) { 0, 82, 172, 255 } // Dark Blue
 
-#define PURPLE      CLITERAL(Color){ 200, 122, 255, 255 }   // Purple
-#define LIGHTPURPLE CLITERAL(Color){ 135, 60, 190, 255 }    // Violet
-#define DARKPURPLE  CLITERAL(Color){ 112, 31, 126, 255 }    // Dark Purple
-#define PINK        CLITERAL(Color){ 255, 109, 194, 255 }   // Pink
+#define PURPLE                                                                 \
+  CLITERAL(Color) { 200, 122, 255, 255 } // Purple
+#define LIGHTPURPLE                                                            \
+  CLITERAL(Color) { 135, 60, 190, 255 } // Violet
+#define DARKPURPLE                                                             \
+  CLITERAL(Color) { 112, 31, 126, 255 } // Dark Purple
+#define PINK                                                                   \
+  CLITERAL(Color) { 255, 109, 194, 255 } // Pink
 
-#define TRANSPARENT CLITERAL(Color){ 0, 0, 0, 0 }           // Blank (Transparent)
+#define TRANSPARENT                                                            \
+  CLITERAL(Color) { 0, 0, 0, 0 } // Blank (Transparent)
 
-const char * colorNames[] =
-  {
-   "black",
-   "white",
-   "lightgray",
-   "lightgrey",
-   "gray",
-   "grey",
-   "darkgray",
-   "darkgrey",
-   "red",
-   "darkred",
-   "lightred",
-   "brown",
-   "darkbrown",
-   "lightbrown",
-   "orange",
-   "yellow",
-   "green",
-   "darkgreen",
-   "lightgreen",
-   "blue",
-   "lightblue",
-   "darkblue",
-   "purple",
-   "pink",
-   "transparent"
-  };
+const char *colorNames[] = {
+    "black",     "white",    "lightgray", "lightgrey",  "gray",
+    "grey",      "darkgray", "darkgrey",  "red",        "darkred",
+    "lightred",  "brown",    "darkbrown", "lightbrown", "orange",
+    "yellow",    "green",    "darkgreen", "lightgreen", "blue",
+    "lightblue", "darkblue", "purple",    "pink",       "transparent"};
 
-const Color colors[] =
-  {
-   BLACK,
-   WHITE,
-   LIGHTGRAY,
-   LIGHTGRAY,
-   GRAY,
-   GRAY,
-   DARKGRAY,
-   DARKGRAY,
-   RED,
-   DARKRED,
-   LIGHTRED,
-   BROWN,
-   DARKBROWN,
-   LIGHTBROWN,
-   ORANGE,
-   YELLOW,
-   GREEN,
-   DARKGREEN,
-   LIGHTGREEN,
-   BLUE,
-   LIGHTBLUE,
-   DARKBLUE,
-   PURPLE,
-   PINK,
-   TRANSPARENT
-  };
+const Color colors[] = {
+    BLACK,    WHITE,  LIGHTGRAY, LIGHTGRAY,  GRAY,       GRAY,      DARKGRAY,
+    DARKGRAY, RED,    DARKRED,   LIGHTRED,   BROWN,      DARKBROWN, LIGHTBROWN,
+    ORANGE,   YELLOW, GREEN,     DARKGREEN,  LIGHTGREEN, BLUE,      LIGHTBLUE,
+    DARKBLUE, PURPLE, PINK,      TRANSPARENT};
 
 const int colorCount = 25;
 
-Color colorFromName(char * name) {
+Color colorFromName(char *name) {
   if (name[0] == '#') {
     char *str = name;
     str++;
@@ -127,7 +109,7 @@ Color colorFromName(char * name) {
   return PINK;
 }
 
-Color colorFromSprite(Runtime * rt, int objId, int tileIndex) {
+Color colorFromSprite(Runtime *rt, int objId, int tileIndex) {
   int tile = objectSpriteTile(objId, tileIndex);
   switch (tile) {
   case '0':
@@ -163,9 +145,9 @@ Color colorFromSprite(Runtime * rt, int objId, int tileIndex) {
 
   case '.':
     return TRANSPARENT;
-
   }
-  fprintf(stderr, "(colors.c) FAILED TO MATCH A COLOR CODE id %i (%c)\n", objId, tile);
+  fprintf(stderr, "(colors.c) FAILED TO MATCH A COLOR CODE id %i (%c)\n", objId,
+          tile);
   for (int i = 0; i < 25; i++) {
     fprintf(stderr, "%c", objectSpriteTile(objId, i));
   }
