@@ -262,7 +262,7 @@ object_name: OBJID OBJID {
 
 colors: colors color | color;
 
-color: OBJID {
+color: COLOR {
   pd.objects[pd.objectCount].colors[pd.objects[pd.objectCount].colorCount] = $1;
   pd.objects[pd.objectCount].colorCount++;
 }

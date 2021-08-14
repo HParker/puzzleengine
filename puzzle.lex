@@ -36,7 +36,7 @@ int colorLine = 0;
 glyph [^[:blank:]\(\n]
 hexcode #([a-fA-F0-9]{8}|[a-fA-F0-9]{6}|[a-fA-F0-9]{3})
 
-name ([a-zA-Z0-9_#]*[a-zA-Z][a-zA-Z0-9_]*){2,}
+name ([a-zA-Z0-9_#]*[a-zA-Z][a-zA-Z0-9_]*){1,}
 word [^[:blank:]\(\n]+
 
 colors (black|white|lightgray|lightgrey|gray|grey|darkgray|darkgrey|red|darkred|lightred|brown|darkbrown|lightbrown|orange|yellow|green|darkgreen|lightgreen|blue|lightblue|darkblue|purple|pink|transparent)
@@ -167,9 +167,9 @@ color (color|colour)
   return END_OF_OBJECT_LINE;
 }
 
-<OBJECT_COLORS>[^[:blank:]\(\n]+ {
+<OBJECT_COLORS>({colors}|{hexcode}) {
   yylval.identifier = strdup(yytext);
-  return OBJID;
+  return COLOR;
 }
 
 <OBJECT_COLORS>\n {
@@ -182,6 +182,13 @@ color (color|colour)
   spriteLine = 1;
   yylval.tile = yytext[0];
   return GLYPH;
+}
+
+<OBJECT_SPRITE>[a-z] {
+  // we clearly aren't doing a sprite. try again
+  yyless(1);
+  BEGIN OBJECT_NAME;
+  return END_OF_OBJECT_LINE;
 }
 
 <OBJECT_SPRITE>\n {
@@ -412,6 +419,7 @@ message[ ]+ {
 
 <COMMENT>[^\)\(]* {
 }
+
 <COMMENT>\) {
   commentNestingLevel--;
   if (commentNestingLevel == 0) {
